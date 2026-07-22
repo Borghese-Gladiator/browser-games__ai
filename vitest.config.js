@@ -35,6 +35,7 @@ export default defineConfig({
       "@portal/shared/leaderboard": resolve(__dirname, "packages/shared/src/leaderboard.js"),
       "@portal/shared/identity": resolve(__dirname, "packages/shared/src/identity.js"),
       "@portal/shared/metrics": resolve(__dirname, "packages/shared/src/metrics.js"),
+      "@portal/shared/registry": resolve(__dirname, "packages/shared/src/registry.js"),
       "@portal/shared": resolve(__dirname, "packages/shared/src/registry.js"),
     },
   },
