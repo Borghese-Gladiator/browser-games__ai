@@ -65,3 +65,10 @@
   color: var(--muted);
   font-size: 0.95rem;
 }
+
+.portal-footer {
+  text-align: center;
+  margin-top: 2.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}

@@ -20,6 +20,7 @@ export function Portal() {
           </li>
         ))}
       </ul>
+      <footer className="portal-footer">Reviewed with Agentic Workbench QA</footer>
     </main>
   );
 }
