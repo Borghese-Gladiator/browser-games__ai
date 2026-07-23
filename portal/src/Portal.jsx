@@ -20,6 +20,7 @@ export function Portal() {
           </li>
         ))}
       </ul>
+      <footer className="portal-footer">Built with the Agentic Workbench</footer>
     </main>
   );
 }
