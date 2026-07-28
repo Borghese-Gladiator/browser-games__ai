@@ -5,6 +5,7 @@ export function Portal() {
     <main className="portal">
       <header className="portal-header">
         <h1>Browser Games</h1>
+        <p className="portal-subtitle">Pick a game and play instantly.</p>
         <p className="portal-subtitle">Pick a game to play.</p>
       </header>
       <ul className="game-grid">
