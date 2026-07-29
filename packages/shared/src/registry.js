@@ -46,6 +46,15 @@ export const games = [
     enabled: true,
   },
   {
+    id: "president",
+    title: "President",
+    description: "2–4 player shedding card game. Play or pass to beat the trick; first to empty their hand is President.",
+    emoji: "👑",
+    path: "/games/president/",
+    multiplayer: true,
+    enabled: true,
+  },
+  {
     id: "reversi",
     title: "Reversi",
     description: "2-player strategy. Flip your opponent's pieces to claim the board. Most pieces wins.",

@@ -1,8 +1,124 @@
 # TODO — Known remaining work
 
-Captured after fixing the multiplayer "not in a room" seating bug
-(commit `318a3ca`). Each item below was observed during that session, not
+Each item below was verified against the code (file:line references), not
 speculative.
+
+## Deployment (blockers)
+
+### D1. Client hardcodes `localhost:3001` for the gateway
+
+- **Status:** Multiplayer + leaderboard are broken in any real deployment.
+- **Detail:** `packages/game-client/src/useGameSocket.js:12` falls back to
+  `ws://localhost:3001` and `packages/game-client/src/leaderboard.js:7-9` to
+  `http://localhost:3001`. These are **build-time** Vite env vars, and the
+  `Dockerfile` build (`Dockerfile:15`) runs `npm run build` without setting
+  `VITE_GATEWAY_URL`, so the shipped client bakes in `localhost`. A deployed
+  browser connects to the *user's own machine*, not the server, and fails.
+- **Fix:** Derive the gateway URL from `window.location` at runtime
+  (same-origin `wss://<host>` / `https://<host>`). The gateway already serves
+  the client on one origin, so this needs no env var and also fixes D2.
+
+### D2. `ws://` breaks under HTTPS
+
+- **Status:** Blocks HTTPS deployment even if `VITE_GATEWAY_URL` is injected.
+- **Detail:** A `ws://` URL on an `https://` page is blocked as mixed content;
+  needs `wss://`. The runtime origin-derivation in D1 handles this.
+
+### D3. Persistence is ephemeral and single-replica
+
+- **Status:** Leaderboards, achievements, and room snapshots lost on restart.
+- **Detail:** `packages/game-core/src/store.js:20,41,64` default to relative
+  paths (`./outcomes.json`, `./achievements.json`, `./snapshots`) resolved
+  against the container CWD (`/app`). `bin/dev-server.js:16-19` does not
+  override them. In a container these live on the ephemeral writable layer —
+  **lost on every restart/redeploy** — and are not shared across replicas.
+- **Fix:** Mount a volume (PVC) or use an external store; parameterize the
+  paths via env and point them at the mount.
+
+### D4. No horizontal scaling path
+
+- **Status:** Must run as exactly one replica.
+- **Detail:** Rooms, seats, presence, and the per-IP rate-limit bucket are all
+  in-process memory (`packages/game-core/src/rooms.js`, `gateway.js`).
+  WebSocket sessions are sticky to one process with no shared backplane.
+- **Fix:** Document the single-replica constraint, or add sticky sessions +
+  shared state (e.g. Redis) before scaling.
+
+### D5. No Kubernetes / Compose / Helm / CI config
+
+- **Status:** Repo ships only a `Dockerfile` + `.dockerignore`.
+- **Detail:** No `.github/`, `.buildkite/`, `*.yaml`/`*.yml`, `Chart.yaml`, or
+  `docker-compose.yml` anywhere. "Do we handle kubernetes?" → no.
+- **Fix:** Add k8s Deployment + Service + Ingress (or Compose), a readiness
+  probe endpoint, resource limits, `PORT`/volume wiring, and
+  `terminationGracePeriodSeconds` ≥ the 5s drain in `bin/dev-server.js:23`.
+
+## User flow / lobby
+
+### F1. Multiplayer games dump you into a lobby, not the game
+
+- **Status:** Core friction — unlike FPS/tic-tac-toe which load straight into
+  play.
+- **Detail:** Portal cards are plain `<a href={game.path}>`
+  (`portal/src/Portal.jsx:13`). FPS boots gameplay on page load
+  (`games/fps/src/main.ts:11-22`, no socket/identity/room). Multiplayer games
+  render `<Lobby>` first (`games/poker/src/Poker.jsx:36-52`) — name entry +
+  room create/join gate every session.
+- **Fix:** Make the primary action instant — card click → auto "Play now"
+  (quick-match, fills with bots), with create/join-specific-room demoted to
+  secondary.
+
+### F2. Lobby room list is stale — never pushed
+
+- **Status:** The "lobby not showing an up-to-date list of people" complaint.
+- **Detail:** The `{ t: 'rooms' }` frame is sent **only** in reply to an
+  explicit `lobby:list` request (`gateway.js:214-217`) — a pull model with one
+  recipient. `joinRoom`, host actions, `game`, and `leave` all call
+  `broadcastRoom(room)` (state to that room's members only), **never** a
+  `rooms` re-broadcast to other lobby watchers. Client only updates on mount
+  (`Lobby.jsx:14-16`) or the manual "Refresh" button (`Lobby.jsx:81`).
+- **Fix:** Broadcast an updated `rooms` frame to all lobby watchers of a game
+  on any room membership change (create/join/leave/lock).
+
+### F3. Selected name is not remembered
+
+- **Status:** User must retype their name on every leave/rejoin or reload.
+- **Detail:** `Lobby.jsx:9` inits `name` to `""` every mount. `useIdentity.js`
+  persists only the `playerId` UUID and color (`useIdentity.js:9,13,16`) —
+  never the display name. No other `localStorage` name usage exists.
+- **Fix:** Persist the last-used name in localStorage and prefill the input.
+
+### F4. No user-initiated "leave room"
+
+- **Status:** Rejoin loop is not smoothed.
+- **Detail:** No `leaveRoom` action client-side and no `lobby:leave` in the
+  protocol (`useGameSocket.js:178-198`, `gateway.js:5-16`). Leaving only
+  happens on socket `close`/`error` (`gateway.js:531-532`), which for a seated
+  player holds the seat (`gateway.js:630`) and only reaps it after `DEAD_MS`
+  (15s). The only way back to the lobby is navigating away / reloading.
+- **Fix:** Add an explicit "Leave / back to lobby" action that frees the seat
+  and returns to the lobby, preserving the name (F3).
+
+### F5. No single obvious primary action per page
+
+- **Status:** Violates the "always an obvious primary action" goal.
+- **Detail:** The lobby gives "Create room", "Play now", "Join by code", the
+  room list, and "Player code" roughly equal visual weight (`Lobby.jsx`).
+- **Fix:** Pick one dominant CTA (Play now) per page; demote the rest.
+
+## Correctness / robustness
+
+### C1. Per-IP rate-limit map leaks
+
+- **Status:** Unbounded memory growth over the process lifetime.
+- **Detail:** `gateway.js:383` — `rateLimitMap` entries are never GC'd.
+- **Fix:** Evict stale IP buckets on the heartbeat.
+
+---
+
+## Session notes (multiplayer "not in a room" seating bug, commit `318a3ca`)
+
+The items below were observed during that session.
 
 ## 1. infra.spec AC2 — version-mismatch refresh banner (pre-existing failure)
 
