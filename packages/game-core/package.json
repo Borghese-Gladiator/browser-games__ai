@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@browser-games/engine-poker": "*",
+    "@browser-games/engine-president": "*",
     "@browser-games/engine-reversi": "*",
     "@browser-games/engine-sheng-ji": "*",
     "@portal/shared": "*",

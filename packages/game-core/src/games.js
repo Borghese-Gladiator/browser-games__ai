@@ -31,6 +31,7 @@
 import * as poker from '@browser-games/engine-poker';
 import * as shengJi from '@browser-games/engine-sheng-ji';
 import * as reversi from '@browser-games/engine-reversi';
+import * as president from '@browser-games/engine-president';
 
 // True exactly once: when newRecord is the player's first recorded rank-1 finish.
 const isFirstWin = (playerId, _newRecord, playerRecords) =>
@@ -190,6 +191,46 @@ const reversiAdapter = {
   achievements: [{ id: 'reversi-first-win', name: 'First Win', predicate: isFirstWin }],
 };
 
+// First-legal-play policy for President bots and turn timeouts: play the lowest
+// legal group, else pass. Returns a game message or null when it isn't their turn.
+function presidentFirstLegal(state, seat) {
+  const view = president.publicState(state, seat);
+  if (seat !== view.activeSeat) return null;
+  if (view.legalPlays && view.legalPlays.length > 0) return { cards: view.legalPlays[0] };
+  if (view.canPass) return { pass: true };
+  return null;
+}
+
+const presidentAdapter = {
+  id: 'president',
+  engine: president,
+  engineVersion: '1.0.0',
+  enabled: true,
+  validGameMessages: [{ cards: 'object' }, { pass: 'boolean' }, { restart: 'boolean' }],
+  anticheat: (state, playerId, msg) => {
+    if ((msg.cards || msg.pass) &&
+      state.players.find((p) => p.id === playerId)?.seat !== state.activeSeat) {
+      return 'action out of turn';
+    }
+    return null;
+  },
+  minPlayers: 2,
+  maxPlayers: 4,
+  autoStart: (state) =>
+    state.players.length === 4 ? president.startRound(state) : null,
+  onMessage: (state, playerId, msg) => {
+    if (msg.restart) return president.startRound(state);
+    if (msg.pass) return president.applyAction(state, playerId, { pass: true });
+    if (msg.cards) return president.applyAction(state, playerId, { cards: msg.cards });
+    throw new Error('unknown president message');
+  },
+  activeSeat: (state) => state.activeSeat,
+  timeoutAction: (state, seat) => presidentFirstLegal(state, seat),
+  botMove: (state, seat) => presidentFirstLegal(state, seat),
+  getOutcome: (state) => president.getOutcome(state),
+  achievements: [{ id: 'president-first-win', name: 'First Win', predicate: isFirstWin }],
+};
+
 // Disabled fixture adapter, never listed in the portal registry. It exists only
 // so the disabled-game rejection path has something to exercise.
 const infraTestAdapter = {
@@ -206,5 +247,6 @@ export const adapters = {
   poker: pokerAdapter,
   'sheng-ji': shengJiAdapter,
   reversi: reversiAdapter,
+  president: presidentAdapter,
   '_infra-test': infraTestAdapter,
 };

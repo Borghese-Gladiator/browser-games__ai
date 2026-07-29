@@ -1,0 +1,10 @@
+{
+  "name": "@browser-games/engine-president",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/engine.js",
+  "exports": {
+    ".": "./src/engine.js"
+  }
+}

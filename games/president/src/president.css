@@ -1,0 +1,105 @@
+.president {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 4rem 1.5rem 2rem;
+  position: relative;
+}
+
+.president-back {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.president h1 {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: 0.05em;
+}
+
+.president h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.president section {
+  text-align: center;
+}
+
+.president-status {
+  margin: 0;
+  font-size: 1.25rem;
+  min-height: 1.5em;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.president-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.president-cards li {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.president-card {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  min-width: 2.25rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.president-card.selected {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.president-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.president-hand li {
+  font-size: 1.75rem;
+}
+
+.president-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.president-error {
+  margin: 0;
+  color: #f87171;
+  font-weight: 600;
+}
+
+.president-host {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
