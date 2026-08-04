@@ -3,6 +3,7 @@
 A small gaming portal: a landing page that lists games, with each game living in
 its own page. Built as an npm-workspaces monorepo using Vite + React. Multiplayer
 games share a single WebSocket gateway with a built-in lobby.
+Note: There are currently 5 available games in the `games/` directory.
 
 ## Layout
 
