@@ -1,5 +1,6 @@
 import { games } from "@portal/shared/registry";
 
+// Landing page that lists the enabled browser games as clickable cards.
 export function Portal() {
   return (
     <main className="portal">
