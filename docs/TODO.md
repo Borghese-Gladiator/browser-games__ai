@@ -67,44 +67,50 @@ speculative.
 - **Fix:** Make the primary action instant — card click → auto "Play now"
   (quick-match, fills with bots), with create/join-specific-room demoted to
   secondary.
+- **Partially done:** the lobby was redesigned so **Play now** is the single
+  dominant CTA (bots fill empty seats), with Create/Join demoted (see F5).
+  Still lobby-first: the portal card lands on the lobby rather than skipping
+  straight into a bot-filled game. Full instant-play (card → game) is the
+  remaining step if desired.
 
-### F2. Lobby room list is stale — never pushed
+### F2. Lobby room list is stale — never pushed — ✅ FIXED
 
-- **Status:** The "lobby not showing an up-to-date list of people" complaint.
-- **Detail:** The `{ t: 'rooms' }` frame is sent **only** in reply to an
-  explicit `lobby:list` request (`gateway.js:214-217`) — a pull model with one
-  recipient. `joinRoom`, host actions, `game`, and `leave` all call
-  `broadcastRoom(room)` (state to that room's members only), **never** a
-  `rooms` re-broadcast to other lobby watchers. Client only updates on mount
-  (`Lobby.jsx:14-16`) or the manual "Refresh" button (`Lobby.jsx:81`).
-- **Fix:** Broadcast an updated `rooms` frame to all lobby watchers of a game
-  on any room membership change (create/join/leave/lock).
+- **Status:** Resolved. Lobby watchers now get live pushes.
+- **Fix (done):** The gateway tracks lobby watchers per `gameId` (registered on
+  `lobby:list`) and pushes a fresh `rooms` frame to all of them on any
+  membership change (create/join/leave/kick/lock) via an `onLobbyChange` hook
+  (`gateway.js`). Required the client send-before-open fix (robustness #2) so the
+  initial `lobby:list` actually registers the watcher. Verified in-browser:
+  a room created in one tab appears in another's list with no Refresh.
 
-### F3. Selected name is not remembered
+### F3. Selected name is not remembered — ✅ FIXED
 
-- **Status:** User must retype their name on every leave/rejoin or reload.
-- **Detail:** `Lobby.jsx:9` inits `name` to `""` every mount. `useIdentity.js`
-  persists only the `playerId` UUID and color (`useIdentity.js:9,13,16`) —
-  never the display name. No other `localStorage` name usage exists.
-- **Fix:** Persist the last-used name in localStorage and prefill the input.
+- **Status:** Resolved.
+- **Fix (done):** `useIdentity` now persists the last-used display name in
+  localStorage (`browser-games:playerName`) via a `setName` setter; `Lobby.jsx`
+  reads/writes it, so the name prefills on every mount. Verified in-browser.
 
-### F4. No user-initiated "leave room"
+### F4. No user-initiated "leave room" — ✅ FIXED (protocol + client)
 
-- **Status:** Rejoin loop is not smoothed.
-- **Detail:** No `leaveRoom` action client-side and no `lobby:leave` in the
-  protocol (`useGameSocket.js:178-198`, `gateway.js:5-16`). Leaving only
-  happens on socket `close`/`error` (`gateway.js:531-532`), which for a seated
-  player holds the seat (`gateway.js:630`) and only reaps it after `DEAD_MS`
-  (15s). The only way back to the lobby is navigating away / reloading.
-- **Fix:** Add an explicit "Leave / back to lobby" action that frees the seat
-  and returns to the lobby, preserving the name (F3).
+- **Status:** Protocol + client action done. A "Leave" button still needs
+  wiring into each game's in-room UI (the hook exposes `leaveRoom`).
+- **Fix (done):** Added `lobby:leave` to the protocol — unlike a socket close
+  (which holds the seat for the reconnect grace window), it frees the seat
+  immediately, deletes the room if it was the last member, acks with `left`, and
+  re-sends the fresh room list. The client `useGameSocket` exposes `leaveRoom()`
+  and clears local room state on `left` (dropping the rejoin intent so a later
+  reconnect doesn't pull the player back in). Name is preserved via F3.
+- **Remaining:** each game's board should render a "Leave / back to lobby"
+  button calling `leaveRoom`.
 
-### F5. No single obvious primary action per page
+### F5. No single obvious primary action per page — ✅ FIXED (lobby)
 
-- **Status:** Violates the "always an obvious primary action" goal.
-- **Detail:** The lobby gives "Create room", "Play now", "Join by code", the
-  room list, and "Player code" roughly equal visual weight (`Lobby.jsx`).
-- **Fix:** Pick one dominant CTA (Play now) per page; demote the rest.
+- **Status:** Resolved for the lobby.
+- **Fix (done):** `Lobby.jsx` + `lobby.css` rebuilt around one dominant CTA — a
+  glowing **Play now** hero card — with "Private Table" (Create room /
+  join-by-code) and the live "Public Tables" list demoted to quiet secondary
+  cards, matching the "Find a Match" mockup. Accessible button names
+  ("Create room", "Join by code", "Play now") were preserved so e2e specs pass.
 
 ## Correctness / robustness
 
@@ -134,40 +140,39 @@ The items below were observed during that session.
   version mismatch a different way (e.g. a server-side test hook / env override
   for the advertised `protocolVersion`).
 
-## 2. Actions dropped during the reconnect window (latent client gap)
+## 2. Actions dropped during the reconnect window — ✅ FIXED
 
-- **Status:** Latent robustness issue; not currently failing a kept test.
-- **Detail:** The fix re-joins the room on socket `open`, but a `game` message
-  fired *during* the brief reconnect/StrictMode socket churn is sent on a
-  transient socket and silently lost (`rawSend` = `ws.current?.send(...)`).
-  The 4-player e2e specs survive because they retry actions in a loop; the
-  single-shot observability action exposed the loss until the room-code parsing
-  bug (item below) was also fixed. A real user clicking once during a network
-  blip could still lose that action.
-- **Fix:** Small outbound message queue in `useGameSocket` that buffers sends
-  while the socket isn't OPEN and flushes on `open` (after the rejoin replay).
+- **Status:** Resolved.
+- **Fix (done):** `useGameSocket` now has an outbound queue (`outbox`): `rawSend`
+  sends immediately when the socket is OPEN, otherwise buffers the frame
+  (de-duped) and flushes on `open`, after the rejoin replay. This also fixed F2 —
+  the lobby's initial `lobby:list` was itself a send-before-open casualty, so the
+  watcher never registered until this landed.
 
-## 3. E2E suite is not hermetic — cross-spec gateway-state contention
+## 3. E2E suite is not hermetic — cross-spec gateway-state contention — ⚠️ MITIGATED
 
-- **Status:** Each spec passes in clean isolation; the full suite (parallel or
-  serial) fails on later specs.
-- **Detail:** All specs run against one long-lived gateway (`playwright.config.js`
-  starts it once). Rooms, held seats, the shared per-IP rate-limit bucket, and
-  the outcome store accumulate across specs, causing seating/lobby contention
-  and stale leaderboard reads by the time later specs run.
-- **Fix:** Make the suite hermetic — fresh gateway per spec file, or a reset
-  endpoint/teardown the gateway exposes for tests.
+- **Status:** Two of the three contention sources removed; the suite now passes
+  9/9. One long-lived gateway is still shared, so this isn't fully closed.
+- **Fixes (done):** (a) Persistence points at a throwaway `.state/e2e` dir wiped
+  each run (`playwright.config.js` env + `test:e2e` script), so outcomes /
+  achievements / snapshots start empty. (b) The per-IP rate-limit capacity is
+  overridable via `RATE_LIMIT_CAPACITY` and the test webServer widens it, so the
+  suite's combined load on the one shared bucket no longer trips false
+  "rate limit exceeded" failures. (This mattered more after F2's live broadcasts
+  raised per-connection message volume.)
+- **Remaining:** rooms / held seats still accumulate in the one gateway process.
+  A fresh gateway per spec file (or a test-only reset endpoint) would fully
+  close it.
 
-## 4. Runtime-cruft hygiene during tests
+## 4. Runtime-cruft hygiene during tests — ✅ FIXED
 
-- **Status:** Test-environment papercut that silently skewed results.
-- **Detail:** `outcomes.json` / `achievements.json` (gitignored) and the
-  `snapshots/` dir accumulate across runs. Stale `outcomes.json` made the
-  leaderboard spec fail ("winner missing from all-time board"); restored
-  `snapshots/` rooms inflate `/stats`. Both are regenerated at runtime.
-- **Fix:** Clear these in a test setup/teardown hook so runs start from a clean
-  store. (The gateway already restores `snapshots/` on boot by design — tests
-  just need an empty starting state.)
+- **Status:** Resolved.
+- **Fix (done):** `bin/dev-server.js` reads `OUTCOMES_PATH` / `ACHIEVEMENTS_PATH`
+  / `SNAPSHOTS_PATH` from env; the Playwright webServer points them at
+  `.state/e2e/*`, and `npm run test:e2e` wipes that dir before each run, so every
+  run starts from empty state. `snapshots/` was also added to `.gitignore` and a
+  stray leftover `snapshots/` + botched `${QA_SPEC_DIR}` dir were removed from the
+  tree. `npm run clean:state` wipes all runtime state on demand.
 
 ---
 

@@ -1,134 +1,63 @@
-# Plan: Framework + Lobby for browser-games
+# Plan: Repo cleanup, agent docs, and lobby overhaul
+
+Supersedes the historical planning log (moved to `docs/history.md`).
 
 ## Brief
-Scale the repo from 3 games to ~13 by removing the two structural bottlenecks:
-1. Each multiplayer game ships a near-identical copy-pasted WS server on its own port.
-2. There is one global game per server process — no rooms, no lobby, no concurrent games.
-
-Target: a single **gateway** WS server that hosts every game, routed by `gameId`,
-with a shared **room-aware** core and a built-in **lobby** (create / list / join rooms
-by code). Each game contributes only a pure engine + a tiny adapter. Adding a game
-becomes: drop an engine + adapter, add one registry line. Vite inputs derived, not
-hand-maintained.
-
-## Architecture (target)
-```
-packages/
-  shared/                  # registry (extended) + theme  [exists]
-  game-core/               # NEW: generic room-aware server + lobby + gateway
-    src/
-      rooms.js             # Room + RoomManager (per-room engine state, seats, clients)
-      gateway.js           # single WS server, routes by gameId, dispatches lobby vs game msgs
-      lobby.js             # createRoom/listRooms/joinRoom protocol
-      games.js             # adapter registry: gameId -> { engine, adapter }
-  engines/                 # NEW: pure engines moved out of *-server packages
-    poker/   (createGame, addPlayer, startHand, applyAction, publicState, handEval)
-    sheng-ji/(createGame, addPlayer, startDeal, playCard, publicState)
-  game-client/             # NEW: shared React client
-    useGameSocket.js       # connect to gateway, join room, send actions
-    Lobby.jsx              # shared lobby UI (name, create/join room)
-games/
-  poker/     sheng-ji/     # thin UI; use game-client + lobby; no bespoke WS code
-  tic-tac-toe/             # unchanged (local game, no server)
-bin/dev-server.js          # boots the single gateway (replaces 2 per-game servers)
-```
-
-Old `packages/poker-server` and `packages/sheng-ji-server` are replaced; their engine
-files move to `packages/engines/*`, transport deleted.
-
-## The adapter contract
-Each multiplayer game registers an adapter so the generic gateway can drive it:
-```js
-{
-  id: 'poker',
-  engine,                              // the pure module
-  minPlayers, maxPlayers,
-  autoStart(state) -> state|null,      // called after each join; null = not ready
-  // map inbound client messages to engine calls, returning next state
-  onMessage(state, playerId, msg) -> state,
-  // map inbound "restart" intent (poker:newHand, sheng-ji:newDeal)
-}
-```
-This isolates the only real per-game differences (message names, start fn) while
-`createGame/addPlayer/publicState` stay uniform.
-
-## Rooms / lobby protocol (client <-> gateway)
-- `{type:'lobby:list', gameId}` -> `{type:'lobby:rooms', rooms:[{code,players,max}]}`
-- `{type:'lobby:create', gameId, name}` -> joins new room, server replies `{type:'joined', code, seat}`
-- `{type:'lobby:join', gameId, code, name}` -> `{type:'joined', code, seat}` or error
-- `{type:'game', code, ...gameMsg}` -> routed to that room's engine via adapter
-- Server broadcasts `publicState` per seat to a room's clients after every change.
+Four workstreams, low-risk → high-risk:
+1. **Cleanup + validation** — remove runtime-state cruft from the tree, gitignore
+   it, give the repo one health command, and make e2e start from clean state.
+2. **Agent docs** — lean README + new `AGENTS.md`; move the deep adapter contract
+   and planning history into `docs/`.
+3. **Lobby logic (F1–F4)** — quick-match-with-bots primary CTA, remember name,
+   live room-list broadcast, explicit leave.
+4. **Lobby UI** — restructure `Lobby.jsx` + `lobby.css` around one primary CTA,
+   a private-lobby block, and a live public-tables list.
 
 ## Changes
-1. `packages/game-core` — rooms.js, lobby.js, gateway.js, games.js (adapters).
-2. `packages/engines/poker`, `packages/engines/sheng-ji` — move engine + tests; delete transport.
-3. `packages/game-client` — useGameSocket.js + Lobby.jsx.
-4. `games/poker/src/Poker.jsx`, `games/sheng-ji/src/ShengJi.jsx` — use shared client + lobby + room code.
-5. `packages/shared/src/registry.js` — add `multiplayer` + per-game adapter pointer; derive vite input.
-6. `vite.config.js` — build `input` from registry instead of hardcoding.
-7. `bin/dev-server.js` + root `package.json` scripts — single gateway; update playwright webServer.
-8. Remove `packages/poker-server`, `packages/sheng-ji-server` from workspace.
+
+### 1. Cleanup + validation
+- Delete the stray empty `${QA_SPEC_DIR}/` directory.
+- Delete leftover untracked `snapshots/*.json` (leftover local rooms).
+- `.gitignore`: add `snapshots/` and stray-var guard.
+- `package.json`: add `check` script (unit tests) and `check:all` (unit + e2e);
+  add a `clean:state` script that removes runtime state.
+- `bin/dev-server.js`: read `OUTCOMES_PATH`, `ACHIEVEMENTS_PATH`, `SNAPSHOTS_PATH`
+  from env and pass to `createGateway` (already parameterized) — lets e2e point
+  at a scratch dir.
+- `playwright.config.js`: point the gateway at a throwaway state dir per run so
+  the suite starts hermetic (TODO C4/#4).
+
+### 2. Agent docs
+- Rewrite `README.md`: orientation + the four commands + one-paragraph "add a
+  game" pointer. ~60 lines, link out for depth.
+- New `AGENTS.md`: workspace map, where things live, validation commands, the
+  golden rules an agent needs (registry is source of truth; engines are pure;
+  one gateway; how to run/validate).
+- New `docs/adding-a-game.md`: the full adapter contract currently inline in
+  README.
+- Move `plan.md` planning history → `docs/history.md`.
+
+### 3. Lobby logic
+- `useIdentity.js` (or Lobby): persist last-used name in localStorage; prefill.
+- Gateway: broadcast a fresh `rooms` frame to all lobby watchers of a game on
+  any membership change (create/join/leave/lock).
+- Add `lobby:leave` protocol + `leaveRoom` client action; free seat, return to
+  lobby, keep name.
+- Portal/Lobby: make quick-match the dominant CTA (bots fill), create/join
+  demoted.
+
+### 4. Lobby UI
+- Rebuild `Lobby.jsx` layout: hero Quick-Match card, "Private Lobby"
+  (host/join-by-code), "Public Tables" live list. One primary button.
+- `lobby.css`: match the mockups (dark cards, single accent CTA).
 
 ## Tests
 ### Unit
-- Move existing engine tests under engines/* (keep passing unchanged — proves engine behavior preserved).
-- New: `rooms.test.js` — create room generates unique code; join assigns seats; full room rejects; per-room isolation (two rooms don't share state); autoStart fires at capacity.
-- New: `lobby.test.js` — list returns open rooms; create+join round-trip; join bad code errors.
+- Existing ~250 vitest pass unchanged after cleanup/docs.
+- Lobby logic: new tests for name persistence, `rooms` re-broadcast on
+  membership change, `lobby:leave` frees the seat.
 ### Manual (browser)
-- `npm run dev` + gateway. Open portal, pick Poker.
-- Tab A: create room -> get code. Tabs B/C/D: join by code -> 4 players -> hand starts.
-- Separately, Tab E: create a *second* poker room -> independent game (proves concurrency).
-- Play a hand to showdown in room 1; room 2 unaffected.
-- Repeat join-by-code flow for Sheng Ji on the same gateway (proves gameId routing).
-- Portal still lists all games; tic-tac-toe still works locally.
-```
-
----
-
-# Plan: Deploy-readiness polish pass
-
-## Brief
-Fix one correctness blocker and add baseline polish so the repo is closer to deployable.
-
-## Changes
-1. **Blocker:** declare `@browser-games/engine-reversi` in `packages/game-core/package.json` deps (imported in `src/games.js:33` but undeclared).
-2. **Favicon:** add `/public/favicon.svg` served from project root by Vite to all multi-page entries.
-3. **Meta + favicon links:** add `<link rel="icon">`, description, theme-color to all 6 `index.html` files (portal + 5 games).
-4. **LICENSE:** add MIT LICENSE at repo root.
-5. **Custom 404:** add `/public/404.html` for static hosts.
-
-## Tests
-### Unit
-- `npm test` — 250 tests still pass (no game logic touched).
-### Manual (browser)
-- `npm run build` succeeds; `dist/favicon.svg` present and referenced.
-- `npm run preview`; load portal + each game, confirm favicon in tab, titles unchanged.
-
----
-
-# Plan: Single-deployment Docker (gateway serves the built client)
-
-## Brief
-Ship as one deployable unit: one Node container that both serves the static
-`dist/` client and runs the WebSocket gateway on the same port. This removes the
-cross-origin `VITE_GATEWAY_URL` problem — the browser connects back to the same
-host it loaded from.
-
-## Changes
-1. `packages/game-core/src/gateway.js` — add optional `staticDir`; when set, the
-   existing HTTP handler serves files from `dist/` (with index + 404.html
-   fallback, path-traversal guard) after the `/admin`, `/stats`, `/api/*` routes.
-2. `bin/dev-server.js` — pass `staticDir` only in production (`NODE_ENV=production`)
-   or when `STATIC_DIR` is set, so dev (Vite on :5173) is unaffected.
-3. `Dockerfile` — multi-stage: build `dist/`, then run gateway with prod deps only.
-4. `.dockerignore`.
-
-## Tests
-### Unit
-- `npm test` — 250 tests still pass (gateway HTTP routing change only).
-### Manual / integration (done)
-- `NODE_ENV=production node bin/dev-server.js`: `/` and `/games/<id>/` → 200 html,
-  `/favicon.svg` → 200 svg, `/api/leaderboard` → 200 json, unknown → 404 (custom
-  404.html body), traversal → blocked.
-- `docker build` succeeds; container serves `/`, `/favicon.svg`, `/games/fps/`
-  (200) and accepts the WS upgrade (101 Switching Protocols) on the same port.
+- `npm run dev`; portal → poker: "Play now" fills bots and starts immediately.
+- Second tab creates a room → its code shows in the first tab's public list
+  without pressing Refresh (live broadcast).
+- Leave room → back to lobby, name still prefilled.
