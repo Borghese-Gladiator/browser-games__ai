@@ -5,6 +5,8 @@ dist/
 .DS_Store
 e2e/artifacts/
 
-# Gateway leaderboard/stats persistence (generated at runtime).
+# Gateway persistence (generated at runtime; not source).
 outcomes.json
 achievements.json
+snapshots/
+.state/

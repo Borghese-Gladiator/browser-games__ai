@@ -16,7 +16,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "rm -rf .state/e2e && playwright test",
+    "check": "vitest run",
+    "check:all": "vitest run && npm run test:e2e",
+    "clean:state": "rm -rf snapshots .state outcomes.json achievements.json"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",

@@ -16,6 +16,9 @@ const staticDir = serveStatic && fs.existsSync(distDir) ? distDir : null;
 const { shutdown } = createGateway({
   port: process.env.PORT || 3001,
   staticDir,
+  outcomesPath: process.env.OUTCOMES_PATH,
+  achievementsPath: process.env.ACHIEVEMENTS_PATH,
+  snapshotsPath: process.env.SNAPSHOTS_PATH,
 });
 
 // On a deploy signal, drain gracefully (snapshot rooms, warn clients) before exit.
