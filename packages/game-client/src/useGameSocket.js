@@ -35,6 +35,11 @@ export function useGameSocket(gameId) {
   // server-assigned and only known once `joined` arrives, so we stash the name
   // here and finalize joinIntent there.
   const pendingName = useRef(null);
+  // Outbound messages issued while the socket isn't OPEN yet (initial connect or
+  // a reconnect/StrictMode churn) are buffered here and flushed on `open`, so a
+  // send that races the connection — e.g. the lobby's initial room-list request,
+  // or a single click during a blip — isn't silently dropped.
+  const outbox = useRef([]);
 
   const connected = connectionStatus === "connected";
 
@@ -51,6 +56,10 @@ export function useGameSocket(gameId) {
       // the seat by playerId, so replaying is an idempotent reconnect.
       const intent = joinIntent.current;
       if (intent) socket.send(JSON.stringify(intent));
+      // Flush anything queued while the socket was still connecting.
+      const queued = outbox.current;
+      outbox.current = [];
+      for (const raw of queued) socket.send(raw);
     };
     socket.onclose = () => {
       // Ignore closes from a socket we've already superseded. The StrictMode
@@ -94,6 +103,15 @@ export function useGameSocket(gameId) {
           setError("");
           setGameState(msg);
           break;
+        case "left":
+          // Server freed our seat; drop back to the lobby. Clear the rejoin
+          // intent so a later reconnect doesn't silently pull us back in.
+          joinIntent.current = null;
+          pendingName.current = null;
+          setRoom(null);
+          setGameState(null);
+          setChatMessages([]);
+          break;
         case "chat":
           setChatMessages((m) => [...m, msg]);
           break;
@@ -128,7 +146,15 @@ export function useGameSocket(gameId) {
     };
   }, [playerId, retrySignal]);
 
-  const rawSend = useCallback((obj) => ws.current?.send(JSON.stringify(obj)), []);
+  const rawSend = useCallback((obj) => {
+    const raw = JSON.stringify(obj);
+    const sock = ws.current;
+    if (sock && sock.readyState === WebSocket.OPEN) sock.send(raw);
+    // Buffer for the next open. De-dupe identical frames so a StrictMode
+    // remount / reconnect doesn't pile up repeat requests (e.g. the lobby's
+    // mount-effect room-list poll) into a burst that trips the rate limiter.
+    else if (!outbox.current.includes(raw)) outbox.current.push(raw);
+  }, []);
 
   const listRooms = useCallback(
     () => rawSend({ t: "lobby:list", gameId }),
@@ -164,6 +190,9 @@ export function useGameSocket(gameId) {
     },
     [rawSend, gameId],
   );
+  // Explicit "back to lobby": ask the server to free our seat now. Local room
+  // state is cleared when the server acks with `left`.
+  const leaveRoom = useCallback(() => rawSend({ t: "lobby:leave" }), [rawSend]);
 
   // Host controls (no-ops server-side unless this player is the host).
   const kick = useCallback((targetId) => rawSend({ t: "host:kick", targetId }), [rawSend]);
@@ -190,6 +219,7 @@ export function useGameSocket(gameId) {
     joinRoom,
     quickMatch,
     spectate,
+    leaveRoom,
     kick,
     lockRoom,
     startEarly,

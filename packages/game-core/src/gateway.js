@@ -8,6 +8,7 @@
 //   { t: 'lobby:join',       gameId, code, name }
 //   { t: 'lobby:quickmatch', gameId, name, options? }   // "Play now"
 //   { t: 'lobby:spectate',   gameId, code }             // watch, no seat
+//   { t: 'lobby:leave' }                                // free seat, back to lobby
 //   { t: 'host:kick',  targetId }                       // host only
 //   { t: 'host:lock',  locked }                         // host only
 //   { t: 'host:start' }                                 // host only, start early
@@ -18,6 +19,7 @@
 // Server -> client:
 //   { t: 'rooms',    rooms: [{code, players, max, locked, host}] }
 //   { t: 'joined',   code, seat, isHost, options }       // seat -1 = spectator
+//   { t: 'left' }                                         // ack of lobby:leave
 //   { t: 'state',    ...publicState, presence, isHost }
 //   { t: 'ping',     sentAt }                             // heartbeat
 //   { t: 'error',    message }
@@ -63,6 +65,13 @@ const HEARTBEAT = {
 };
 
 const RATE_LIMIT = { capacity: 30, refillRate: 2, refillIntervalMs: 1000 };
+// The whole e2e suite shares one long-lived gateway and one per-IP bucket, so a
+// production-tight limit produces false "rate limit exceeded" failures under the
+// suite's combined load. RATE_LIMIT_CAPACITY lets the test webServer widen it.
+function resolveRateLimit() {
+  const cap = Number(process.env.RATE_LIMIT_CAPACITY);
+  return Number.isFinite(cap) && cap > 0 ? { ...RATE_LIMIT, capacity: cap } : RATE_LIMIT;
+}
 const SNAPSHOT_INTERVAL_MS = 60_000;
 
 const CONTENT_TYPES = {
@@ -208,10 +217,12 @@ function broadcastChat(room, msg) {
 
 // Core dispatch. Pure-ish: depends only on the manager and the session. Exported
 // for tests. Returns nothing; effects happen via session.send / broadcastRoom.
-export function handleMessage(manager, session, msg, logger = null) {
+export function handleMessage(manager, session, msg, logger = null, hooks = {}) {
+  const onLobbyChange = hooks.onLobbyChange ?? (() => {});
   try {
     switch (msg.t) {
       case 'lobby:list': {
+        hooks.watchLobby?.(session, msg.gameId);
         session.send({ t: 'rooms', rooms: manager.listRooms(msg.gameId) });
         return;
       }
@@ -219,18 +230,42 @@ export function handleMessage(manager, session, msg, logger = null) {
         const name = sanitizeName(msg.name); // throws → outer catch → error reply
         const room = manager.createRoom(msg.gameId, msg.options); // validateOptions may throw
         joinRoom(room, session, name);
+        onLobbyChange(room.gameId);
         return;
       }
       case 'lobby:join': {
         const name = sanitizeName(msg.name);
         const room = manager.getRoom(msg.code);
         joinRoom(room, session, name);
+        onLobbyChange(room.gameId);
         return;
       }
       case 'lobby:quickmatch': {
         const name = sanitizeName(msg.name);
         const room = manager.quickMatch(msg.gameId, msg.options);
         joinRoom(room, session, name);
+        onLobbyChange(room.gameId);
+        return;
+      }
+      case 'lobby:leave': {
+        // Explicit "back to lobby": unlike a socket close (which holds the seat
+        // for the reconnect grace window), this frees the seat now so the room
+        // opens up immediately, then re-sends this player the fresh room list.
+        const room = session.room;
+        if (!room) {
+          session.send({ t: 'left' });
+          return;
+        }
+        const gameId = room.gameId;
+        if (session.spectator) room.removeSpectator(session.key);
+        else room.removePlayer(session.playerId);
+        session.room = null;
+        session.spectator = false;
+        if (room.isEmpty) manager.deleteRoom(room.code);
+        else broadcastRoom(room);
+        session.send({ t: 'left' });
+        session.send({ t: 'rooms', rooms: manager.listRooms(gameId) });
+        onLobbyChange(gameId);
         return;
       }
       case 'lobby:spectate': {
@@ -245,11 +280,13 @@ export function handleMessage(manager, session, msg, logger = null) {
       case 'host:kick': {
         requireRoom(session).kick(session.playerId, msg.targetId);
         broadcastRoom(session.room);
+        onLobbyChange(session.room.gameId);
         return;
       }
       case 'host:lock': {
         requireRoom(session).lock(session.playerId, msg.locked);
         broadcastRoom(session.room);
+        onLobbyChange(session.room.gameId);
         return;
       }
       case 'host:start': {
@@ -381,8 +418,32 @@ export function createGateway({
   const snapshotStore = new SnapshotStore(snapshotsPath);
   let draining = false;
   const rateLimitMap = new Map();
+
+  // Lobby watchers: sessions that have asked for a game's room list get pushed a
+  // fresh `rooms` frame whenever that game's membership changes, so the open-room
+  // list stays live instead of only updating on an explicit refresh.
+  const lobbyWatchers = new Map(); // gameId -> Set<session>
+  function watchLobby(session, gameId) {
+    if (!gameId) return;
+    if (!lobbyWatchers.has(gameId)) lobbyWatchers.set(gameId, new Set());
+    lobbyWatchers.get(gameId).add(session);
+  }
+  function unwatchLobby(session) {
+    for (const set of lobbyWatchers.values()) set.delete(session);
+  }
+  function broadcastLobby(gameId) {
+    const watchers = lobbyWatchers.get(gameId);
+    if (!watchers || watchers.size === 0) return;
+    const frame = JSON.stringify({ t: 'rooms', rooms: manager.listRooms(gameId) });
+    for (const s of watchers) {
+      if (isOpen(s.client)) s.client.send(frame);
+      else watchers.delete(s);
+    }
+  }
+  const lobbyHooks = { onLobbyChange: broadcastLobby, watchLobby };
+  const rateLimit = resolveRateLimit();
   function getRateBucket(ip) {
-    if (!rateLimitMap.has(ip)) rateLimitMap.set(ip, new TokenBucket(RATE_LIMIT));
+    if (!rateLimitMap.has(ip)) rateLimitMap.set(ip, new TokenBucket(rateLimit));
     return rateLimitMap.get(ip);
   }
 
@@ -519,17 +580,23 @@ export function createGateway({
       if (msg.t === 'lobby:list' && msg.gameId) getFunnel(msg.gameId).lobbyViews++;
       if (msg.t === 'lobby:create' || msg.t === 'lobby:quickmatch') {
         const prevSize = manager.rooms.size;
-        handleMessage(manager, session, msg, log);
+        handleMessage(manager, session, msg, log, lobbyHooks);
         if (manager.rooms.size > prevSize && msg.gameId) {
           getFunnel(msg.gameId).roomsCreated++;
           totalRoomsCreated++;
         }
         return;
       }
-      handleMessage(manager, session, msg, log);
+      handleMessage(manager, session, msg, log, lobbyHooks);
     });
-    ws.on('close', () => leave(manager, session));
-    ws.on('error', () => leave(manager, session));
+    ws.on('close', () => {
+      unwatchLobby(session);
+      leave(manager, session, broadcastLobby);
+    });
+    ws.on('error', () => {
+      unwatchLobby(session);
+      leave(manager, session, broadcastLobby);
+    });
   });
 
   // The single heartbeat clock. Each tick pings every connected socket and runs
@@ -620,9 +687,10 @@ export function runHeartbeat(manager, broadcast, opts, now = Date.now()) {
 // resumes cleanly. The heartbeat reaps the seat only after the socket has been
 // silent past DEAD_MS, and the turn timer auto-acts for them meanwhile so the
 // game never stalls. We just mark the socket closed so presence reflects it.
-function leave(manager, session) {
+function leave(manager, session, onLobbyChange = () => {}) {
   const room = session.room;
   if (!room) return;
+  const gameId = room.gameId;
   if (session.spectator) {
     room.removeSpectator(session.key);
   } else {
@@ -632,6 +700,7 @@ function leave(manager, session) {
   if (room.isEmpty) manager.deleteRoom(room.code);
   else broadcastRoom(room);
   session.room = null;
+  onLobbyChange(gameId);
 }
 
 export { RoomManager, adapters };

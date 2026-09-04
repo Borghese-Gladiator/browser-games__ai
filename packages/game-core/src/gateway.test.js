@@ -212,6 +212,65 @@ describe('gateway central validation', () => {
   });
 });
 
+describe('gateway lobby leave + live list', () => {
+  let manager;
+  beforeEach(() => {
+    manager = new RoomManager({ test: adapter });
+  });
+
+  it('lobby:leave frees the seat and acks with left + fresh rooms', () => {
+    const host = platformSession();
+    handleMessage(manager, host, { t: 'lobby:create', gameId: 'test', name: 'Alice' });
+    const guest = platformSession();
+    const code = host.sent.find((m) => m.t === 'joined').code;
+    handleMessage(manager, guest, { t: 'lobby:join', gameId: 'test', code, name: 'Bob' });
+    const room = manager.getRoom(code);
+    expect(room.members.size).toBe(2);
+
+    guest.sent.length = 0;
+    handleMessage(manager, guest, { t: 'lobby:leave' });
+
+    expect(room.members.has(guest.playerId)).toBe(false);
+    expect(room.members.size).toBe(1);
+    expect(guest.room).toBeNull();
+    expect(guest.sent.some((m) => m.t === 'left')).toBe(true);
+    expect(guest.sent.at(-1)).toMatchObject({ t: 'rooms' });
+  });
+
+  it('lobby:leave on the last member deletes the room', () => {
+    const host = platformSession();
+    handleMessage(manager, host, { t: 'lobby:create', gameId: 'test', name: 'Alice' });
+    const code = host.sent.find((m) => m.t === 'joined').code;
+    handleMessage(manager, host, { t: 'lobby:leave' });
+    expect(manager.rooms.has(code)).toBe(false);
+  });
+
+  it('pushes a fresh rooms frame to lobby watchers on membership change', () => {
+    const watcher = platformSession();
+    const hooks = { onLobbyChange: broadcastLobby, watchLobby };
+    // A watcher set: gameId -> Set<session>, mirroring the gateway closure.
+    const watchers = new Map();
+    function watchLobby(session, gameId) {
+      if (!watchers.has(gameId)) watchers.set(gameId, new Set());
+      watchers.get(gameId).add(session);
+    }
+    function broadcastLobby(gameId) {
+      const frame = JSON.stringify({ t: 'rooms', rooms: manager.listRooms(gameId) });
+      for (const s of watchers.get(gameId) ?? []) s.client.send(frame);
+    }
+
+    handleMessage(manager, watcher, { t: 'lobby:list', gameId: 'test' }, null, hooks);
+    watcher.sent.length = 0;
+
+    const creator = platformSession();
+    handleMessage(manager, creator, { t: 'lobby:create', gameId: 'test', name: 'Alice' }, null, hooks);
+
+    const pushed = watcher.sent.filter((m) => m.t === 'rooms');
+    expect(pushed.length).toBe(1);
+    expect(pushed[0].rooms).toHaveLength(1);
+  });
+});
+
 describe('runHeartbeat', () => {
   // Adapter with a turn pointer so timeout enforcement is observable.
   const turnAdapter = {

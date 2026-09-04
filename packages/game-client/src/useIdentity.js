@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react';
 import { encodePlayerCode, decodePlayerCode, playerColor } from '@portal/shared/identity';
 
 const STORAGE_KEY = 'browser-games:playerId';
+const NAME_KEY = 'browser-games:playerName';
 
 export function useIdentity() {
   const [playerId] = useState(() => {
@@ -16,6 +17,14 @@ export function useIdentity() {
     localStorage.setItem(STORAGE_KEY, fresh);
     return fresh;
   });
+
+  // Last-used display name, so a player who leaves/rejoins or reloads doesn't
+  // have to retype it. Persisted through setName.
+  const [name, setNameState] = useState(() => localStorage.getItem(NAME_KEY) || '');
+  const setName = useCallback((next) => {
+    setNameState(next);
+    if (next) localStorage.setItem(NAME_KEY, next);
+  }, []);
 
   const importIdentity = useCallback((code) => {
     try {
@@ -29,6 +38,8 @@ export function useIdentity() {
 
   return {
     playerId,
+    name,
+    setName,
     color: playerColor(playerId),
     playerCode: encodePlayerCode(playerId),
     importIdentity,
