@@ -99,7 +99,7 @@ describe('replaceFlowers', () => {
     expect(result.events.every((event) => event.type === 'FLOWER_REPLACED')).toBe(true);
   });
 
-  it('reports an exhaustive draw when the replacement supply is empty', () => {
+  it('reveals the flower and reports an exhaustive draw when the replacement supply is empty', () => {
     const base = createGame(config());
     const emptyReplacement: GameState = {
       ...base,
@@ -119,10 +119,11 @@ describe('replaceFlowers', () => {
       return;
     }
     expect(result.exhausted).toBe(true);
-    expect(result.events).toHaveLength(0);
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0].type).toBe('FLOWER_REPLACED');
     const held = getPlayer(result.state, 0);
-    expect(held.hand.some((tile) => tile.suit === 'flower')).toBe(true);
-    expect(held.hand).toHaveLength(2);
-    expect(held.flowers).toHaveLength(0);
+    expect(held.hand.some((tile) => tile.suit === 'flower')).toBe(false);
+    expect(held.hand).toHaveLength(1);
+    expect(held.flowers.map((tile) => tile.flower)).toEqual(['spring']);
   });
 });
