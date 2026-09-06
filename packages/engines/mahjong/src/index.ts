@@ -11,3 +11,4 @@ export * from './hand/winning-patterns/standard.js';
 export * from './hand/winning-patterns/seven-pairs.js';
 export * from './hand/winning.js';
 export * from './hand/waits.js';
+export * from './game/index.js';
