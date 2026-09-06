@@ -12,6 +12,7 @@ export * from './hand/winning-patterns/standard.js';
 export * from './hand/winning-patterns/seven-pairs.js';
 export * from './hand/winning.js';
 export * from './hand/waits.js';
+export * from './scoring/scoring.js';
 export * from './game/index.js';
 export * from './assertValidGameState.js';
 export * from './ai/random.js';
