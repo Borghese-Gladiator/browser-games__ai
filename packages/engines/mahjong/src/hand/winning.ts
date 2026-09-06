@@ -2,7 +2,7 @@ import type { Tile } from '../tiles/tile.js';
 import { tileToKind } from '../tiles/tile-kind.js';
 import type { Meld } from '../tiles/meld.js';
 import type { TaiwaneseRules } from '../rules/taiwanese.js';
-import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.js';
+import { DEFAULT_TAIWANESE_RULES, winningHandSize } from '../rules/taiwanese.js';
 import type { TileCounts } from './counts.js';
 import { toTileCounts } from './counts.js';
 import type { DecomposedMeld, HandDecomposition, WinningHandResult } from './decomposition.js';
@@ -10,6 +10,15 @@ import { decomposeStandard } from './winning-patterns/standard.js';
 import { decomposeSevenPairs } from './winning-patterns/seven-pairs.js';
 
 const TOTAL_MELDS = 5;
+const TILES_PER_EXPOSED_MELD = 3;
+
+function totalTileCount(counts: TileCounts): number {
+  let total = 0;
+  for (const count of counts.values()) {
+    total += count;
+  }
+  return total;
+}
 
 export interface HandInput {
   readonly concealed: readonly Tile[];
@@ -30,6 +39,11 @@ export function winningDecompositionsFromCounts(
   rules: TaiwaneseRules,
 ): HandDecomposition[] {
   const decompositions: HandDecomposition[] = [];
+  const target = winningHandSize(rules);
+  const handSize = totalTileCount(counts) + exposed.length * TILES_PER_EXPOSED_MELD;
+  if (handSize !== target) {
+    return decompositions;
+  }
   const meldsNeeded = TOTAL_MELDS - exposed.length;
   for (const decomposition of decomposeStandard(counts, meldsNeeded)) {
     decompositions.push({

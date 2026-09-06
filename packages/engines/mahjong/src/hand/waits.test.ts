@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { findWaits } from '../waits.js';
-import { meld, tiles } from './helpers.js';
+import { findWaits } from './waits.js';
+import { meld, tiles } from './test-helpers.js';
 
 describe('findWaits', () => {
   it('finds the pair wait of a standard hand', () => {
@@ -19,12 +19,12 @@ describe('findWaits', () => {
     expect(waits).toEqual(['1s', '4s']);
   });
 
-  it('finds the completing tile of a seven-pairs wait', () => {
+  it('finds the triplet waits of an eight-pairs tenpai', () => {
     const waits = findWaits({
-      concealed: tiles('1m 1m 2m 2m 3m 3m 4m 4m 5m 5m 6m 6m 7m 7m 8m'),
+      concealed: tiles('1m 1m 2m 2m 3m 3m 4m 4m 5m 5m 6m 6m 7m 7m 8m 8m'),
       exposedMelds: [],
     });
-    expect(waits).toEqual(['8m']);
+    expect(waits).toEqual(['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m']);
   });
 
   it('respects exposed melds when computing waits', () => {

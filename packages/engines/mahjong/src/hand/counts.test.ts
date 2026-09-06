@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { toTileCounts } from '../counts.js';
-import { tiles } from './helpers.js';
+import { toTileCounts } from './counts.js';
+import { tiles } from './test-helpers.js';
 
 describe('toTileCounts', () => {
   it('counts each tile kind', () => {
