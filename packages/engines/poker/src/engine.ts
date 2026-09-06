@@ -10,7 +10,7 @@ import {
   compareHands,
   type Card,
   type HandValue,
-} from './handEval.js';
+} from './handEval.ts';
 
 export const RAISE_AMOUNT = 100;
 const MAX_PLAYERS = 4;
