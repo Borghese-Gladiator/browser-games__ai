@@ -6,5 +6,13 @@
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run src",
+    "typecheck": "tsc --noEmit -p ../../../tsconfig.json",
+    "simulate": "vite-node src/simulation.cli.ts"
+  },
+  "devDependencies": {
+    "fast-check": "^4.9.0"
   }
 }
