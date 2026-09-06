@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "src/engine.js",
+  "main": "src/engine.ts",
   "exports": {
-    ".": "./src/engine.js"
+    ".": "./src/engine.ts"
   }
 }

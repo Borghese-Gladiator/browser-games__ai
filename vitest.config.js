@@ -14,28 +14,40 @@ export default defineConfig({
     alias: {
       "@browser-games/engine-poker/handEval": resolve(
         __dirname,
-        "packages/engines/poker/src/handEval.js",
+        "packages/engines/poker/src/handEval.ts",
       ),
       "@browser-games/engine-poker": resolve(
         __dirname,
-        "packages/engines/poker/src/engine.js",
+        "packages/engines/poker/src/engine.ts",
       ),
       "@browser-games/engine-sheng-ji": resolve(
         __dirname,
-        "packages/engines/sheng-ji/src/engine.js",
+        "packages/engines/sheng-ji/src/engine.ts",
       ),
       "@browser-games/engine-reversi": resolve(
         __dirname,
-        "packages/engines/reversi/src/engine.js",
+        "packages/engines/reversi/src/engine.ts",
       ),
-      "@portal/shared/version": resolve(__dirname, "packages/shared/src/version.js"),
-      "@portal/shared/validate": resolve(__dirname, "packages/shared/src/validate.js"),
-      "@portal/shared/rateLimit": resolve(__dirname, "packages/shared/src/rateLimit.js"),
-      "@portal/shared/sanitize": resolve(__dirname, "packages/shared/src/sanitize.js"),
-      "@portal/shared/leaderboard": resolve(__dirname, "packages/shared/src/leaderboard.js"),
-      "@portal/shared/identity": resolve(__dirname, "packages/shared/src/identity.js"),
-      "@portal/shared/metrics": resolve(__dirname, "packages/shared/src/metrics.js"),
-      "@portal/shared": resolve(__dirname, "packages/shared/src/registry.js"),
+      "@browser-games/engine-president": resolve(
+        __dirname,
+        "packages/engines/president/src/engine.ts",
+      ),
+      "@browser-games/game-core": resolve(
+        __dirname,
+        "packages/game-core/src/gateway.js",
+      ),
+      "@browser-games/game-client": resolve(
+        __dirname,
+        "packages/game-client/src",
+      ),
+      "@portal/shared/version": resolve(__dirname, "packages/shared/src/version.ts"),
+      "@portal/shared/validate": resolve(__dirname, "packages/shared/src/validate.ts"),
+      "@portal/shared/rateLimit": resolve(__dirname, "packages/shared/src/rateLimit.ts"),
+      "@portal/shared/sanitize": resolve(__dirname, "packages/shared/src/sanitize.ts"),
+      "@portal/shared/leaderboard": resolve(__dirname, "packages/shared/src/leaderboard.ts"),
+      "@portal/shared/identity": resolve(__dirname, "packages/shared/src/identity.ts"),
+      "@portal/shared/metrics": resolve(__dirname, "packages/shared/src/metrics.ts"),
+      "@portal/shared": resolve(__dirname, "packages/shared/src/registry.ts"),
     },
   },
   test: {

@@ -17,15 +17,21 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "rm -rf .state/e2e && playwright test",
-    "check": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && vitest run",
     "check:all": "vitest run && npm run test:e2e",
     "clean:state": "rm -rf snapshots .state outcomes.json achievements.json"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",
     "@testing-library/react": "^16.1.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/ws": "^8.5.13",
     "@vitejs/plugin-react": "^4.3.4",
     "jsdom": "^25.0.0",
+    "typescript": "^5.7.2",
     "vite": "^6.0.0",
     "vitest": "^2.1.0"
   },
