@@ -25,11 +25,28 @@ function seqNumbers(state: GameState): number[] {
   return state.events.map((event) => event.seq);
 }
 
+function passAllClaims(state: GameState): GameState {
+  let current = state;
+  while (current.pendingClaim && current.pendingClaim.pending.length > 0) {
+    const seat = current.pendingClaim.pending[0];
+    const result = applyAction(current, { type: 'PASS_CLAIM', player: seat });
+    if (!result.ok) {
+      throw new Error('pass failed');
+    }
+    current = result.state;
+  }
+  return current;
+}
+
 function playToTerminal(state: GameState): GameState {
   let current = state;
   let guard = 0;
   while (current.phase !== 'FINISHED' && guard < 1000) {
     guard += 1;
+    if (current.pendingClaim) {
+      current = passAllClaims(current);
+      continue;
+    }
     const player = current.turn.player;
     if (current.turn.phase === 'NEEDS_DISCARD') {
       const held = getPlayer(current, player);
@@ -140,7 +157,7 @@ describe('event sequence numbers', () => {
     if (!discarded.ok) {
       return;
     }
-    state = discarded.state;
+    state = passAllClaims(discarded.state);
     const drawn = applyAction(state, { type: 'DRAW', player: 1 });
     expect(drawn.ok).toBe(true);
     if (!drawn.ok) {

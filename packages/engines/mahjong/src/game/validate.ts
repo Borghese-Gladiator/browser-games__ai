@@ -1,9 +1,11 @@
+import type { ClaimType } from '../rules/claims.js';
 import type { GameAction } from './actions.js';
 import type { GameState, PlayerId } from './state.js';
 import type { GameError } from './errors.js';
 import type { TurnPhase } from './turn.js';
 import { getPlayer } from './state.js';
 import { gameError } from './errors.js';
+import { chowCombos, sameKind, windowOption } from './claim.js';
 
 export function requireTurn(
   state: GameState,
@@ -26,6 +28,33 @@ export function requireTurn(
     );
   }
   return null;
+}
+
+export function requireClaimWindow(
+  state: GameState,
+  action: GameAction,
+  player: PlayerId,
+): GameError | null {
+  if (!state.pendingClaim) {
+    return gameError('NO_CLAIM_WINDOW', action, 'no claim window is open');
+  }
+  if (!state.pendingClaim.pending.includes(player)) {
+    return gameError(
+      'NOT_ELIGIBLE_TO_CLAIM',
+      action,
+      `player ${player} is not an outstanding claimant`,
+    );
+  }
+  return null;
+}
+
+function eligibleForKind(state: GameState, player: PlayerId, kind: ClaimType): boolean {
+  const window = state.pendingClaim;
+  if (!window) {
+    return false;
+  }
+  const option = windowOption(window, player);
+  return option !== undefined && option.kinds.includes(kind);
 }
 
 export function validateAction(state: GameState, action: GameAction): GameError | null {
@@ -67,7 +96,87 @@ export function validateAction(state: GameState, action: GameAction): GameError 
       if (state.phase !== 'PLAYING') {
         return gameError('WRONG_PHASE', action, 'DECLARE_WIN is only valid during play');
       }
+      if (state.pendingClaim) {
+        const windowError = requireClaimWindow(state, action, action.player);
+        if (windowError) {
+          return windowError;
+        }
+        if (!eligibleForKind(state, action.player, 'WIN')) {
+          return gameError('INVALID_CLAIM', action, `player ${action.player} cannot win this discard`);
+        }
+        return null;
+      }
       return requireTurn(state, action, action.player, 'NEEDS_DISCARD');
+    }
+    case 'CLAIM_CHOW': {
+      if (state.phase !== 'PLAYING') {
+        return gameError('WRONG_PHASE', action, 'CLAIM_CHOW is only valid during play');
+      }
+      const windowError = requireClaimWindow(state, action, action.player);
+      if (windowError) {
+        return windowError;
+      }
+      if (!eligibleForKind(state, action.player, 'CHOW')) {
+        return gameError('INVALID_CLAIM', action, `player ${action.player} cannot chow this discard`);
+      }
+      const discard = state.pendingClaim!.discard;
+      const held = getPlayer(state, action.player).hand;
+      const requested = action.tiles.map((tile) => tile.id).sort();
+      const valid = chowCombos(held, discard.tile).some((combo) => {
+        const ids = combo.map((tile) => tile.id).sort();
+        return ids.length === requested.length && ids.every((id, index) => id === requested[index]);
+      });
+      if (!valid) {
+        return gameError('INVALID_CLAIM', action, 'the named tiles do not form a chow with the discard');
+      }
+      return null;
+    }
+    case 'CLAIM_PONG': {
+      if (state.phase !== 'PLAYING') {
+        return gameError('WRONG_PHASE', action, 'CLAIM_PONG is only valid during play');
+      }
+      const windowError = requireClaimWindow(state, action, action.player);
+      if (windowError) {
+        return windowError;
+      }
+      if (!eligibleForKind(state, action.player, 'PONG')) {
+        return gameError('INVALID_CLAIM', action, `player ${action.player} cannot pong this discard`);
+      }
+      return null;
+    }
+    case 'CLAIM_KONG': {
+      if (state.phase !== 'PLAYING') {
+        return gameError('WRONG_PHASE', action, 'CLAIM_KONG is only valid during play');
+      }
+      if (action.concealed) {
+        const turnError = requireTurn(state, action, action.player, 'NEEDS_DISCARD');
+        if (turnError) {
+          return turnError;
+        }
+        if (!action.tile) {
+          return gameError('INVALID_KONG', action, 'a concealed kong needs a tile');
+        }
+        const held = getPlayer(state, action.player).hand;
+        const matches = held.filter((tile) => sameKind(tile, action.tile!)).length;
+        if (matches < 4) {
+          return gameError('INVALID_KONG', action, 'a concealed kong needs four matching tiles');
+        }
+        return null;
+      }
+      const windowError = requireClaimWindow(state, action, action.player);
+      if (windowError) {
+        return windowError;
+      }
+      if (!eligibleForKind(state, action.player, 'KONG')) {
+        return gameError('INVALID_KONG', action, `player ${action.player} cannot kong this discard`);
+      }
+      return null;
+    }
+    case 'PASS_CLAIM': {
+      if (state.phase !== 'PLAYING') {
+        return gameError('WRONG_PHASE', action, 'PASS_CLAIM is only valid during play');
+      }
+      return requireClaimWindow(state, action, action.player);
     }
     default: {
       const unknown = action as GameAction;

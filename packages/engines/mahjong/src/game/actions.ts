@@ -21,4 +21,35 @@ export interface DeclareWinAction {
   readonly player: PlayerId;
 }
 
-export type GameAction = DealAction | DrawAction | DiscardAction | DeclareWinAction;
+export interface ClaimChowAction {
+  readonly type: 'CLAIM_CHOW';
+  readonly player: PlayerId;
+  readonly tiles: readonly [Tile, Tile];
+}
+
+export interface ClaimPongAction {
+  readonly type: 'CLAIM_PONG';
+  readonly player: PlayerId;
+}
+
+export interface ClaimKongAction {
+  readonly type: 'CLAIM_KONG';
+  readonly player: PlayerId;
+  readonly concealed: boolean;
+  readonly tile?: Tile;
+}
+
+export interface PassClaimAction {
+  readonly type: 'PASS_CLAIM';
+  readonly player: PlayerId;
+}
+
+export type GameAction =
+  | DealAction
+  | DrawAction
+  | DiscardAction
+  | DeclareWinAction
+  | ClaimChowAction
+  | ClaimPongAction
+  | ClaimKongAction
+  | PassClaimAction;

@@ -6,4 +6,6 @@ export * from './errors.js';
 export * from './result.js';
 export * from './validate.js';
 export * from './deal.js';
+export * from './claim.js';
+export * from './getAvailableActions.js';
 export * from './reducer.js';
