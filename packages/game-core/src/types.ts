@@ -61,11 +61,19 @@ export interface Adapter<TState extends EngineState> {
 export type AdapterTable = Record<string, Adapter<EngineState>>;
 
 // Minimal transport shape so tests inject a fake socket. `emit` matches the
-// Socket.IO socket surface; a null client means a held seat with no live socket.
+// Socket.IO socket surface; `join` lets the gateway put a socket into its
+// game:CODE and player:PLAYERID rooms. A null client means a held seat with no
+// live socket.
 export type SocketLike = {
   emit(event: string, payload: unknown): void;
+  join?(room: string): void;
+  leave?(room: string): void;
+  connected?: boolean;
   readyState?: number;
 } | null;
+
+export type OutboundMessage = { t: string; [k: string]: unknown };
+export type InboundMessage = { t: string; [k: string]: unknown };
 
 export interface Member {
   id: string;

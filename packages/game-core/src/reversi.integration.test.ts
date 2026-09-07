@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { RoomManager } from './rooms.js';
+import type { Room } from './rooms.js';
 import { handleMessage } from './gateway.js';
 import { adapters } from './games.js';
+import type { EngineState } from './types.ts';
 import type { ReversiState } from '@browser-games/engine-reversi';
 
 // Drives the real reversi adapter through the gateway's handleMessage with
@@ -13,9 +15,10 @@ type Frame = Record<string, unknown>;
 function fakeClient() {
   const sent: Frame[] = [];
   return {
-    readyState: 1,
-    emit: () => {},
-    send: (raw: string) => sent.push(JSON.parse(raw) as Frame),
+    connected: true,
+    emit: (_event: string, payload: Frame) => { sent.push(payload); },
+    join: () => {},
+    leave: () => {},
     sent,
     last: () => sent[sent.length - 1],
     ofType: (t: string) => sent.filter((m) => m.t === t),
@@ -30,13 +33,13 @@ function session(playerId: string) {
   return {
     client,
     playerId,
-    room: null as unknown,
+    room: null as Room<EngineState> | null,
     spectator: false,
     get key(): string {
       return this.spectator ? `spec:${this.playerId}` : this.playerId;
     },
-    send(obj: unknown) {
-      this.client.send(JSON.stringify(obj));
+    send(obj: Frame) {
+      this.client.emit(String(obj.t), obj);
     },
   };
 }

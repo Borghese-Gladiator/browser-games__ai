@@ -7,27 +7,33 @@ import type { Adapter, EngineState, GameEngine } from './types.ts';
 type Frame = Record<string, unknown>;
 
 interface FakeSession {
-  client: { readyState: number; send: (raw: string) => void };
+  client: { connected: boolean; emit: (event: string, payload: Frame) => void };
   playerId: string;
   room: any;
   sent: Frame[];
-  spectator?: boolean;
-  readonly key?: string;
-  send(obj: unknown): void;
+  spectator: boolean;
+  readonly key: string;
+  send(obj: Frame): void;
 }
 
-// Recreates the gateway's Session shape with a capturing fake client so the
-// lobby/game dispatch can be tested without a real WebSocket.
+// Recreates the gateway's Session shape with a capturing fake Socket.IO socket so
+// the lobby/game dispatch can be tested without a real transport. Both direct
+// replies (session.send) and broadcasts (member.client.emit) land in `sent`.
 function fakeSession(): FakeSession {
   const sent: Frame[] = [];
-  const client = { readyState: 1, send: (raw: string) => { sent.push(JSON.parse(raw) as Frame); } };
+  const client = { connected: true, emit: (_event: string, payload: Frame) => { sent.push(payload); } };
+  const playerId = crypto.randomUUID();
   return {
     client,
-    playerId: crypto.randomUUID(),
+    playerId,
     room: null,
     sent,
-    send(obj: unknown) {
-      client.send(JSON.stringify(obj));
+    spectator: false,
+    get key() {
+      return this.spectator ? `spec:${this.playerId}` : this.playerId;
+    },
+    send(obj: Frame) {
+      client.emit(String(obj.t), obj);
     },
   };
 }
@@ -125,18 +131,9 @@ describe('gateway handleMessage', () => {
   });
 });
 
-// gateway sessions carry a `spectator` flag and a derived `key`; the real
-// Session class lives in gateway.js, so the test session mirrors its shape.
-function platformSession(): FakeSession {
-  const s = fakeSession();
-  s.spectator = false;
-  Object.defineProperty(s, 'key', {
-    get(this: FakeSession) {
-      return this.spectator ? `spec:${this.playerId}` : this.playerId;
-    },
-  });
-  return s;
-}
+// fakeSession already carries the spectator flag and derived key the platform
+// messages rely on, so platformSession is just an alias.
+const platformSession = fakeSession;
 
 describe('gateway platform messages', () => {
   let manager: RoomManager;
@@ -292,8 +289,7 @@ describe('gateway lobby leave + live list', () => {
       watchers.get(gameId)!.add(session);
     }
     function broadcastLobby(gameId: string) {
-      const frame = JSON.stringify({ t: 'rooms', rooms: manager.listRooms(gameId) });
-      for (const s of watchers.get(gameId) ?? []) s.client.send(frame);
+      for (const s of watchers.get(gameId) ?? []) s.send({ t: 'rooms', rooms: manager.listRooms(gameId) });
     }
     const hooks = { onLobbyChange: broadcastLobby, watchLobby };
 
@@ -352,7 +348,7 @@ describe('runHeartbeat', () => {
     room.recordPong('g', { now: 9000 });
 
     const broadcasts: string[] = [];
-    runHeartbeat(m, (rm: any) => broadcasts.push(rm.code), { deadAfterMs: 100000, graceMs: 1000, forfeitMs: 60000 }, 9000);
+    runHeartbeat(m, (rm: any) => broadcasts.push(rm.code), { DEAD_MS: 100000, GRACE_MS: 1000, FORFEIT_MS: 60000 }, 9000);
 
     expect(room.state.folded).toContain('h');
     expect(broadcasts).toContain(room.code);
@@ -363,10 +359,10 @@ describe('runHeartbeat', () => {
     const room = m.createRoom('test');
     room.addPlayer('h', 'Host', liveClient, { now: 0 });
     // First tick reaps the dead human and marks the room empty (t=5000).
-    runHeartbeat(m, () => {}, { deadAfterMs: 100, graceMs: 50, forfeitMs: 1000 }, 5000);
+    runHeartbeat(m, () => {}, { DEAD_MS: 100, GRACE_MS: 50, FORFEIT_MS: 1000 }, 5000);
     expect(m.rooms.size).toBe(1);
     // A later tick past the grace window collects it.
-    runHeartbeat(m, () => {}, { deadAfterMs: 100, graceMs: 50, forfeitMs: 1000 }, 5000 + ROOM_GRACE_MS);
+    runHeartbeat(m, () => {}, { DEAD_MS: 100, GRACE_MS: 50, FORFEIT_MS: 1000 }, 5000 + ROOM_GRACE_MS);
     expect(m.rooms.size).toBe(0);
   });
 
@@ -384,7 +380,7 @@ describe('runHeartbeat', () => {
     room.recordPong('g', { now: 9000 });
 
     expect(() =>
-      runHeartbeat(m, () => {}, { deadAfterMs: 100000, graceMs: 1000, forfeitMs: 60000 }, 9000),
+      runHeartbeat(m, () => {}, { DEAD_MS: 100000, GRACE_MS: 1000, FORFEIT_MS: 60000 }, 9000),
     ).not.toThrow();
   });
 });
