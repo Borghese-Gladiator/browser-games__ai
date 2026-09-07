@@ -1,9 +1,10 @@
-export type PlayerType = 'guest' | 'claimed';
-
-export interface DecodedPlayerCode {
+// Portable identity code. It now bundles the secret reconnectToken alongside the
+// public playerId so a player carries both to another device in one string,
+// replacing the old plaintext guest-only code.
+export interface PlayerCode {
   playerId: string;
+  reconnectToken: string;
   name: string;
-  type: PlayerType;
 }
 
 export function generatePlayerId(): string {
@@ -19,23 +20,27 @@ export function playerColor(playerId: string): string {
   return `hsl(${hue}, 70%, 55%)`;
 }
 
-export function encodePlayerCode(playerId: string, name = ''): string {
-  return btoa(JSON.stringify({ v: 1, id: playerId, n: name, type: 'guest' }));
+export function encodePlayerCode(playerId: string, reconnectToken: string, name = ''): string {
+  return btoa(JSON.stringify({ v: 2, id: playerId, rt: reconnectToken, n: name }));
 }
 
-export function decodePlayerCode(code: string): DecodedPlayerCode {
-  let parsed: any;
+export function decodePlayerCode(code: string): PlayerCode {
+  let parsed: { v?: number; id?: unknown; rt?: unknown; n?: unknown };
   try {
     parsed = JSON.parse(atob(code));
   } catch {
     throw new Error('invalid code');
   }
-  if (parsed.v !== 1 || typeof parsed.id !== 'string' || !parsed.id) {
+  if (
+    parsed.v !== 2 ||
+    typeof parsed.id !== 'string' || !parsed.id ||
+    typeof parsed.rt !== 'string' || !parsed.rt
+  ) {
     throw new Error('invalid code');
   }
   return {
     playerId: parsed.id,
+    reconnectToken: parsed.rt,
     name: typeof parsed.n === 'string' ? parsed.n : '',
-    type: parsed.type === 'claimed' ? 'claimed' : 'guest',
   };
 }

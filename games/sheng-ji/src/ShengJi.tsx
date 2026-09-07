@@ -27,7 +27,6 @@ export function ShengJi() {
   const {
     rooms,
     room,
-    gameState,
     error,
     listRooms,
     createRoom,
@@ -39,7 +38,10 @@ export function ShengJi() {
     send,
     restart,
     needsRefresh,
-  }: any = useGameSocket("sheng-ji");
+    gameState: rawGameState,
+  } = useGameSocket("sheng-ji");
+  // Engine-specific per-seat view; read through a permissive alias.
+  const gameState = rawGameState as Record<string, any> | null;
 
   if (!room || !gameState) {
     return (

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isYourTurn } from './yourTurn.js';
+import { isYourTurn } from './yourTurn.ts';
 
 describe('isYourTurn', () => {
   it('fires when the active seat transitions to mySeat', () => {

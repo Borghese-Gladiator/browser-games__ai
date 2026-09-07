@@ -1,63 +1,78 @@
-# Plan: Repo cleanup, agent docs, and lobby overhaul
-
-Supersedes the historical planning log (moved to `docs/history.md`).
+# Plan: game-client TypeScript + secret reconnectToken
 
 ## Brief
-Four workstreams, low-risk → high-risk:
-1. **Cleanup + validation** — remove runtime-state cruft from the tree, gitignore
-   it, give the repo one health command, and make e2e start from clean state.
-2. **Agent docs** — lean README + new `AGENTS.md`; move the deep adapter contract
-   and planning history into `docs/`.
-3. **Lobby logic (F1–F4)** — quick-match-with-bots primary CTA, remember name,
-   live room-list broadcast, explicit leave.
-4. **Lobby UI** — restructure `Lobby.jsx` + `lobby.css` around one primary CTA,
-   a private-lobby block, and a live public-tables list.
+Convert `packages/game-client/src` from `.js`/`.jsx` to `.ts`/`.tsx`. Give
+`useGameSocket` a real exported return type. Split identity into a public
+`playerId` and a secret `reconnectToken`. Mint the token server-side with
+`crypto.randomBytes`, return it only to the owning client, store it in
+localStorage beside the id, and verify it with a timing-safe compare before a
+seat restore or any host action. Never broadcast the token. Persist the room
+code and auto-rejoin on connect. Keep the protocol-version refresh banner.
+Remove the `joinIntent` useRef path.
+
+Note: `game-core` and `shared` are already TypeScript and already use the
+Socket.IO transport. The `game-client` package is the only `.js`/`.jsx` package
+left, so the Socket.IO client migration is already present. This slice adds the
+reconnectToken/identity work and the TS conversion.
 
 ## Changes
 
-### 1. Cleanup + validation
-- Delete the stray empty `${QA_SPEC_DIR}/` directory.
-- Delete leftover untracked `snapshots/*.json` (leftover local rooms).
-- `.gitignore`: add `snapshots/` and stray-var guard.
-- `package.json`: add `check` script (unit tests) and `check:all` (unit + e2e);
-  add a `clean:state` script that removes runtime state.
-- `bin/dev-server.js`: read `OUTCOMES_PATH`, `ACHIEVEMENTS_PATH`, `SNAPSHOTS_PATH`
-  from env and pass to `createGateway` (already parameterized) — lets e2e point
-  at a scratch dir.
-- `playwright.config.js`: point the gateway at a throwaway state dir per run so
-  the suite starts hermetic (TODO C4/#4).
+### Server (game-core + shared)
+- `packages/shared/src/identity.ts`: `encodePlayerCode(playerId, reconnectToken,
+  name?)` and `decodePlayerCode -> { playerId, reconnectToken, name }`. Drop the
+  plaintext guest-only code. Add `PlayerCode` type.
+- `packages/game-core/src/reconnectToken.ts` (new): `mintReconnectToken()` via
+  `crypto.randomBytes`; `verifyReconnectToken(expected, presented)` via
+  `crypto.timingSafeEqual`, false on null/length mismatch.
+- `packages/game-core/src/rooms.ts`: store a secret token per member in a private
+  `_tokens` map. Mint on first seat. On reconnect verify the presented token
+  (timing-safe) before restoring the held seat, else throw. Add `tokenFor` and
+  `assertOwner`. Adopt-and-mint when a snapshot-restored seat has no stored
+  token. Keep the token out of `summary`/`presence`/`viewFor`/`snapshot`.
+- `packages/game-core/src/socket.ts`: `Session` carries the presented
+  `reconnectToken`. `joinRoom` passes it to `addPlayer`, then sets
+  `session.reconnectToken` to the authoritative stored token and returns that
+  token to the owner only in `joined`. Host cases call `assertOwner`.
+  `registerSocketEvents` reads `playerId`+`reconnectToken` from
+  `socket.handshake.auth` (query fallback for playerId).
 
-### 2. Agent docs
-- Rewrite `README.md`: orientation + the four commands + one-paragraph "add a
-  game" pointer. ~60 lines, link out for depth.
-- New `AGENTS.md`: workspace map, where things live, validation commands, the
-  golden rules an agent needs (registry is source of truth; engines are pure;
-  one gateway; how to run/validate).
-- New `docs/adding-a-game.md`: the full adapter contract currently inline in
-  README.
-- Move `plan.md` planning history → `docs/history.md`.
+### Client (game-client)
+- Rename every `src/*.js` -> `*.ts` and `src/*.jsx` -> `*.tsx`.
+- `protocol.ts` (new): `RoomSummary`, `Presence`, `GameState`, `ChatMessage`,
+  `ServerMessage`, `ClientMessage`, `HandshakeAuth`.
+- `useGameSocket.types.ts` (new): `ConnectionStatus`, `JoinedRoom`,
+  `UseGameSocketApi`.
+- `useIdentity.ts`: add `reconnectToken`/`setReconnectToken` and
+  `lastRoom`/`setLastRoom`; `playerCode`/`importIdentity` carry the token.
+- `useGameSocket.ts`: connect with `auth: { playerId, reconnectToken }`;
+  auto-rejoin the persisted room on connect; persist token + room from `joined`;
+  clear room on `left`; remove `joinIntent`; typed return; keep banner.
+- `package.json`: repoint `exports` to `.ts`/`.tsx`; add `typescript` devDep and
+  `typecheck` script.
+- `tsconfig.json` (new): package typecheck config (noEmit, react-jsx, strict).
 
-### 3. Lobby logic
-- `useIdentity.js` (or Lobby): persist last-used name in localStorage; prefill.
-- Gateway: broadcast a fresh `rooms` frame to all lobby watchers of a game on
-  any membership change (create/join/leave/lock).
-- Add `lobby:leave` protocol + `leaveRoom` client action; free seat, return to
-  lobby, keep name.
-- Portal/Lobby: make quick-match the dominant CTA (bots fill), create/join
-  demoted.
-
-### 4. Lobby UI
-- Rebuild `Lobby.jsx` layout: hero Quick-Match card, "Private Lobby"
-  (host/join-by-code), "Public Tables" live list. One primary button.
-- `lobby.css`: match the mockups (dark cards, single accent CTA).
+### Games
+- `games/{poker,president,reversi,sheng-ji}/src/*.tsx`: drop the `: any` on the
+  `useGameSocket(...)` destructure; keep game-state field access permissive.
 
 ## Tests
 ### Unit
-- Existing ~250 vitest pass unchanged after cleanup/docs.
-- Lobby logic: new tests for name persistence, `rooms` re-broadcast on
-  membership change, `lobby:leave` frees the seat.
-### Manual (browser)
-- `npm run dev`; portal → poker: "Play now" fills bots and starts immediately.
-- Second tab creates a room → its code shows in the first tab's public list
-  without pressing Refresh (live broadcast).
-- Leave room → back to lobby, name still prefilled.
+- `packages/shared/src/identity.test.ts`: encode/decode round-trip with the
+  reconnectToken; throw on invalid input.
+- `packages/game-core/src/reconnectToken.test.ts` (new): mint uniqueness; verify
+  timing-safe true/false on match, mismatch, length, null.
+- `packages/game-core/src/rooms.test.ts`: mint on first seat; reject reconnect on
+  token mismatch; `assertOwner` guard.
+- `packages/game-core/src/gateway.test.ts`: fake session carries reconnectToken;
+  `joined` returns the token to the owner; host action guarded.
+- `packages/game-client/src/useGameSocket.test.ts` (new): outbox flush-on-connect
+  + de-dupe; handshake auth carries playerId+reconnectToken; auto-rejoin with the
+  persisted room code; `joined` persists the token.
+### Manual
+- `npm run dev`; open poker; create a room; reload the tab; confirm the same seat
+  resumes with private state, no manual room-code re-type.
+
+## Targeted checks
+- `cd packages/game-client && npx tsc --noEmit -p tsconfig.json` -> zero errors.
+- `npx vitest run packages/game-client` -> green.
+- `git diff` grep: `reconnectToken` never in a broadcast/summary/presence/view.

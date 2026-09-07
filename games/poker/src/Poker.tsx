@@ -14,7 +14,6 @@ export function Poker() {
     connectionStatus,
     rooms,
     room,
-    gameState,
     chatMessages,
     sendChat,
     error,
@@ -29,9 +28,13 @@ export function Poker() {
     send,
     restart,
     needsRefresh,
-  }: any = useGameSocket("poker");
+    gameState: rawGameState,
+  } = useGameSocket("poker");
+  // The engine's per-seat public view is game-specific; read it through a
+  // permissive alias so poker fields stay ergonomic without an `any` on the hook.
+  const gameState = rawGameState as Record<string, any> | null;
 
-  useYourTurn(gameState, room?.seat);
+  useYourTurn(rawGameState, room?.seat);
 
   if (!room || !gameState) {
     return (
@@ -52,7 +55,7 @@ export function Poker() {
   }
 
   if (room.seat === -1) {
-    return <SpectatorView gameState={gameState} gameId="poker" />;
+    return <SpectatorView gameState={rawGameState} gameId="poker" />;
   }
 
   const isHost = gameState.isHost ?? room.isHost;

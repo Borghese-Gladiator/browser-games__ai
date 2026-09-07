@@ -1,14 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
+import type { ChatMessage } from './protocol.ts';
+
+interface ChatProps {
+  messages?: ChatMessage[];
+  onSend: (text: string) => void;
+  disabled?: boolean;
+}
 
 // Shared in-game chat. Wired to the gateway via onSend (useGameSocket.sendChat);
 // every multiplayer game gets chat for free.
-export function Chat({ messages = [], onSend, disabled }) {
+export function Chat({ messages = [], onSend, disabled }: ChatProps) {
   const [text, setText] = useState('');
-  const bottomRef = useRef(null);
+  const bottomRef = useRef<HTMLLIElement | null>(null);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-  const submit = (e) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const t = text.trim();
     if (t && !disabled) {

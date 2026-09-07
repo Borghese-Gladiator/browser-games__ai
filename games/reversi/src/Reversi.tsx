@@ -11,12 +11,15 @@ import "@browser-games/game-client/chrome.css";
 
 export function Reversi() {
   const {
-    connectionStatus, rooms, room, gameState, chatMessages, sendChat,
+    connectionStatus, rooms, room, chatMessages, sendChat,
     error, listRooms, createRoom, joinRoom, quickMatch, spectate,
     lockRoom, startEarly, send, restart, needsRefresh,
-  }: any = useGameSocket("reversi");
+    gameState: rawGameState,
+  } = useGameSocket("reversi");
+  // Engine-specific per-seat view; read through a permissive alias.
+  const gameState = rawGameState as Record<string, any> | null;
 
-  useYourTurn(gameState, room?.seat);
+  useYourTurn(rawGameState, room?.seat);
 
   if (!room || !gameState) {
     return (
@@ -29,7 +32,7 @@ export function Reversi() {
     );
   }
 
-  if (room.seat === -1) return <SpectatorView gameState={gameState} gameId="reversi" />;
+  if (room.seat === -1) return <SpectatorView gameState={rawGameState} gameId="reversi" />;
 
   const legalSet = new Set((gameState.legalMoves ?? []).map(({ row, col }: any) => `${row},${col}`));
   const isMyTurn = gameState.activeSeat === room.seat;

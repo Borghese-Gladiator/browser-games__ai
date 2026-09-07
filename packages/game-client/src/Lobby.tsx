@@ -2,13 +2,25 @@
 // (quick-match, fills with bots) — with hosting a private room, joining by code,
 // and the live public-table list as secondary paths. The player's name is
 // remembered across sessions via useIdentity.
-import { useEffect, useState } from "react";
-import { useIdentity } from "./useIdentity.js";
-import { PlayerCodeModal } from "./PlayerCodeModal.jsx";
+import { useEffect, useState } from 'react';
+import { useIdentity } from './useIdentity.ts';
+import { PlayerCodeModal } from './PlayerCodeModal.tsx';
+import type { RoomSummary } from './protocol.ts';
 
-export function Lobby({ title, rooms, error, onCreate, onJoin, onRefresh, onQuickMatch, onSpectate }) {
+interface LobbyProps {
+  title: string;
+  rooms: RoomSummary[];
+  error?: string;
+  onCreate: (name: string) => void;
+  onJoin: (code: string, name: string) => void;
+  onRefresh?: () => void;
+  onQuickMatch?: (name: string) => void;
+  onSpectate?: (code: string) => void;
+}
+
+export function Lobby({ title, rooms, error, onCreate, onJoin, onRefresh, onQuickMatch, onSpectate }: LobbyProps) {
   const { name, setName, color, playerCode, importIdentity } = useIdentity();
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState('');
   const [showCode, setShowCode] = useState(false);
 
   useEffect(() => {
@@ -116,15 +128,11 @@ export function Lobby({ title, rooms, error, onCreate, onJoin, onRefresh, onQuic
                   <span className="lobby-room-code">{r.code}</span>
                   <span className="lobby-room-meta">
                     {r.players}/{r.max}
-                    {r.locked ? " · 🔒" : ""}
+                    {r.locked ? ' · 🔒' : ''}
                   </span>
                 </button>
                 {onSpectate && (
-                  <button
-                    className="btn btn-link"
-                    type="button"
-                    onClick={() => onSpectate(r.code)}
-                  >
+                  <button className="btn btn-link" type="button" onClick={() => onSpectate(r.code)}>
                     Watch
                   </button>
                 )}

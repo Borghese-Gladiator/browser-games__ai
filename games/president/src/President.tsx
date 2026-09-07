@@ -24,7 +24,6 @@ export function President() {
     connectionStatus,
     rooms,
     room,
-    gameState,
     chatMessages,
     sendChat,
     error,
@@ -39,11 +38,14 @@ export function President() {
     send,
     restart,
     needsRefresh,
-  }: any = useGameSocket("president");
+    gameState: rawGameState,
+  } = useGameSocket("president");
+  // Engine-specific per-seat view; read through a permissive alias.
+  const gameState = rawGameState as Record<string, any> | null;
 
   const [selected, setSelected] = useState<string[]>([]);
 
-  useYourTurn(gameState, room?.seat);
+  useYourTurn(rawGameState, room?.seat);
 
   if (!room || !gameState) {
     return (
@@ -64,7 +66,7 @@ export function President() {
   }
 
   if (room.seat === -1) {
-    return <SpectatorView gameState={gameState} gameId="president" />;
+    return <SpectatorView gameState={rawGameState} gameId="president" />;
   }
 
   const isHost = gameState.isHost ?? room.isHost;

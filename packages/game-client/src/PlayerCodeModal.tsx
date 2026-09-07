@@ -1,9 +1,16 @@
 // Export/import affordance for the player code. Export shows the current code
-// with a copy button; import accepts a pasted code and reloads so the new
-// identity takes effect on the next socket connection.
+// (which carries the secret reconnectToken) with a copy button; import accepts a
+// pasted code and reloads so the new identity takes effect on the next socket
+// connection.
 import { useState } from 'react';
 
-export function PlayerCodeModal({ playerCode, onImport, onClose }) {
+interface PlayerCodeModalProps {
+  playerCode: string;
+  onImport: (code: string) => boolean;
+  onClose: () => void;
+}
+
+export function PlayerCodeModal({ playerCode, onImport, onClose }: PlayerCodeModalProps) {
   const [input, setInput] = useState('');
   const [copied, setCopied] = useState(false);
   const [importErr, setImportErr] = useState('');

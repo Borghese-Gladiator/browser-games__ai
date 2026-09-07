@@ -120,6 +120,44 @@ describe('RoomManager', () => {
   });
 });
 
+// --- Reconnect token: secret per seat, verified before a held-seat restore ----
+
+describe('Room reconnect token', () => {
+  it('mints a token on the first seat and requires it to restore a held seat', () => {
+    const room = manager().createRoom('test');
+    room.addPlayer('p1', 'Alice', noClient);
+    const token = room.tokenFor('p1');
+    expect(token).toMatch(/^[0-9a-f]{64}$/);
+
+    // A held-seat restore with the wrong secret is rejected.
+    expect(() =>
+      room.addPlayer('p1', 'Alice', noClient, { presentedToken: 'wrong' }),
+    ).toThrow(/invalid reconnect token/);
+
+    // The correct secret restores the same seat.
+    expect(room.addPlayer('p1', 'Alice', noClient, { presentedToken: token })).toBe(0);
+  });
+
+  it('assertOwner passes with the stored token and throws otherwise', () => {
+    const room = manager().createRoom('test');
+    room.addPlayer('p1', 'Alice', noClient);
+    const token = room.tokenFor('p1');
+    expect(() => room.assertOwner('p1', token)).not.toThrow();
+    expect(() => room.assertOwner('p1', 'nope')).toThrow(/not authorized/);
+    expect(() => room.assertOwner('p1', null)).toThrow(/not authorized/);
+  });
+
+  it('never places the token in the summary, presence, view, or snapshot', () => {
+    const room = manager().createRoom('test');
+    room.addPlayer('p1', 'Alice', noClient);
+    const token = room.tokenFor('p1');
+    expect(JSON.stringify(room.summary())).not.toContain(token);
+    expect(JSON.stringify(room.presence())).not.toContain(token);
+    expect(JSON.stringify(room.viewFor('p1'))).not.toContain(token);
+    expect(JSON.stringify(room.snapshot())).not.toContain(token);
+  });
+});
+
 // --- Seat truth: the engine is the single source of seat state ------------
 
 describe('Room seat truth', () => {

@@ -9,6 +9,7 @@ type Frame = Record<string, unknown>;
 interface FakeSession {
   client: { connected: boolean; emit: (event: string, payload: Frame) => void };
   playerId: string;
+  reconnectToken: string | null;
   room: any;
   sent: Frame[];
   spectator: boolean;
@@ -26,6 +27,7 @@ function fakeSession(): FakeSession {
   return {
     client,
     playerId,
+    reconnectToken: null,
     room: null,
     sent,
     spectator: false,
@@ -302,6 +304,48 @@ describe('gateway lobby leave + live list', () => {
     const pushed = watcher.sent.filter((m) => m.t === 'rooms') as Array<{ rooms: unknown[] }>;
     expect(pushed.length).toBe(1);
     expect(pushed[0].rooms).toHaveLength(1);
+  });
+});
+
+describe('gateway reconnect token', () => {
+  let manager: RoomManager;
+  beforeEach(() => {
+    manager = new RoomManager({ test: asEngine(adapter) });
+  });
+
+  it('returns a reconnectToken to the owner in joined but not in broadcast state', () => {
+    const s = fakeSession();
+    handleMessage(manager, s, { t: 'lobby:create', gameId: 'test', name: 'Alice' });
+    const joined = s.sent.find((m) => m.t === 'joined') as { reconnectToken?: string };
+    expect(typeof joined.reconnectToken).toBe('string');
+    expect((joined.reconnectToken as string).length).toBeGreaterThan(0);
+    // The token is adopted onto the session and never appears in any state frame.
+    for (const frame of s.sent.filter((m) => m.t === 'state')) {
+      expect(frame).not.toHaveProperty('reconnectToken');
+    }
+  });
+
+  it('rejects a seat restore that presents the wrong token', () => {
+    const s = fakeSession();
+    handleMessage(manager, s, { t: 'lobby:create', gameId: 'test', name: 'Alice' });
+    const code = (s.sent.find((m) => m.t === 'joined') as { code: string }).code;
+
+    // A reconnect on a fresh session for the same player, but with a bad secret.
+    const reconnect = fakeSession();
+    reconnect.playerId = s.playerId;
+    reconnect.reconnectToken = 'not-the-real-token';
+    handleMessage(manager, reconnect, { t: 'lobby:join', gameId: 'test', code, name: 'Alice' });
+    expect(reconnect.sent.at(-1)).toMatchObject({ t: 'error', message: 'invalid reconnect token' });
+  });
+
+  it('rejects a host action when the session token does not match', () => {
+    const s = fakeSession();
+    handleMessage(manager, s, { t: 'lobby:create', gameId: 'test', name: 'Alice' });
+    // Tamper with the presented secret, then attempt a host control.
+    s.reconnectToken = 'tampered';
+    handleMessage(manager, s, { t: 'host:lock', locked: true });
+    expect(s.sent.at(-1)).toMatchObject({ t: 'error', message: 'not authorized' });
+    expect(s.room.locked).toBe(false);
   });
 });
 

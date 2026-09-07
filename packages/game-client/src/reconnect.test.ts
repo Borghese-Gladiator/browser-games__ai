@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MAX_ATTEMPTS, nextDelay, shouldReconnect } from './reconnect.js';
+import { MAX_ATTEMPTS, nextDelay, shouldReconnect } from './reconnect.ts';
 
 describe('nextDelay', () => {
   it('stays within the jittered [base, max] range', () => {

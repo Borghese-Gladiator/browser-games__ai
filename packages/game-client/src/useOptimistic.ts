@@ -1,12 +1,15 @@
 import { useState, useRef, useCallback } from 'react';
-import { reconcile } from './optimistic.js';
+import { reconcile } from './optimistic.ts';
 
 // Apply an action locally for snappy UI, then reconcile against authoritative
 // server state when it arrives (rolling back if the server rejected the action).
-export function useOptimistic(serverState, reduce) {
-  const [localState, setLocalState] = useState(null);
-  const pending = useRef(null);
-  const prevServer = useRef(null);
+export function useOptimistic<S, A>(
+  serverState: S,
+  reduce: (state: S, action: A) => S,
+): [S, (action: A, sendFn: () => void) => void] {
+  const [localState, setLocalState] = useState<S | null>(null);
+  const pending = useRef<A | null>(null);
+  const prevServer = useRef<S | null>(null);
 
   if (serverState !== prevServer.current) {
     prevServer.current = serverState;
@@ -18,7 +21,7 @@ export function useOptimistic(serverState, reduce) {
   }
 
   const apply = useCallback(
-    (action, sendFn) => {
+    (action: A, sendFn: () => void) => {
       pending.current = action;
       setLocalState((prev) => reduce(prev ?? serverState, action));
       sendFn();

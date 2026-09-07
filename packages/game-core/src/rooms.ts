@@ -8,6 +8,7 @@
 
 import crypto from 'node:crypto';
 import { makeBot, botActionFor } from './bots.ts';
+import { mintReconnectToken, verifyReconnectToken } from './reconnectToken.ts';
 import { decideTimeout, windowDeadlineExpired } from './timers.ts';
 import { validateOptions } from './options.ts';
 import { pickQuickMatchRoom } from './matchmaking.ts';
@@ -74,6 +75,9 @@ export class Room<TState extends EngineState> {
   _eventSeq: number;
   _gameStarted: boolean;
   _kicked: Set<string>;
+  // Secret per-seat reconnect tokens, keyed by playerId. Never serialized into a
+  // snapshot, never sent in any broadcast — only handed to the owning client.
+  _tokens: Map<string, string>;
   _onGameEnd?: OnGameEnd;
   _onGameStart?: OnGameStart;
 
@@ -108,6 +112,7 @@ export class Room<TState extends EngineState> {
     this._onGameStart = onGameStart;
     this._gameStarted = false;
     this._kicked = new Set();
+    this._tokens = new Map();
   }
 
   get playerCount(): number {
@@ -140,7 +145,12 @@ export class Room<TState extends EngineState> {
   // Seat a player. The first human to join becomes the host. Throws (via the
   // engine) if the name is taken or the table is full. Returns the assigned seat.
   // Fires the adapter's autoStart when at capacity.
-  addPlayer(playerId: string, name: string, client: SocketLike, { now = Date.now() }: { now?: number } = {}): number {
+  addPlayer(
+    playerId: string,
+    name: string,
+    client: SocketLike,
+    { now = Date.now(), presentedToken = null }: { now?: number; presentedToken?: string | null } = {},
+  ): number {
     if (this.locked && !this.state.players.some((p) => p.id === playerId)) {
       throw new Error('room locked');
     }
@@ -148,6 +158,17 @@ export class Room<TState extends EngineState> {
     // reference only; engine state (including per-seat private state) is intact.
     const existing = this.state.players.find((p) => p.id === playerId);
     if (existing) {
+      const stored = this._tokens.get(playerId) ?? null;
+      if (stored != null) {
+        // Require the secret before restoring the held seat.
+        if (!verifyReconnectToken(stored, presentedToken)) {
+          throw new Error('invalid reconnect token');
+        }
+      } else {
+        // A snapshot-restored seat has no stored token (tokens are never
+        // serialized). Adopt a fresh one so the seat is guarded from here on.
+        this._tokens.set(playerId, mintReconnectToken());
+      }
       this.members.set(playerId, {
         id: playerId, seat: existing.seat, client,
         isBot: false, isSpectator: false, lastPong: now, latencyMs: 0,
@@ -160,9 +181,26 @@ export class Room<TState extends EngineState> {
       id: playerId, seat, client,
       isBot: false, isSpectator: false, lastPong: now, latencyMs: 0,
     });
+    // Mint the secret on the first seat this player takes in this room.
+    this._tokens.set(playerId, mintReconnectToken());
     if (this.host === null) this.host = playerId;
     this._maybeAutoStart();
     return seat;
+  }
+
+  // The owning player's secret token, so the gateway can send it to that owner
+  // only. Never broadcast this.
+  tokenFor(playerId: string): string | null {
+    return this._tokens.get(playerId) ?? null;
+  }
+
+  // Timing-safe guard required before any host action or seat-owning action.
+  // Throws on a missing or mismatched token.
+  assertOwner(playerId: string, presentedToken: string | null): void {
+    const stored = this._tokens.get(playerId) ?? null;
+    if (!verifyReconnectToken(stored, presentedToken)) {
+      throw new Error('not authorized');
+    }
   }
 
   // Seat a bot in the next open seat. No socket; the gateway drives its moves.
@@ -205,6 +243,7 @@ export class Room<TState extends EngineState> {
   removePlayer(playerId: string): void {
     this._freeSeat(playerId);
     this.members.delete(playerId);
+    this._tokens.delete(playerId);
   }
 
   // Host-only kick: mark the target kicked (so a lingering socket cannot act),
@@ -215,6 +254,7 @@ export class Room<TState extends EngineState> {
     this._kicked.add(targetId);
     this._freeSeat(targetId);
     this.members.delete(targetId);
+    this._tokens.delete(targetId);
   }
 
   isKicked(playerId: string): boolean {
