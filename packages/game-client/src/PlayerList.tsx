@@ -25,6 +25,8 @@ export function PlayerList({ players = [], presence, mySeat, activeSeat }: Playe
         return (
           <li
             key={p.seat}
+            data-seat={p.seat}
+            data-you={p.seat === mySeat ? 'true' : undefined}
             aria-current={p.seat === activeSeat ? 'true' : undefined}
             className="player-list-item"
           >

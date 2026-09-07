@@ -76,3 +76,40 @@ reconnectToken/identity work and the TS conversion.
 - `cd packages/game-client && npx tsc --noEmit -p tsconfig.json` -> zero errors.
 - `npx vitest run packages/game-client` -> green.
 - `git diff` grep: `reconnectToken` never in a broadcast/summary/presence/view.
+
+## E2e slice (Socket.IO transport)
+
+### Brief
+Port the 8 e2e specs onto the Socket.IO transport. Add a reload-mid-game test
+that proves a reload resumes the same seat with private state intact. Replace the
+manual room-code re-type in `identity.spec.js`. Keep the protocol-mismatch banner
+assertion. Report the pre-existing `infra.spec.js` interception failure plainly.
+
+### Changes
+- `e2e/helpers/transport.js` (new): shared helpers.
+  - `createRoomAs(page, name)` / `joinRoomByCode(page, code, name)`: UI create/join.
+  - `readSeat(page)`: read the player's seat from the rendered player list ("(you)"
+    marker index); seat-ordered games map index -> seat.
+  - `readPrivateState(page)`: read the "Your cards" region card list.
+  - `readStoredIdentity(page)`: read playerId + reconnectToken + lastRoom from
+    localStorage.
+  - `ensureSocketIoClient(page)` + `socketExchange(page, ...)`: inject the
+    gateway-served Socket.IO client and run a low-level protocol exchange
+    (replaces the raw `new WebSocket` in `infra.spec.js`).
+- `e2e/identity.spec.js`: drop the manual room-code re-type at 60-64. After the
+  reload the hook auto-rejoins via the persisted code + token; assert the seat is
+  reclaimed by reading the rendered app, not raw WS frames.
+- `e2e/reload-mid-game.spec.js` (new): host + one guest; host starts with bots so
+  the hand deals private hole cards; guest (a non-zero seat) reloads; assert the
+  same seat resumes with identical hole cards and no manual re-join.
+- `e2e/infra.spec.js`: port AC1/AC3 to `socketExchange`; port the AC2
+  hello-rewrite to engine.io framing (`42["hello",...]`); keep the refresh-banner
+  assert. AC2 (`:74`) is the known pre-existing interception failure — report it.
+- `e2e/{chrome,leaderboard,observability,poker,president,sheng-ji}.spec.js`: route
+  create/join through the shared helpers; keep each spec's own assertions.
+
+### Tests
+#### Manual / suite
+- `npm run test:e2e` -> all ported specs pass except the documented
+  `infra.spec.js:74` interception failure.
+- The reload-mid-game spec confirms the resumed seat + intact private state.

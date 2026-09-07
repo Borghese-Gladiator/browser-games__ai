@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
+import { createRoomAs, joinRoomByCode } from "./helpers/transport.js";
 
 test("4-player President plays through at least one trick", async ({ browser }) => {
   const artifactDir = path.resolve("e2e/artifacts");
@@ -25,16 +26,10 @@ test("4-player President plays through at least one trick", async ({ browser }) 
 
   // Player 1 creates a room; the rest join it by its code.
   const [host, ...guests] = pages;
-  await host.getByLabel("Your name").fill("Player1");
-  await host.getByRole("button", { name: "Create room" }).click();
-
-  const roomText = await host.getByText(/^Room: /).textContent();
-  const code = roomText.replace("Room:", "").replace(/Copy.*/i, "").trim();
+  const code = await createRoomAs(host, "Player1");
 
   for (const [i, page] of guests.entries()) {
-    await page.getByLabel("Your name").fill(`Player${i + 2}`);
-    await page.getByLabel("Room code").fill(code);
-    await page.getByRole("button", { name: "Join by code" }).click();
+    await joinRoomByCode(page, code, `Player${i + 2}`);
   }
 
   // Server auto-starts the round once all 4 are seated — wait for hands.
