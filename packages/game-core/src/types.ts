@@ -54,7 +54,9 @@ export interface Adapter<TState extends EngineState> {
   achievements?: Achievement[];
   optionsSchema?: OptionsSchema;
   activeSeat?(state: TState): number;
+  pendingSeats?(state: TState): number[];
   timeoutAction?(state: TState, seat: number): GameMessage | null;
+  resolveWindow?(state: TState): TState;
   botMove?(state: TState, seat: number): GameMessage | null;
 }
 
@@ -114,8 +116,10 @@ export interface RoomSnapshot<TState extends EngineState = EngineState> {
   _eventSeq: number;
   host: string | null;
   locked: boolean;
-  turnStartedAt: number | null;
-  _lastActiveSeat: number | null;
+  windowOpenedAt?: number | null;
+  _windowKey?: string;
+  turnStartedAt?: number | null;
+  _lastActiveSeat?: number | null;
   createdAt: number;
   phaseEnteredAt: number | null;
   _gameStarted: boolean;
@@ -151,15 +155,20 @@ export interface Presence {
   latencyMs: number;
 }
 
-export interface TimeoutDecision {
+export interface TimeoutIntent {
   seat: number;
   msg: GameMessage;
   reason: 'disconnect' | 'idle';
 }
 
+export interface BotIntent {
+  seat: number;
+  msg: GameMessage;
+}
+
 export interface TickResult {
   reaped: string[];
-  timeout: TimeoutDecision | null;
-  botMsg: GameMessage | null;
-  botSeat: number | null;
+  timeouts: TimeoutIntent[];
+  botMsgs: BotIntent[];
+  deadlineExpired: boolean;
 }

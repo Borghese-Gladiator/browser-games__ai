@@ -175,11 +175,16 @@ export function createGateway(opts: GatewayOptions = {}): Gateway {
 
   const broadcast = (room: Room<EngineState>) => broadcastRoom(room);
 
-  // The single heartbeat clock: ping every socket, then run room maintenance.
-  const heartbeat = setInterval(() => {
+  // Ping cadence stays at PING_MS so presence/latency and dead-socket reaping are
+  // unchanged. The game tick runs on its own, finer TICK_MS clock so a turn or
+  // window deadline resolves at ~2s resolution rather than only once per ping.
+  const pingTimer = setInterval(() => {
     pingAll(io);
-    runHeartbeat(manager, broadcast, HEARTBEAT);
   }, HEARTBEAT.PING_MS);
+
+  const heartbeat = setInterval(() => {
+    runHeartbeat(manager, broadcast, HEARTBEAT);
+  }, HEARTBEAT.TICK_MS);
 
   // Periodic persistence so a restart can resume active rooms.
   const snapshotTimer = setInterval(() => {
@@ -192,6 +197,7 @@ export function createGateway(opts: GatewayOptions = {}): Gateway {
   // clients a refresh is coming, then hard-close after the grace window.
   function shutdown(graceMs = 10_000): Promise<void> {
     draining = true;
+    clearInterval(pingTimer);
     clearInterval(heartbeat);
     clearInterval(snapshotTimer);
     for (const room of manager.rooms.values()) {

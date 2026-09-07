@@ -18,20 +18,35 @@ describe('makeBot', () => {
 
 describe('botActionFor', () => {
   const adapter = asAdapter({
-    activeSeat: () => 1,
     botMove: (_state, seat) => ({ cardId: `from-${seat}` }),
   });
 
-  it('returns the adapter move when it is a bot seat to act', () => {
-    expect(botActionFor(state, adapter, new Set([1]))).toEqual({ cardId: 'from-1' });
+  it('returns the adapter move for a pending bot seat', () => {
+    expect(botActionFor(state, adapter, new Set([1]), new Set([1]))).toEqual([
+      { seat: 1, msg: { cardId: 'from-1' } },
+    ]);
   });
 
-  it('returns null when the active seat is not a bot', () => {
-    expect(botActionFor(state, adapter, new Set([0, 2]))).toBeNull();
+  it('returns [] when the pending seat is not a bot', () => {
+    expect(botActionFor(state, adapter, new Set([0, 2]), new Set([1]))).toEqual([]);
   });
 
-  it('returns null when no seat is active', () => {
-    const idle = asAdapter({ activeSeat: () => -1, botMove: () => ({ cardId: 'x' }) });
-    expect(botActionFor(state, idle, new Set([0, 1, 2, 3]))).toBeNull();
+  it('returns [] when there are no pending seats', () => {
+    expect(botActionFor(state, adapter, new Set([0, 1, 2, 3]), new Set())).toEqual([]);
+  });
+
+  it('iterates every pending bot seat and returns one intent each', () => {
+    const out = botActionFor(state, adapter, new Set([1, 3]), new Set([1, 2, 3]));
+    expect(out).toEqual([
+      { seat: 1, msg: { cardId: 'from-1' } },
+      { seat: 3, msg: { cardId: 'from-3' } },
+    ]);
+  });
+
+  it('skips a pending bot seat the adapter declines', () => {
+    const picky = asAdapter({ botMove: (_state, seat) => (seat === 2 ? { play: seat } : null) });
+    expect(botActionFor(state, picky, new Set([1, 2]), new Set([1, 2]))).toEqual([
+      { seat: 2, msg: { play: 2 } },
+    ]);
   });
 });

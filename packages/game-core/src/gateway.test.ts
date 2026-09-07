@@ -344,7 +344,7 @@ describe('runHeartbeat', () => {
     room.addPlayer('h', 'Host', liveClient, { now: 0 });
     room.addPlayer('g', 'Guest', liveClient, { now: 0 });
     room.state.turn = 0;
-    room.turnStartedAt = 0;
+    room.windowOpenedAt = 0;
     room.recordPong('g', { now: 9000 });
 
     const broadcasts: string[] = [];
@@ -376,7 +376,7 @@ describe('runHeartbeat', () => {
     room.addPlayer('h', 'Host', liveClient, { now: 0 });
     room.addPlayer('g', 'Guest', liveClient, { now: 0 });
     room.state.turn = 0;
-    room.turnStartedAt = 0;
+    room.windowOpenedAt = 0;
     room.recordPong('g', { now: 9000 });
 
     expect(() =>
