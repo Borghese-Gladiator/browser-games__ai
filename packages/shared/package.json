@@ -3,16 +3,16 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "main": "src/registry.js",
+  "main": "src/registry.ts",
   "exports": {
-    "./version": "./src/version.js",
-    "./validate": "./src/validate.js",
-    "./rateLimit": "./src/rateLimit.js",
-    "./registry": "./src/registry.js",
+    "./version": "./src/version.ts",
+    "./validate": "./src/validate.ts",
+    "./rateLimit": "./src/rateLimit.ts",
+    "./registry": "./src/registry.ts",
     "./theme.css": "./src/theme.css",
-    "./identity": "./src/identity.js",
-    "./sanitize": "./src/sanitize.js",
-    "./leaderboard": "./src/leaderboard.js",
-    "./metrics": "./src/metrics.js"
+    "./identity": "./src/identity.ts",
+    "./sanitize": "./src/sanitize.ts",
+    "./leaderboard": "./src/leaderboard.ts",
+    "./metrics": "./src/metrics.ts"
   }
 }

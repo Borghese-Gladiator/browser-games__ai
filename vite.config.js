@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { games } from "./packages/shared/src/registry.js";
+import { games } from "./packages/shared/src/registry.ts";
 
 // Multi-page build. The portal lives at the root; each game is its own page
 // under /games/<id>/. Inputs are derived from the shared registry so adding a
