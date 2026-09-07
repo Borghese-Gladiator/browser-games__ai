@@ -16,4 +16,5 @@ export * from './scoring/scoring.js';
 export * from './game/index.js';
 export * from './assertValidGameState.js';
 export * from './ai/random.js';
+export * from './ai/standard.js';
 export * from './simulation.js';

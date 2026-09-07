@@ -4,7 +4,18 @@ import { createGame } from './game/deal.js';
 import { applyAction } from './game/reducer.js';
 import { getAvailableActions } from './game/getAvailableActions.js';
 import { assertValidGameState, InvalidGameStateError } from './assertValidGameState.js';
+import type { GameAction } from './game/actions.js';
 import { createRandomAi, createRng } from './ai/random.js';
+import type { Rng } from './ai/random.js';
+import { createStandardAi } from './ai/standard.js';
+
+export type SimulationAi = (
+  state: GameState,
+  actions: readonly GameAction[],
+  rng: Rng,
+) => GameAction;
+
+export type SimulationAiFactory = () => SimulationAi;
 
 export interface SimulationStats {
   readonly gamesPlayed: number;
@@ -88,9 +99,9 @@ function terminalOutcome(state: GameState, seed: number): GameOutcome {
   return { kind: 'crash', turns, seed };
 }
 
-function playOneGame(seed: number): GameOutcome {
+function playOneGame(seed: number, aiFactory: SimulationAiFactory): GameOutcome {
   const rng = createRng(seed);
-  const ai = createRandomAi();
+  const ai = aiFactory();
   try {
     let state = createGame(baseConfig(seed));
     const dealt = applyAction(state, { type: 'DEAL' });
@@ -182,11 +193,15 @@ function aggregate(outcomes: readonly GameOutcome[]): SimulationStats {
   };
 }
 
-export function runSimulation(gameCount: number, baseSeed: number): SimulationStats {
+export function runSimulation(
+  gameCount: number,
+  baseSeed: number,
+  aiFactory: SimulationAiFactory = () => createRandomAi(),
+): SimulationStats {
   const outcomes: GameOutcome[] = [];
   for (let index = 0; index < gameCount; index++) {
     const seed = baseSeed + index;
-    const outcome = playOneGame(seed);
+    const outcome = playOneGame(seed, aiFactory);
     outcomes.push(outcome);
     if (isFailure(outcome.kind)) {
       console.error(`mahjong simulation: failing game seed=${seed} kind=${outcome.kind}`);
@@ -210,16 +225,25 @@ function formatStats(stats: SimulationStats): string {
   ].join('\n');
 }
 
-function parseArgs(argv: readonly string[]): { readonly gameCount: number; readonly baseSeed: number } {
+interface ParsedArgs {
+  readonly gameCount: number;
+  readonly baseSeed: number;
+  readonly aiName: 'random' | 'standard';
+}
+
+function parseArgs(argv: readonly string[]): ParsedArgs {
   const numbers = argv.map(Number).filter((value) => Number.isFinite(value));
   const gameCount = numbers.length > 0 ? Math.floor(numbers[0]) : 1000;
   const baseSeed = numbers.length > 1 ? Math.floor(numbers[1]) : 1;
-  return { gameCount, baseSeed };
+  const aiName = argv.includes('standard') ? 'standard' : 'random';
+  return { gameCount, baseSeed, aiName };
 }
 
 export function main(argv: readonly string[]): void {
-  const { gameCount, baseSeed } = parseArgs(argv);
-  const stats = runSimulation(gameCount, baseSeed);
-  console.log(`mahjong simulation: ${gameCount} games from seed ${baseSeed}`);
+  const { gameCount, baseSeed, aiName } = parseArgs(argv);
+  const aiFactory: SimulationAiFactory =
+    aiName === 'standard' ? () => createStandardAi() : () => createRandomAi();
+  const stats = runSimulation(gameCount, baseSeed, aiFactory);
+  console.log(`mahjong simulation: ${gameCount} games from seed ${baseSeed} ai=${aiName}`);
   console.log(formatStats(stats));
 }
