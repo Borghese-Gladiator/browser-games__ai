@@ -11,9 +11,15 @@
 // We only time out a seat that is BOTH the active turn AND not live — a present
 // player simply taking their time is never auto-acted on; only a dark one is.
 
+import type { Adapter, EngineState, TimeoutDecision } from './types.ts';
+
 // Has this seat exceeded its turn time? `turnStartedAt` is when the seat became
 // active; `now` and `turnTimeoutMs` are the clock + budget.
-export function isTurnExpired(turnStartedAt, now, turnTimeoutMs) {
+export function isTurnExpired(
+  turnStartedAt: number | null,
+  now: number,
+  turnTimeoutMs: number,
+): boolean {
   if (turnStartedAt == null) return false;
   return now - turnStartedAt >= turnTimeoutMs;
 }
@@ -23,10 +29,15 @@ export function isTurnExpired(turnStartedAt, now, turnTimeoutMs) {
 // We auto-act when the turn is expired AND (the active player is dark, OR the
 // turn is hard-expired past the longer `forfeitMs` even for a present-but-idle
 // player — so an AFK human can't freeze the table indefinitely either).
-export function decideTimeout(
-  { state, adapter, turnStartedAt, liveSeats },
-  { now, graceMs, forfeitMs },
-) {
+export function decideTimeout<TState extends EngineState>(
+  { state, adapter, turnStartedAt, liveSeats }: {
+    state: TState;
+    adapter: Adapter<TState>;
+    turnStartedAt: number | null;
+    liveSeats: Set<number>;
+  },
+  { now, graceMs, forfeitMs }: { now: number; graceMs: number; forfeitMs: number },
+): TimeoutDecision | null {
   const seat = adapter.activeSeat?.(state);
   if (seat == null || seat < 0) return null;
 

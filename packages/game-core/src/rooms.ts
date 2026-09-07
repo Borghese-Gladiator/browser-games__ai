@@ -7,16 +7,35 @@
 // adapter (applyMessage), which is pure with respect to the outside world.
 
 import crypto from 'node:crypto';
-import { makeBot, botActionFor } from './bots.js';
-import { decideTimeout } from './timers.js';
-import { validateOptions } from './options.js';
-import { pickQuickMatchRoom } from './matchmaking.js';
-import { hashState } from './observability.js';
+import { makeBot, botActionFor } from './bots.ts';
+import { decideTimeout } from './timers.ts';
+import { validateOptions } from './options.ts';
+import { pickQuickMatchRoom } from './matchmaking.ts';
+import { hashState } from './observability.ts';
+import type {
+  Adapter,
+  AdapterTable,
+  EngineState,
+  GameMessage,
+  Member,
+  Outcome,
+  Presence,
+  RoomSnapshot,
+  RoomSummary,
+  SocketLike,
+  Spectator,
+  TickResult,
+} from './types.ts';
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1 ambiguity
 const MAX_EVENT_LOG = 200;
 
-function makeCode(taken) {
+// A bot-only (or fully empty) room is not deleted the instant its last human is
+// reaped: it lingers for this window so a human who blips off the network for a
+// few seconds can rejoin the same table instead of finding it gone.
+export const ROOM_GRACE_MS = 15_000;
+
+export function makeCode(taken: Map<string, unknown>): string {
   for (;;) {
     let code = '';
     for (let i = 0; i < 4; i++) {
@@ -26,47 +45,81 @@ function makeCode(taken) {
   }
 }
 
-// One game table. `adapter` is the per-game contract (see games.js); `state` is
+type OnGameEnd = (outcome: Outcome) => void;
+type OnGameStart = () => void;
+
+// One game table. `adapter` is the per-game contract (see games.ts); `state` is
 // whatever the engine's createGame(options) returned.
 //
 // Member kinds:
 //   seated player — has a seat in engine state and (usually) a live socket.
 //   bot           — has a seat in engine state, no socket; driven by the gateway.
 //   spectator     — no seat; receives only the seatless public view (-1).
-export class Room {
-  // onGameEnd (optional): called with the adapter's outcome when a message
-  // transitions the game into a terminal state. Wired by RoomManager.
-  constructor(code, adapter, onGameEnd, options = {}, onGameStart = null) {
+export class Room<TState extends EngineState> {
+  code: string;
+  gameId: string;
+  adapter: Adapter<TState>;
+  options: Record<string, unknown>;
+  state: TState;
+  members: Map<string, Member>;
+  spectators: Map<string, Spectator>;
+  host: string | null;
+  locked: boolean;
+  turnStartedAt: number | null;
+  createdAt: number;
+  eventLog: RoomSnapshot<TState>['eventLog'];
+  phaseEnteredAt: number | null;
+  emptySince: number | null;
+  _lastActiveSeat: number | null;
+  _eventSeq: number;
+  _gameStarted: boolean;
+  _kicked: Set<string>;
+  _onGameEnd?: OnGameEnd;
+  _onGameStart?: OnGameStart;
+
+  // gameId is a constructor argument so a Room knows its game without a
+  // post-construction monkey-patch. onGameEnd (optional): called with the
+  // adapter's outcome when a message transitions the game into a terminal state.
+  constructor(
+    code: string,
+    gameId: string,
+    adapter: Adapter<TState>,
+    onGameEnd?: OnGameEnd,
+    options: Record<string, unknown> = {},
+    onGameStart?: OnGameStart,
+  ) {
     this.code = code;
+    this.gameId = gameId;
     this.adapter = adapter;
     this.options = validateOptions(adapter.optionsSchema, options);
-    this.state = adapter.engine.createGame(this.options);
-    // playerId -> { id, seat, client, isBot, isSpectator, lastPong, latencyMs }
+    this.state = adapter.engine.createGame(this.options) as TState;
     this.members = new Map();
-    this.spectators = new Map(); // clientKey -> { client, lastPong, latencyMs }
-    this.host = null; // playerId of the room host (first to join)
-    this.locked = false; // host can lock to stop new joins
-    this.turnStartedAt = null; // ms timestamp the current active seat began
+    this.spectators = new Map();
+    this.host = null;
+    this.locked = false;
+    this.turnStartedAt = null;
     this._lastActiveSeat = null;
     this._onGameEnd = onGameEnd;
     this.createdAt = Date.now();
     this.eventLog = [];
     this._eventSeq = 0;
     this.phaseEnteredAt = null;
+    this.emptySince = null;
     this._onGameStart = onGameStart;
     this._gameStarted = false;
+    this._kicked = new Set();
   }
 
-  get playerCount() {
+  get playerCount(): number {
     return this.state.players.length;
   }
 
-  get isFull() {
+  get isFull(): boolean {
     return this.playerCount >= this.adapter.maxPlayers;
   }
 
-  get botSeats() {
-    const seats = new Set();
+  get botSeats(): Set<number> {
+    const seats = new Set<number>();
     for (const m of this.members.values()) {
       if (m.isBot) seats.add(m.seat);
     }
@@ -75,8 +128,8 @@ export class Room {
 
   // Seats with a connected, recently-ponging human. Bots count as live (always
   // responsive); humans are live until the heartbeat reaps them.
-  liveSeats(now, deadAfterMs) {
-    const seats = new Set();
+  liveSeats(now: number, deadAfterMs: number): Set<number> {
+    const seats = new Set<number>();
     for (const m of this.members.values()) {
       if (m.isSpectator) continue;
       if (m.isBot || now - m.lastPong < deadAfterMs) seats.add(m.seat);
@@ -87,7 +140,7 @@ export class Room {
   // Seat a player. The first human to join becomes the host. Throws (via the
   // engine) if the name is taken or the table is full. Returns the assigned seat.
   // Fires the adapter's autoStart when at capacity.
-  addPlayer(playerId, name, client, { now = Date.now() } = {}) {
+  addPlayer(playerId: string, name: string, client: SocketLike, { now = Date.now() }: { now?: number } = {}): number {
     if (this.locked && !this.state.players.some((p) => p.id === playerId)) {
       throw new Error('room locked');
     }
@@ -102,7 +155,7 @@ export class Room {
       return existing.seat;
     }
     this.state = this.adapter.engine.addPlayer(this.state, { id: playerId, name });
-    const seat = this.state.players.find((p) => p.id === playerId).seat;
+    const seat = this.state.players.find((p) => p.id === playerId)!.seat;
     this.members.set(playerId, {
       id: playerId, seat, client,
       isBot: false, isSpectator: false, lastPong: now, latencyMs: 0,
@@ -113,10 +166,10 @@ export class Room {
   }
 
   // Seat a bot in the next open seat. No socket; the gateway drives its moves.
-  addBot(index) {
+  addBot(index: number): number {
     const { id, name } = makeBot(index);
     this.state = this.adapter.engine.addPlayer(this.state, { id, name });
-    const seat = this.state.players.find((p) => p.id === id).seat;
+    const seat = this.state.players.find((p) => p.id === id)!.seat;
     this.members.set(id, {
       id, seat, client: null, isBot: true, isSpectator: false,
       lastPong: Infinity, latencyMs: 0,
@@ -127,7 +180,7 @@ export class Room {
 
   // Fill every remaining open seat with bots, then start. Used by quick-match and
   // by the host's "start early" control so a quiet table is still playable.
-  fillWithBots() {
+  fillWithBots(): number {
     let added = 0;
     while (!this.isFull) {
       this.addBot(this.playerCount);
@@ -138,36 +191,51 @@ export class Room {
 
   // Attach a spectator (no seat). Keyed by an arbitrary client key so multiple
   // spectators on one room are tracked independently.
-  addSpectator(clientKey, client, { now = Date.now() } = {}) {
+  addSpectator(clientKey: string, client: SocketLike, { now = Date.now() }: { now?: number } = {}): void {
     this.spectators.set(clientKey, { client, lastPong: now, latencyMs: 0 });
   }
 
-  removeSpectator(clientKey) {
+  removeSpectator(clientKey: string): void {
     this.spectators.delete(clientKey);
   }
 
-  removePlayer(playerId) {
+  // Free the seat through the engine so the engine stays the single source of
+  // seat truth, then drop the member. A fake engine without removePlayer falls
+  // back to a member-only drop.
+  removePlayer(playerId: string): void {
+    this._freeSeat(playerId);
     this.members.delete(playerId);
   }
 
-  // Host-only kick: drop a member and remove their seat from engine state so the
-  // seat frees up. (We can't un-deal cards mid-hand cleanly, so a kick before the
-  // hand starts simply removes them; mid-hand the adapter's timeout/forfeit path
-  // handles the seat going dark.)
-  kick(requesterId, targetId) {
+  // Host-only kick: mark the target kicked (so a lingering socket cannot act),
+  // free their engine seat, and drop the member.
+  kick(requesterId: string, targetId: string): void {
     this._assertHost(requesterId);
     if (targetId === this.host) throw new Error('cannot kick the host');
+    this._kicked.add(targetId);
+    this._freeSeat(targetId);
     this.members.delete(targetId);
   }
 
-  lock(requesterId, locked) {
+  isKicked(playerId: string): boolean {
+    return this._kicked.has(playerId);
+  }
+
+  _freeSeat(playerId: string): void {
+    if (!this.state.players.some((p) => p.id === playerId)) return;
+    if (this.adapter.engine.removePlayer) {
+      this.state = this.adapter.engine.removePlayer(this.state, playerId);
+    }
+  }
+
+  lock(requesterId: string, locked: boolean): void {
     this._assertHost(requesterId);
     this.locked = !!locked;
   }
 
   // Host starts before the table is full. Requires the adapter's minPlayers of
   // real members (humans + bots); fills the rest with bots, then starts.
-  startEarly(requesterId) {
+  startEarly(requesterId: string): void {
     this._assertHost(requesterId);
     if (this.playerCount < this.adapter.minPlayers) {
       throw new Error('not enough players to start');
@@ -176,16 +244,11 @@ export class Room {
     this._maybeAutoStart();
   }
 
-  _assertHost(requesterId) {
+  _assertHost(requesterId: string): void {
     if (requesterId !== this.host) throw new Error('host only');
   }
 
-  _maybeAutoStart() {
-    // Idempotent: once the game has started, don't ask the adapter to start
-    // again. autoStart calls the engine's start (e.g. poker.startHand), which
-    // throws "hand in progress" mid-hand. startEarly fills with bots — the last
-    // seat already auto-starts — so a second call here would otherwise throw and
-    // abort the host:start handler before it can broadcast the started state.
+  _maybeAutoStart(): void {
     if (this._gameStarted) return;
     const started = this.adapter.autoStart?.(this.state);
     if (started) {
@@ -197,21 +260,34 @@ export class Room {
   }
 
   // Only bots and spectators left → no live human; the room can be reaped.
-  get isEmpty() {
+  get isEmpty(): boolean {
     return this.members.size === 0 && this.spectators.size === 0;
   }
 
-  get hasHumanMembers() {
+  get hasHumanMembers(): boolean {
     for (const m of this.members.values()) {
       if (!m.isBot) return true;
     }
     return false;
   }
 
-  // Route a game message through the adapter, mutating room state. When a message
-  // moves the game into a terminal state, fire onGameEnd exactly once for that
-  // game (edge-triggered: a terminal state already recorded won't re-fire).
-  applyMessage(playerId, msg, { now = Date.now() } = {}) {
+  // Set or clear emptySince so reap can honor the grace window. A room is
+  // reap-empty when it has no live human and no spectator (a bot-only table
+  // counts as empty). emptySince marks when that first became true.
+  markEmptyState(now: number): void {
+    const empty = !this.hasHumanMembers && this.spectators.size === 0;
+    if (empty) {
+      if (this.emptySince == null) this.emptySince = now;
+    } else {
+      this.emptySince = null;
+    }
+  }
+
+  // Route a game message through the adapter, mutating room state. Rejects a
+  // kicked player before any mutation. When a message moves the game into a
+  // terminal state, fire onGameEnd exactly once (edge-triggered).
+  applyMessage(playerId: string, msg: GameMessage, { now = Date.now() }: { now?: number } = {}): void {
+    if (this.isKicked(playerId)) throw new Error('player was kicked');
     if (this.adapter.anticheat) {
       const reason = this.adapter.anticheat(this.state, playerId, msg);
       if (reason) throw new Error(`anticheat: ${reason}`);
@@ -219,9 +295,9 @@ export class Room {
     const before = this._onGameEnd && this.adapter.getOutcome
       ? this.adapter.getOutcome(this.state)
       : null;
-    const phaseBefore = this.state?.phase;
+    const phaseBefore = this.state.phase;
     this.state = this.adapter.onMessage(this.state, playerId, msg);
-    const phaseAfter = this.state?.phase;
+    const phaseAfter = this.state.phase;
     if (phaseAfter !== phaseBefore) this.phaseEnteredAt = now;
     this._refreshTurnClock(now);
     const entry = { seq: this._eventSeq++, ts: now, playerId, msg, stateHash: hashState(this.state) };
@@ -234,32 +310,31 @@ export class Room {
   }
 
   // Reset the turn clock whenever the active seat changes, so each player gets a
-  // fresh budget for their own turn (and a stalled seat is measured from when its
-  // turn began, not from the last message).
-  _refreshTurnClock(now) {
+  // fresh budget for their own turn.
+  _refreshTurnClock(now: number): void {
     const seat = this.adapter.activeSeat?.(this.state);
     if (seat !== this._lastActiveSeat) {
-      this._lastActiveSeat = seat;
+      this._lastActiveSeat = seat ?? null;
       this.turnStartedAt = seat != null && seat >= 0 ? now : null;
     }
   }
 
-  // Record a pong from a member or spectator and update its latency. `sentAt` is
-  // the timestamp the gateway stamped on the matching ping.
-  recordPong(clientKey, { now = Date.now(), sentAt } = {}) {
+  // Record a pong from a member or spectator and update its latency.
+  recordPong(clientKey: string, { now = Date.now(), sentAt }: { now?: number; sentAt?: number } = {}): void {
     const member = this.members.get(clientKey);
-    const target = member ?? this.spectators.get(clientKey);
+    const target: Member | Spectator | undefined = member ?? this.spectators.get(clientKey);
     if (!target) return;
     target.lastPong = now;
     if (sentAt != null) target.latencyMs = now - sentAt;
   }
 
   // One heartbeat tick of room logic (pure w.r.t. sockets — returns intents the
-  // gateway executes). Reaps dead human members (freeing their seat from the
-  // member map), then asks the timer whether the active seat should be auto-acted.
-  // Returns { reaped: [playerId], timeout: {seat,msg,reason}|null, botMsg }.
-  tick({ now = Date.now(), deadAfterMs, graceMs, forfeitMs }) {
-    const reaped = [];
+  // gateway executes). Reaps dead human members, then asks the timer whether the
+  // active seat should be auto-acted, then whether a bot should move.
+  tick({ now = Date.now(), deadAfterMs, graceMs, forfeitMs }: {
+    now?: number; deadAfterMs: number; graceMs: number; forfeitMs: number;
+  }): TickResult {
+    const reaped: string[] = [];
     for (const [id, m] of this.members) {
       if (m.isBot || m.isSpectator) continue;
       if (now - m.lastPong >= deadAfterMs) {
@@ -271,24 +346,20 @@ export class Room {
       if (now - s.lastPong >= deadAfterMs) this.spectators.delete(key);
     }
 
-    // Liveness for turn purposes uses the (shorter) grace window, not the dead
-    // window: a player silent past grace is "dark" and may be auto-acted on even
-    // though their seat isn't reaped until deadAfterMs.
     const liveSeats = this.liveSeats(now, graceMs);
     const timeout = decideTimeout(
       { state: this.state, adapter: this.adapter, turnStartedAt: this.turnStartedAt, liveSeats },
       { now, graceMs, forfeitMs },
     );
 
-    // A bot whose turn it is plays automatically (independent of timeouts).
     const botMsg = botActionFor(this.state, this.adapter, this.botSeats);
-    const botSeat = botMsg ? this.adapter.activeSeat(this.state) : null;
+    const botSeat = botMsg ? this.adapter.activeSeat!(this.state) : null;
 
     return { reaped, timeout, botMsg, botSeat };
   }
 
   // Public lobby view of this room.
-  summary() {
+  summary(): RoomSummary {
     return {
       code: this.code,
       players: this.playerCount,
@@ -299,16 +370,16 @@ export class Room {
   }
 
   // Per-seat public view for a member; spectators (and unknown ids) get the
-  // seatless view (-1), which the engine renders with no private per-seat data.
-  viewFor(playerId) {
+  // seatless view (-1).
+  viewFor(playerId: string): unknown {
     const member = this.members.get(playerId);
     const seat = member ? member.seat : -1;
     return this.adapter.engine.publicState(this.state, seat);
   }
 
   // Presence/latency snapshot the gateway can broadcast (drives presence dots).
-  presence() {
-    const out = [];
+  presence(): Presence[] {
+    const out: Presence[] = [];
     for (const m of this.members.values()) {
       if (m.isSpectator) continue;
       out.push({ seat: m.seat, isBot: m.isBot, latencyMs: m.latencyMs });
@@ -318,7 +389,7 @@ export class Room {
 
   // Serializable snapshot of the room for the persistence seam. Live socket
   // references are dropped; members keep only the durable seat/identity fields.
-  snapshot() {
+  snapshot(): RoomSnapshot<TState> {
     return {
       code: this.code,
       gameId: this.gameId,
@@ -337,10 +408,16 @@ export class Room {
     };
   }
 
-  // Rebuild a Room from a snapshot. Engine state is restored verbatim; members
-  // come back without sockets (humans must reconnect, which restores client refs).
-  static fromSnapshot(snap, adapter, onGameEnd, onGameStart) {
-    const room = new Room(snap.code, adapter, onGameEnd, snap.options, onGameStart);
+  // Rebuild a Room from a snapshot. gameId is passed explicitly. Engine state is
+  // restored verbatim; members come back without sockets (humans must reconnect).
+  static fromSnapshot<TState extends EngineState>(
+    snap: RoomSnapshot<TState>,
+    gameId: string,
+    adapter: Adapter<TState>,
+    onGameEnd?: OnGameEnd,
+    onGameStart?: OnGameStart,
+  ): Room<TState> {
+    const room = new Room<TState>(snap.code, gameId, adapter, onGameEnd, snap.options, onGameStart);
     room.state = snap.state;
     room.eventLog = snap.eventLog ?? [];
     room._eventSeq = snap._eventSeq ?? room.eventLog.length;
@@ -362,31 +439,41 @@ export class Room {
 }
 
 export class RoomManager {
-  constructor(adapters, { onGameEnd, onGameStart } = {}) {
-    this.adapters = adapters; // gameId -> adapter
-    this.rooms = new Map(); // code -> Room
-    this._onGameEnd = onGameEnd; // (outcome, { gameId, roomCode }) => void
-    this._onGameStart = onGameStart; // ({ gameId, roomCode }) => void
+  adapters: AdapterTable;
+  rooms: Map<string, Room<EngineState>>;
+  _onGameEnd?: (outcome: Outcome, ctx: { gameId: string; roomCode: string }) => void;
+  _onGameStart?: (ctx: { gameId: string; roomCode: string }) => void;
+
+  constructor(
+    adapters: AdapterTable,
+    { onGameEnd, onGameStart }: {
+      onGameEnd?: (outcome: Outcome, ctx: { gameId: string; roomCode: string }) => void;
+      onGameStart?: (ctx: { gameId: string; roomCode: string }) => void;
+    } = {},
+  ) {
+    this.adapters = adapters;
+    this.rooms = new Map();
+    this._onGameEnd = onGameEnd;
+    this._onGameStart = onGameStart;
   }
 
-  createRoom(gameId, options = {}) {
+  createRoom(gameId: string, options: Record<string, unknown> = {}): Room<EngineState> {
     const adapter = this.adapters[gameId];
     if (!adapter) throw new Error(`unknown game: ${gameId}`);
     if (adapter.enabled === false) throw new Error(`game ${gameId} is disabled`);
     const code = makeCode(this.rooms);
     const cb = this._onGameEnd
-      ? (outcome) => this._onGameEnd(outcome, { gameId, roomCode: code })
+      ? (outcome: Outcome) => this._onGameEnd!(outcome, { gameId, roomCode: code })
       : undefined;
     const startCb = this._onGameStart
-      ? () => this._onGameStart({ gameId, roomCode: code })
+      ? () => this._onGameStart!({ gameId, roomCode: code })
       : undefined;
-    const room = new Room(code, adapter, cb, options, startCb);
-    room.gameId = gameId;
+    const room = new Room(code, gameId, adapter, cb, options, startCb);
     this.rooms.set(code, room);
     return room;
   }
 
-  getRoom(code) {
+  getRoom(code: string): Room<EngineState> {
     const room = this.rooms.get(code);
     if (!room) throw new Error('room not found');
     return room;
@@ -394,23 +481,22 @@ export class RoomManager {
 
   // Re-seat a room from a persisted snapshot on startup. Skips unknown or
   // now-disabled games rather than reviving a room nobody can join.
-  restoreRoom(snap) {
+  restoreRoom(snap: RoomSnapshot): void {
     const adapter = this.adapters[snap.gameId];
     if (!adapter || adapter.enabled === false) return;
     const cb = this._onGameEnd
-      ? (outcome) => this._onGameEnd(outcome, { gameId: snap.gameId, roomCode: snap.code })
+      ? (outcome: Outcome) => this._onGameEnd!(outcome, { gameId: snap.gameId, roomCode: snap.code })
       : undefined;
     const startCb = this._onGameStart
-      ? () => this._onGameStart({ gameId: snap.gameId, roomCode: snap.code })
+      ? () => this._onGameStart!({ gameId: snap.gameId, roomCode: snap.code })
       : undefined;
-    const room = Room.fromSnapshot(snap, adapter, cb, startCb);
-    room.gameId = snap.gameId;
+    const room = Room.fromSnapshot(snap, snap.gameId, adapter, cb, startCb);
     this.rooms.set(snap.code, room);
   }
 
   // Open rooms (not full, not locked) for a given game, for the lobby list.
-  listRooms(gameId) {
-    const out = [];
+  listRooms(gameId: string): RoomSummary[] {
+    const out: RoomSummary[] = [];
     for (const room of this.rooms.values()) {
       if (room.gameId === gameId && !room.isFull && !room.locked) {
         out.push(room.summary());
@@ -419,26 +505,26 @@ export class RoomManager {
     return out;
   }
 
-  deleteRoom(code) {
+  deleteRoom(code: string): void {
     this.rooms.delete(code);
   }
 
   // Quick-match ("Play now"): pick the fullest open room for this game, or create
-  // a fresh one when none is joinable. Returns the Room; the gateway seats the
-  // player into it. Pure selection lives in matchmaking.js.
-  quickMatch(gameId, options = {}) {
+  // a fresh one when none is joinable.
+  quickMatch(gameId: string, options: Record<string, unknown> = {}): Room<EngineState> {
     const open = this.listRooms(gameId);
     const code = pickQuickMatchRoom(open);
     return code ? this.getRoom(code) : this.createRoom(gameId, options);
   }
 
-  // Empty-room garbage collection: drop any room with no live humans (a room of
-  // only bots is dead too) and no spectators. Called by the gateway after each
-  // heartbeat tick.
-  reapEmptyRooms() {
-    const removed = [];
+  // Empty-room garbage collection with a grace window: a room is only dropped
+  // after it has been empty (no live humans, no spectators) for at least graceMs,
+  // so a bot table survives a short blip and a reconnecting human finds it.
+  reapEmptyRooms(now: number = Date.now(), graceMs: number = ROOM_GRACE_MS): string[] {
+    const removed: string[] = [];
     for (const [code, room] of this.rooms) {
-      if (!room.hasHumanMembers && room.spectators.size === 0) {
+      room.markEmptyState(now);
+      if (room.emptySince != null && now - room.emptySince >= graceMs) {
         this.rooms.delete(code);
         removed.push(code);
       }

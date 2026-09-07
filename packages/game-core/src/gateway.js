@@ -32,9 +32,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createServer } from 'node:http';
 import { WebSocketServer } from 'ws';
-import { RoomManager } from './rooms.js';
-import { adapters } from './games.js';
-import { OutcomeStore, AchievementStore, SnapshotStore } from './store.js';
+import { RoomManager } from './rooms.ts';
+import { adapters } from './games.ts';
+import { OutcomeStore, AchievementStore, SnapshotStore } from './store.ts';
 import { sanitizeName } from '@portal/shared/sanitize';
 import { PROTOCOL_VERSION } from '@portal/shared/version';
 import { validateMessage } from '@portal/shared/validate';
@@ -45,7 +45,7 @@ import {
   headToHead,
   checkAchievements,
 } from '@portal/shared/leaderboard';
-import { log } from './logger.js';
+import { log } from './logger.ts';
 import { isSlowGame, rollupMessagesPerSec } from '@portal/shared/metrics';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -679,7 +679,7 @@ export function runHeartbeat(manager, broadcast, opts, now = Date.now()) {
 
     if (changed) broadcast(room);
   }
-  manager.reapEmptyRooms();
+  manager.reapEmptyRooms(now);
 }
 
 // A socket dropped. Spectators leave immediately. A *seated* player is NOT

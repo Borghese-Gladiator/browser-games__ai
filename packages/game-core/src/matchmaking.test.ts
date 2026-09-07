@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { pickQuickMatchRoom, isQuickMatchable } from './matchmaking.js';
+import type { RoomSummary } from './types.ts';
 
-const room = (code, players, max = 4, locked = false) => ({ code, players, max, locked });
+const room = (code: string, players: number, max = 4, locked = false): RoomSummary =>
+  ({ code, players, max, locked, host: null });
 
 describe('isQuickMatchable', () => {
   it('accepts an open, unlocked room', () => {

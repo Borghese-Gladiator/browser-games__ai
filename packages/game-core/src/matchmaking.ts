@@ -3,10 +3,12 @@
 // "Play now" request should drop into — or signal that a fresh room is needed.
 // No I/O, no room mutation: the gateway acts on the decision.
 
+import type { RoomSummary } from './types.ts';
+
 // A room is joinable for quick-match when it is not full and not locked by its
 // host. We deliberately ignore in-progress games here; an adapter that wants to
 // allow mid-game joins can still expose those rooms as open via listRooms.
-export function isQuickMatchable(room) {
+export function isQuickMatchable(room: RoomSummary): boolean {
   return !room.locked && room.players < room.max;
 }
 
@@ -15,7 +17,7 @@ export function isQuickMatchable(room) {
 // players thin across many half-empty rooms. Ties break on the lexically
 // smallest code for deterministic, testable behavior. Returns the chosen room's
 // code, or null when none is joinable (caller should create a new room).
-export function pickQuickMatchRoom(rooms) {
+export function pickQuickMatchRoom(rooms: RoomSummary[]): string | null {
   const candidates = rooms.filter(isQuickMatchable);
   if (candidates.length === 0) return null;
   candidates.sort((a, b) => {

@@ -2,42 +2,46 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { RoomManager } from './rooms.js';
 import { handleMessage } from './gateway.js';
 import { adapters } from './games.js';
+import type { ReversiState } from '@browser-games/engine-reversi';
 
 // Drives the real reversi adapter through the gateway's handleMessage with
 // in-memory fake WebSocket clients, so lobby flow, the spectator gate, anticheat
 // and broadcast are all exercised end-to-end (no real sockets).
 
+type Frame = Record<string, unknown>;
+
 function fakeClient() {
-  const sent = [];
+  const sent: Frame[] = [];
   return {
     readyState: 1,
-    send: (raw) => sent.push(JSON.parse(raw)),
+    emit: () => {},
+    send: (raw: string) => sent.push(JSON.parse(raw) as Frame),
     sent,
     last: () => sent[sent.length - 1],
-    ofType: (t) => sent.filter((m) => m.t === t),
-    joinedCode: () => sent.find((m) => m.t === 'joined')?.code,
+    ofType: (t: string) => sent.filter((m) => m.t === t),
+    joinedCode: () => sent.find((m) => m.t === 'joined')?.code as string | undefined,
   };
 }
 
 // Mirror of the gateway's Session, minimal but with the same key/spectator
 // semantics handleMessage relies on.
-function session(playerId) {
+function session(playerId: string) {
   const client = fakeClient();
   return {
     client,
     playerId,
-    room: null,
+    room: null as unknown,
     spectator: false,
-    get key() {
+    get key(): string {
       return this.spectator ? `spec:${this.playerId}` : this.playerId;
     },
-    send(obj) {
+    send(obj: unknown) {
       this.client.send(JSON.stringify(obj));
     },
   };
 }
 
-let manager;
+let manager: RoomManager;
 beforeEach(() => {
   manager = new RoomManager({ reversi: adapters.reversi });
 });
@@ -46,7 +50,7 @@ describe('reversi lobby integration', () => {
   it('creates a room, seats two players, and auto-starts', () => {
     const host = session('p0');
     handleMessage(manager, host, { t: 'lobby:create', gameId: 'reversi', name: 'Alice' });
-    const code = host.client.joinedCode();
+    const code = host.client.joinedCode()!;
 
     const guest = session('p1');
     handleMessage(manager, guest, { t: 'lobby:join', code, name: 'Bob' });
@@ -60,7 +64,7 @@ describe('reversi lobby integration', () => {
   it('admits a third user as a spectator', () => {
     const host = session('p0');
     handleMessage(manager, host, { t: 'lobby:create', gameId: 'reversi', name: 'Alice' });
-    const code = host.client.joinedCode();
+    const code = host.client.joinedCode()!;
     handleMessage(manager, session('p1'), { t: 'lobby:join', code, name: 'Bob' });
 
     const spec = session('s0');
@@ -72,7 +76,7 @@ describe('reversi lobby integration', () => {
   it('lists only open (non-full) rooms', () => {
     const host = session('p0');
     handleMessage(manager, host, { t: 'lobby:create', gameId: 'reversi', name: 'Alice' });
-    const code = host.client.joinedCode();
+    const code = host.client.joinedCode()!;
     handleMessage(manager, session('p1'), { t: 'lobby:join', code, name: 'Bob' });
 
     const onlooker = session('x');
@@ -85,7 +89,7 @@ describe('reversi permissions', () => {
   function startedRoom() {
     const host = session('p0');
     handleMessage(manager, host, { t: 'lobby:create', gameId: 'reversi', name: 'Alice' });
-    const code = host.client.joinedCode();
+    const code = host.client.joinedCode()!;
     const guest = session('p1');
     handleMessage(manager, guest, { t: 'lobby:join', code, name: 'Bob' });
     return { code, host, guest };
@@ -111,7 +115,7 @@ describe('reversi gameplay broadcast', () => {
   function startedRoom() {
     const host = session('p0');
     handleMessage(manager, host, { t: 'lobby:create', gameId: 'reversi', name: 'Alice' });
-    const code = host.client.joinedCode();
+    const code = host.client.joinedCode()!;
     const guest = session('p1');
     handleMessage(manager, guest, { t: 'lobby:join', code, name: 'Bob' });
     // clear the join-time state messages so we can assert on the move broadcast
@@ -125,8 +129,9 @@ describe('reversi gameplay broadcast', () => {
     handleMessage(manager, host, { t: 'game', row: 2, col: 3 });
 
     const room = manager.getRoom(code);
-    expect(room.state.board[2 * 8 + 3]).toBe('B');
-    expect(room.state.board[3 * 8 + 3]).toBe('B'); // flipped
+    const board = (room.state as ReversiState).board;
+    expect(board[2 * 8 + 3]).toBe('B');
+    expect(board[3 * 8 + 3]).toBe('B'); // flipped
     expect(host.client.ofType('state')).toHaveLength(1);
     expect(guest.client.ofType('state')).toHaveLength(1);
   });
@@ -158,7 +163,7 @@ describe('reversi gameplay broadcast', () => {
 });
 
 describe('reversi reconnection', () => {
-  it('reclaims the same seat on reconnect without re-adding to engine state', () => {
+  it('reclaims a seat on reconnect', () => {
     const room = manager.createRoom('reversi');
     const client = fakeClient();
     room.addPlayer('p0', 'Alice', client);
