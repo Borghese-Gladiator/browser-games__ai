@@ -1,63 +1,42 @@
-# Plan: Repo cleanup, agent docs, and lobby overhaul
-
-Supersedes the historical planning log (moved to `docs/history.md`).
+# Plan: mahjong adapter
 
 ## Brief
-Four workstreams, low-risk → high-risk:
-1. **Cleanup + validation** — remove runtime-state cruft from the tree, gitignore
-   it, give the repo one health command, and make e2e start from clean state.
-2. **Agent docs** — lean README + new `AGENTS.md`; move the deep adapter contract
-   and planning history into `docs/`.
-3. **Lobby logic (F1–F4)** — quick-match-with-bots primary CTA, remember name,
-   live room-list broadcast, explicit leave.
-4. **Lobby UI** — restructure `Lobby.jsx` + `lobby.css` around one primary CTA,
-   a private-lobby block, and a live public-tables list.
+Add the `mahjong` adapter to `packages/game-core/src/games.ts`, wired to
+`@browser-games/engine-mahjong`. Add the portal registry entry. Write adapter
+unit tests beside the code.
 
 ## Changes
-
-### 1. Cleanup + validation
-- Delete the stray empty `${QA_SPEC_DIR}/` directory.
-- Delete leftover untracked `snapshots/*.json` (leftover local rooms).
-- `.gitignore`: add `snapshots/` and stray-var guard.
-- `package.json`: add `check` script (unit tests) and `check:all` (unit + e2e);
-  add a `clean:state` script that removes runtime state.
-- `bin/dev-server.js`: read `OUTCOMES_PATH`, `ACHIEVEMENTS_PATH`, `SNAPSHOTS_PATH`
-  from env and pass to `createGateway` (already parameterized) — lets e2e point
-  at a scratch dir.
-- `playwright.config.js`: point the gateway at a throwaway state dir per run so
-  the suite starts hermetic (TODO C4/#4).
-
-### 2. Agent docs
-- Rewrite `README.md`: orientation + the four commands + one-paragraph "add a
-  game" pointer. ~60 lines, link out for depth.
-- New `AGENTS.md`: workspace map, where things live, validation commands, the
-  golden rules an agent needs (registry is source of truth; engines are pure;
-  one gateway; how to run/validate).
-- New `docs/adding-a-game.md`: the full adapter contract currently inline in
-  README.
-- Move `plan.md` planning history → `docs/history.md`.
-
-### 3. Lobby logic
-- `useIdentity.js` (or Lobby): persist last-used name in localStorage; prefill.
-- Gateway: broadcast a fresh `rooms` frame to all lobby watchers of a game on
-  any membership change (create/join/leave/lock).
-- Add `lobby:leave` protocol + `leaveRoom` client action; free seat, return to
-  lobby, keep name.
-- Portal/Lobby: make quick-match the dominant CTA (bots fill), create/join
-  demoted.
-
-### 4. Lobby UI
-- Rebuild `Lobby.jsx` layout: hero Quick-Match card, "Private Lobby"
-  (host/join-by-code), "Public Tables" live list. One primary button.
-- `lobby.css`: match the mockups (dark cards, single accent CTA).
+- `packages/game-core/package.json`: add `@browser-games/engine-mahjong` dep.
+- `packages/game-core/src/games.ts`:
+  - Import the engine namespace and its types.
+  - Add a `MahjongState` wrapper: `players` (seats), `rules`, `seed`, `game`
+    (engine `GameState` or null), `phase`.
+  - Add a `GameEngine` object: `createGame` (rules from options), `addPlayer`,
+    `removePlayer`, `publicState`.
+  - Add helpers: `resolveWireTile`, `resolveWireTiles`, `mahjongActiveSeat`,
+    `mahjongPendingSeats`, `mahjongResolveWindow`, `mahjongBotMove`,
+    `mahjongTimeout`, `mahjongOnMessage`, `mahjongAnticheat`, `mahjongDeal`,
+    `mahjongGetOutcome`, `mahjongPublicState`, `mahjongOptionsSchema`.
+  - `activeSeat` returns -1 while a claim window is open.
+  - `pendingSeats` returns the open claimers, empty when no window.
+  - `resolveWindow` closes an expired window by engine precedence
+    (`resolveClaimWindow`), not by replaying timeouts.
+  - `botMove` uses `createStandardAi`.
+  - `timeoutAction` passes an open claim or discards the drawn tile.
+  - `onMessage` resolves wire tile ids against the actual hand and throws on a
+    malformed or non-owned id.
+  - `optionsSchema` derives from `DEFAULT_TAIWANESE_RULES`.
+  - Register `mahjong` in the adapters map. Export the adapter and the type.
+- `packages/shared/src/registry.ts`: add the `mahjong` entry
+  (multiplayer: true, enabled: true).
 
 ## Tests
-### Unit
-- Existing ~250 vitest pass unchanged after cleanup/docs.
-- Lobby logic: new tests for name persistence, `rooms` re-broadcast on
-  membership change, `lobby:leave` frees the seat.
-### Manual (browser)
-- `npm run dev`; portal → poker: "Play now" fills bots and starts immediately.
-- Second tab creates a room → its code shows in the first tab's public list
-  without pressing Refresh (live broadcast).
-- Leave room → back to lobby, name still prefilled.
+### Unit (`packages/game-core/src/games.test.ts`)
+- `publicState` hides opponent hands (only counts/melds/flowers/discards).
+- `pendingSeats` during a claim window and outside a window.
+- `resolveWindow` closes a window by precedence (pong beats chow).
+- `onMessage` rejects a malformed and a non-owned tile id.
+
+### Manual
+- Run `npm run test` scoped to game-core.
+- Run `npm run build` / typecheck the changed packages.

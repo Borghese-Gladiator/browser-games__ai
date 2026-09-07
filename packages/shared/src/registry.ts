@@ -73,4 +73,13 @@ export const games: GameMeta[] = [
     multiplayer: true,
     enabled: true,
   },
+  {
+    id: "mahjong",
+    title: "Mahjong (台灣麻將)",
+    description: "4-player Taiwanese 16-tile mahjong. Draw, discard, and claim to win. Create a room and share the code.",
+    emoji: "🀄",
+    path: "/games/mahjong/",
+    multiplayer: true,
+    enabled: true,
+  },
 ];

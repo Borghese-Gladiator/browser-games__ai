@@ -1,0 +1,84 @@
+.mj {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 4rem 1.5rem 2rem;
+  position: relative;
+}
+
+.mj-back {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.mj h1 {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: 0.05em;
+}
+
+.mj section {
+  text-align: center;
+}
+
+.mj [role="status"] {
+  margin: 0;
+  font-size: 1.25rem;
+  min-height: 1.5em;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.mj-hand,
+.mj-actions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.mj-tile-btn,
+.mj-action-btn {
+  font-size: 1.1rem;
+  font-weight: 700;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: var(--text);
+  cursor: pointer;
+  min-width: 3rem;
+}
+
+.mj-tile-btn:disabled,
+.mj-action-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mj-tile-btn:not(:disabled):hover,
+.mj-action-btn:not(:disabled):hover {
+  border-color: var(--accent);
+}
+
+.mj-opponents {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mj li[aria-current="true"] {
+  color: var(--accent);
+  font-weight: 700;
+}
