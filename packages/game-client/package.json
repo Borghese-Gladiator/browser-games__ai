@@ -26,7 +26,8 @@
     "./SpectatorView": "./src/SpectatorView.jsx"
   },
   "dependencies": {
-    "@portal/shared": "*"
+    "@portal/shared": "*",
+    "socket.io-client": "^4.8.3"
   },
   "peerDependencies": {
     "react": "^18.3.1"

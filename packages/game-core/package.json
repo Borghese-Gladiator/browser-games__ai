@@ -12,7 +12,8 @@
     "./types": "./src/types.ts"
   },
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@browser-games/engine-poker": "*",
