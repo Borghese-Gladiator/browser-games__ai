@@ -1,3 +1,3 @@
-import { main } from './simulation.js';
+import { main } from './simulation.ts';
 
 main(process.argv);

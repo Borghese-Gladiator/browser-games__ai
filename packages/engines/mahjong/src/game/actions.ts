@@ -1,5 +1,5 @@
-import type { Tile } from '../tiles/tile.js';
-import type { PlayerId } from './state.js';
+import type { Tile } from '../tiles/tile.ts';
+import type { PlayerId } from './state.ts';
 
 export interface DealAction {
   readonly type: 'DEAL';

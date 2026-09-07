@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { runSimulation } from './simulation.js';
+import { runSimulation } from './simulation.ts';
 
 describe('runSimulation', () => {
   it('plays a few hundred random games with no crashes or invalid states', () => {

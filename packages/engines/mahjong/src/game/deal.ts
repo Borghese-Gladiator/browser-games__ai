@@ -1,16 +1,16 @@
-import type { Tile } from '../tiles/tile.js';
-import type { RandomSource } from '../random/rng.js';
-import type { TaiwaneseRules } from '../rules/taiwanese.js';
-import { createSeededRandom } from '../random/rng.js';
-import { createTaiwaneseTileSet } from '../tiles/tile-set.js';
-import { shuffleTiles } from '../tiles/shuffle.js';
-import type { GameConfig, GameOutcome, GameState, PlayerId, PlayerState, Wall } from './state.js';
-import { getPlayer, withPlayer } from './state.js';
-import type { ApplyResult } from './result.js';
-import type { GameError } from './errors.js';
-import type { GameEvent } from './events.js';
-import { recordEvent } from './events.js';
-import { dealerContinues, initialTurn } from './turn.js';
+import type { Tile } from '../tiles/tile.ts';
+import type { RandomSource } from '../random/rng.ts';
+import type { TaiwaneseRules } from '../rules/taiwanese.ts';
+import { createSeededRandom } from '../random/rng.ts';
+import { createTaiwaneseTileSet } from '../tiles/tile-set.ts';
+import { shuffleTiles } from '../tiles/shuffle.ts';
+import type { GameConfig, GameOutcome, GameState, PlayerId, PlayerState, Wall } from './state.ts';
+import { getPlayer, withPlayer } from './state.ts';
+import type { ApplyResult } from './result.ts';
+import type { GameError } from './errors.ts';
+import type { GameEvent } from './events.ts';
+import { recordEvent } from './events.ts';
+import { dealerContinues, initialTurn } from './turn.ts';
 
 export type ReplaceFlowersResult =
   | {

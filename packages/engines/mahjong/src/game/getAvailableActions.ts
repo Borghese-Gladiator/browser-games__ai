@@ -1,8 +1,8 @@
-import { isWinningHand } from '../hand/winning.js';
-import type { GameAction } from './actions.js';
-import type { GameState, PlayerId } from './state.js';
-import { getPlayer } from './state.js';
-import { chowCombos, concealedKongTiles, windowOption } from './claim.js';
+import { isWinningHand } from '../hand/winning.ts';
+import type { GameAction } from './actions.ts';
+import type { GameState, PlayerId } from './state.ts';
+import { getPlayer } from './state.ts';
+import { chowCombos, concealedKongTiles, windowOption } from './claim.ts';
 
 export function getAvailableActions(state: GameState, player: PlayerId): readonly GameAction[] {
   if (state.phase !== 'PLAYING') {

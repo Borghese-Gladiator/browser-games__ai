@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { isWinningHand, findWinningDecompositions } from './winning.js';
-import { meld, tiles } from './test-helpers.js';
+import { isWinningHand, findWinningDecompositions } from './winning.ts';
+import { meld, tiles } from './test-helpers.ts';
 
 describe('isWinningHand', () => {
   it('recognizes a standard win', () => {

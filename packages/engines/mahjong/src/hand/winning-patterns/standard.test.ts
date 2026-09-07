@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { toTileCounts } from '../counts.js';
-import { decomposeStandard } from './standard.js';
-import { tiles } from '../test-helpers.js';
+import { toTileCounts } from '../counts.ts';
+import { decomposeStandard } from './standard.ts';
+import { tiles } from '../test-helpers.ts';
 
 describe('decomposeStandard', () => {
   it('finds the single decomposition of a plain hand', () => {

@@ -1,6 +1,6 @@
-import type { Tile } from '../tiles/tile.js';
-import type { TaiwaneseRules } from '../rules/taiwanese.js';
-import type { PlayerId, GameState, GameOutcome } from './state.js';
+import type { Tile } from '../tiles/tile.ts';
+import type { TaiwaneseRules } from '../rules/taiwanese.ts';
+import type { PlayerId, GameState, GameOutcome } from './state.ts';
 
 export type TurnPhase = 'NEEDS_DRAW' | 'NEEDS_DISCARD' | 'CLAIM_RESOLUTION';
 

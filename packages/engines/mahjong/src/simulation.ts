@@ -1,13 +1,13 @@
-import { DEFAULT_TAIWANESE_RULES } from './rules/taiwanese.js';
-import type { GameConfig, GameState, PlayerId } from './game/state.js';
-import { createGame } from './game/deal.js';
-import { applyAction } from './game/reducer.js';
-import { getAvailableActions } from './game/getAvailableActions.js';
-import { assertValidGameState, InvalidGameStateError } from './assertValidGameState.js';
-import type { GameAction } from './game/actions.js';
-import { createRandomAi, createRng } from './ai/random.js';
-import type { Rng } from './ai/random.js';
-import { createStandardAi } from './ai/standard.js';
+import { DEFAULT_TAIWANESE_RULES } from './rules/taiwanese.ts';
+import type { GameConfig, GameState, PlayerId } from './game/state.ts';
+import { createGame } from './game/deal.ts';
+import { applyAction } from './game/reducer.ts';
+import { getAvailableActions } from './game/getAvailableActions.ts';
+import { assertValidGameState, InvalidGameStateError } from './assertValidGameState.ts';
+import type { GameAction } from './game/actions.ts';
+import { createRandomAi, createRng } from './ai/random.ts';
+import type { Rng } from './ai/random.ts';
+import { createStandardAi } from './ai/standard.ts';
 
 export type SimulationAi = (
   state: GameState,

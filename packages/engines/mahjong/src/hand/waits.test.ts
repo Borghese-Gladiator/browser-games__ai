@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { findWaits } from './waits.js';
-import { meld, tiles } from './test-helpers.js';
+import { findWaits } from './waits.ts';
+import { meld, tiles } from './test-helpers.ts';
 
 describe('findWaits', () => {
   it('finds the pair wait of a standard hand', () => {

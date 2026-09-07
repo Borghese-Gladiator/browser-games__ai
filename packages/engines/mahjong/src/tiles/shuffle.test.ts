@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { createSeededRandom } from '../random/rng.js';
-import { createTaiwaneseTileSet } from './tile-set.js';
-import { shuffleTiles } from './shuffle.js';
+import { createSeededRandom } from '../random/rng.ts';
+import { createTaiwaneseTileSet } from './tile-set.ts';
+import { shuffleTiles } from './shuffle.ts';
 
 describe('shuffleTiles', () => {
   const tileSet = createTaiwaneseTileSet();

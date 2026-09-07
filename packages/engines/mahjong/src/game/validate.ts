@@ -1,11 +1,11 @@
-import type { ClaimType } from '../rules/claims.js';
-import type { GameAction } from './actions.js';
-import type { GameState, PlayerId } from './state.js';
-import type { GameError } from './errors.js';
-import type { TurnPhase } from './turn.js';
-import { getPlayer } from './state.js';
-import { gameError } from './errors.js';
-import { chowCombos, sameKind, windowOption } from './claim.js';
+import type { ClaimType } from '../rules/claims.ts';
+import type { GameAction } from './actions.ts';
+import type { GameState, PlayerId } from './state.ts';
+import type { GameError } from './errors.ts';
+import type { TurnPhase } from './turn.ts';
+import { getPlayer } from './state.ts';
+import { gameError } from './errors.ts';
+import { chowCombos, sameKind, windowOption } from './claim.ts';
 
 export function requireTurn(
   state: GameState,

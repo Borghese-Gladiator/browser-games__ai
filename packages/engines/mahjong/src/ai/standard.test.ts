@@ -1,15 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { tiles } from '../hand/test-helpers.js';
-import type { Tile } from '../tiles/tile.js';
-import type { Meld } from '../tiles/meld.js';
-import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.js';
-import type { GameAction } from '../game/actions.js';
-import type { GameState, PlayerId, PlayerState } from '../game/state.js';
-import { createGame } from '../game/deal.js';
-import { applyAction } from '../game/reducer.js';
-import { getAvailableActions } from '../game/getAvailableActions.js';
-import { createStandardAi, evaluateDiscards, shouldClaimPong } from './standard.js';
-import { createRng } from './random.js';
+import { tiles } from '../hand/test-helpers.ts';
+import type { Tile } from '../tiles/tile.ts';
+import type { Meld } from '../tiles/meld.ts';
+import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.ts';
+import type { GameAction } from '../game/actions.ts';
+import type { GameState, PlayerId, PlayerState } from '../game/state.ts';
+import { createGame } from '../game/deal.ts';
+import { applyAction } from '../game/reducer.ts';
+import { getAvailableActions } from '../game/getAvailableActions.ts';
+import { createStandardAi, evaluateDiscards, shouldClaimPong } from './standard.ts';
+import { createRng } from './random.ts';
 
 function chooseActingSeat(state: GameState): PlayerId | null {
   if (state.pendingClaim) {

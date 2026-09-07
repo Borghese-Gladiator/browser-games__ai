@@ -1,9 +1,9 @@
-import type { TileKind } from '../../tiles/tile-kind.js';
-import type { TaiwaneseRules } from '../../rules/taiwanese.js';
-import { winningHandSize } from '../../rules/taiwanese.js';
-import type { TileCounts } from '../counts.js';
-import { ALL_TILE_KINDS } from '../counts.js';
-import type { DecomposedMeld, HandDecomposition } from '../decomposition.js';
+import type { TileKind } from '../../tiles/tile-kind.ts';
+import type { TaiwaneseRules } from '../../rules/taiwanese.ts';
+import { winningHandSize } from '../../rules/taiwanese.ts';
+import type { TileCounts } from '../counts.ts';
+import { ALL_TILE_KINDS } from '../counts.ts';
+import type { DecomposedMeld, HandDecomposition } from '../decomposition.ts';
 
 const TRIPLET_SIZE = 3;
 

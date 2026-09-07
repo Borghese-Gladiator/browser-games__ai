@@ -1,9 +1,9 @@
-import type { TileKind } from '../tiles/tile-kind.js';
-import type { TaiwaneseRules } from '../rules/taiwanese.js';
-import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.js';
-import { ALL_TILE_KINDS, toTileCounts } from './counts.js';
-import type { HandInput } from './winning.js';
-import { toExposedMelds, winningDecompositionsFromCounts } from './winning.js';
+import type { TileKind } from '../tiles/tile-kind.ts';
+import type { TaiwaneseRules } from '../rules/taiwanese.ts';
+import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.ts';
+import { ALL_TILE_KINDS, toTileCounts } from './counts.ts';
+import type { HandInput } from './winning.ts';
+import { toExposedMelds, winningDecompositionsFromCounts } from './winning.ts';
 
 const MAX_COPIES = 4;
 

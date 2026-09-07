@@ -1,42 +1,58 @@
-# Plan: mahjong adapter
+# Plan: mahjong browser page
 
 ## Brief
-Add the `mahjong` adapter to `packages/game-core/src/games.ts`, wired to
-`@browser-games/engine-mahjong`. Add the portal registry entry. Write adapter
-unit tests beside the code.
+Build the browser page at `games/mahjong/` on the `games/sheng-ji` template.
+Render the player hand, the player discard area, three opponent areas, a centre
+table with wall count and last discard, and an action bar. The action bar and
+tile enablement come only from the engine `availableActions`; React never
+re-derives legality. Tile selection is by click. Add a Playwright spec that
+starts a game, makes a legal discard, completes a turn, and resolves one claim
+window.
 
 ## Changes
-- `packages/game-core/package.json`: add `@browser-games/engine-mahjong` dep.
-- `packages/game-core/src/games.ts`:
-  - Import the engine namespace and its types.
-  - Add a `MahjongState` wrapper: `players` (seats), `rules`, `seed`, `game`
-    (engine `GameState` or null), `phase`.
-  - Add a `GameEngine` object: `createGame` (rules from options), `addPlayer`,
-    `removePlayer`, `publicState`.
-  - Add helpers: `resolveWireTile`, `resolveWireTiles`, `mahjongActiveSeat`,
-    `mahjongPendingSeats`, `mahjongResolveWindow`, `mahjongBotMove`,
-    `mahjongTimeout`, `mahjongOnMessage`, `mahjongAnticheat`, `mahjongDeal`,
-    `mahjongGetOutcome`, `mahjongPublicState`, `mahjongOptionsSchema`.
-  - `activeSeat` returns -1 while a claim window is open.
-  - `pendingSeats` returns the open claimers, empty when no window.
-  - `resolveWindow` closes an expired window by engine precedence
-    (`resolveClaimWindow`), not by replaying timeouts.
-  - `botMove` uses `createStandardAi`.
-  - `timeoutAction` passes an open claim or discards the drawn tile.
-  - `onMessage` resolves wire tile ids against the actual hand and throws on a
-    malformed or non-owned id.
-  - `optionsSchema` derives from `DEFAULT_TAIWANESE_RULES`.
-  - Register `mahjong` in the adapters map. Export the adapter and the type.
-- `packages/shared/src/registry.ts`: add the `mahjong` entry
-  (multiplayer: true, enabled: true).
+- `packages/engines/mahjong/src/**`: rewrite the internal import specifiers from
+  `.js` to `.ts` (270 across 50 files). The gateway runs `.ts` directly through
+  Node type-stripping, which needs the specifier to match the real file, like
+  the poker engine (`./handEval.ts`). Without this the server fails to boot the
+  mahjong adapter (`ERR_MODULE_NOT_FOUND` on `./random/rng.js`). Content is
+  otherwise unchanged.
+- `packages/game-core/src/games.ts`: add `myDiscards` (the requesting seat own
+  discards) to `mahjongPublicState`, so the page can render the player discard
+  area. This reveals only the seat own discards; opponent hiding is unchanged.
+- `games/mahjong/src/Mahjong.tsx`: rewrite the table page.
+  - Components: `TileButton`, `OpponentArea`, `ActionBar`, plus helpers
+    `statusText`, `tileLabel`, `tileShort`.
+  - Partition `availableActions` into per-tile discard actions and the rest.
+  - The hand renders one clickable `TileButton` per tile. A tile is enabled only
+    when the engine offers a discard action for it. A click sends that discard.
+  - `ActionBar` renders every non-discard engine action (draw, pass, chow, pong,
+    kong, win) verbatim.
+  - Layout: three opponent areas across the top, a centre table (wall + last
+    discard) below, then the player discard area, the hand, and the action bar.
+- `games/mahjong/src/mahjong.css`: table grid, opponent areas, discard rows,
+  hand, and action bar layout. Reuse the theme tokens (`--cell`, `--line`,
+  `--accent`, `--muted`).
+- `e2e/mahjong.spec.js`: Playwright spec. Four browser contexts join one room,
+  the server auto-starts the hand, and a driver clicks Draw, a discard tile, or
+  Pass each tick until a result. The spec asserts a legal discard advanced a
+  turn and that at least one claim window opened and resolved.
+
+## Note on AI seats
+The gateway starts a 4-seat game only when four members are seated
+(`autoStart` at 4) and `startEarly` needs `minPlayers` real members first, so a
+solo human cannot start against three bots (the same limit applies to sheng-ji
+and president). The spec therefore seats four browser clients, which is the
+proven multiplayer e2e pattern. Idle seats are still driven by the adapter
+`botMove`/`timeoutAction`, so the play is engine-legal.
 
 ## Tests
-### Unit (`packages/game-core/src/games.test.ts`)
-- `publicState` hides opponent hands (only counts/melds/flowers/discards).
-- `pendingSeats` during a claim window and outside a window.
-- `resolveWindow` closes a window by precedence (pong beats chow).
-- `onMessage` rejects a malformed and a non-owned tile id.
-
 ### Manual
-- Run `npm run test` scoped to game-core.
-- Run `npm run build` / typecheck the changed packages.
+- `npm run dev`, open `http://localhost:5173/games/mahjong/`, create a room,
+  seat four clients, confirm the hand renders and a discard completes a turn.
+
+### E2E
+- `npx playwright test e2e/mahjong.spec.js`
+
+### Unit
+- `npm run check` (adapter + engine unit tests still pass after the
+  `myDiscards` field addition).

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.js';
-import { tiles } from '../hand/test-helpers.js';
-import type { GameConfig, GameState, PlayerState } from './state.js';
-import { getPlayer, withPlayer, isTerminal } from './state.js';
-import { createGame } from './deal.js';
-import { applyAction } from './reducer.js';
+import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.ts';
+import { tiles } from '../hand/test-helpers.ts';
+import type { GameConfig, GameState, PlayerState } from './state.ts';
+import { getPlayer, withPlayer, isTerminal } from './state.ts';
+import { createGame } from './deal.ts';
+import { applyAction } from './reducer.ts';
 
 const rules = DEFAULT_TAIWANESE_RULES;
 

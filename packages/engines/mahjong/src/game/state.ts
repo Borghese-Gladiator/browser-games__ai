@@ -1,9 +1,9 @@
-import type { Tile } from '../tiles/tile.js';
-import type { Meld } from '../tiles/meld.js';
-import type { TaiwaneseRules } from '../rules/taiwanese.js';
-import type { ClaimType } from '../rules/claims.js';
-import type { TurnState } from './turn.js';
-import type { GameEvent } from './events.js';
+import type { Tile } from '../tiles/tile.ts';
+import type { Meld } from '../tiles/meld.ts';
+import type { TaiwaneseRules } from '../rules/taiwanese.ts';
+import type { ClaimType } from '../rules/claims.ts';
+import type { TurnState } from './turn.ts';
+import type { GameEvent } from './events.ts';
 
 export type PlayerId = 0 | 1 | 2 | 3;
 

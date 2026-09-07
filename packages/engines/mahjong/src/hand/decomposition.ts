@@ -1,5 +1,5 @@
-import type { TileKind } from '../tiles/tile-kind.js';
-import type { MeldKind } from '../tiles/meld.js';
+import type { TileKind } from '../tiles/tile-kind.ts';
+import type { MeldKind } from '../tiles/meld.ts';
 
 export type WinningPattern = 'STANDARD' | 'SEVEN_PAIRS';
 

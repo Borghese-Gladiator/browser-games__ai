@@ -1,6 +1,6 @@
-import type { Tile } from '../tiles/tile.js';
-import type { PlayerId, GameState } from './state.js';
-import type { TurnPhase } from './turn.js';
+import type { Tile } from '../tiles/tile.ts';
+import type { PlayerId, GameState } from './state.ts';
+import type { TurnPhase } from './turn.ts';
 
 export interface GameEventBase {
   readonly seq: number;

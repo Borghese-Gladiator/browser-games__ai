@@ -1,4 +1,4 @@
-import type { FlowerKind, HonorKind, Suit, Tile } from './tile.js';
+import type { FlowerKind, HonorKind, Suit, Tile } from './tile.ts';
 
 const NUMBER_SUITS: Suit[] = ['characters', 'bamboo', 'dots'];
 

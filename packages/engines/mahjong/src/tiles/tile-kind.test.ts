@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import type { Tile } from './tile.js';
-import { tileToKind } from './tile-kind.js';
+import type { Tile } from './tile.ts';
+import { tileToKind } from './tile-kind.ts';
 
 describe('tileToKind', () => {
   it.each([
