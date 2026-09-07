@@ -113,6 +113,14 @@ export function addPlayer(state: PresidentState, { id, name }: SeatInit): Presid
   return next;
 }
 
+export function removePlayer(state: PresidentState, playerId: string): PresidentState {
+  const next = clone(state);
+  next.players = next.players
+    .filter((p) => p.id !== playerId)
+    .map((p, i) => ({ ...p, seat: i }));
+  return next;
+}
+
 // Sort a hand low→high by rank (stable within rank).
 function sortHand(hand: string[]): string[] {
   return [...hand].sort((a, b) => rankIndex(a) - rankIndex(b));
