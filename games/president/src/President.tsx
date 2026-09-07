@@ -8,7 +8,22 @@ import { RoomCode } from "@browser-games/game-client/RoomCode";
 import { Chat } from "@browser-games/game-client/Chat";
 import { SpectatorView } from "@browser-games/game-client/SpectatorView";
 import { useYourTurn } from "@browser-games/game-client/useYourTurn";
+import type { GameState } from "@browser-games/game-client/protocol";
 import "@browser-games/game-client/chrome.css";
+
+interface PresidentPlayer {
+  seat: number;
+  name: string;
+}
+
+interface PresidentState extends GameState {
+  players: PresidentPlayer[];
+  winner?: { name: string };
+  currentPlay?: { cards: string[] } | null;
+  myHand: string[];
+  canPass?: boolean;
+  mySeat?: number;
+}
 
 // Cards played this trick must share a rank; a legal play is any subset of one
 // rank that beats the current play. We let the player pick cards and match the
@@ -40,8 +55,8 @@ export function President() {
     needsRefresh,
     gameState: rawGameState,
   } = useGameSocket("president");
-  // Engine-specific per-seat view; read through a permissive alias.
-  const gameState = rawGameState as Record<string, any> | null;
+  // Engine-specific per-seat view; read through a typed local view.
+  const gameState = rawGameState as PresidentState | null;
 
   const [selected, setSelected] = useState<string[]>([]);
 
@@ -90,7 +105,7 @@ export function President() {
     setSelected([]);
   };
 
-  const activePlayer = gameState.players.find((p: any) => p.seat === gameState.activeSeat);
+  const activePlayer = gameState.players.find((p) => p.seat === gameState.activeSeat);
   const activePlayerName = activePlayer?.name ?? "";
 
   let statusText;
@@ -138,7 +153,7 @@ export function President() {
         <h2>Current play</h2>
         {current ? (
           <ul className="president-cards">
-            {current.cards.map((c: any) => (
+            {current.cards.map((c) => (
               <li key={c}>{c}</li>
             ))}
           </ul>
@@ -151,7 +166,7 @@ export function President() {
         <section aria-label="Your cards">
           <h2>Your cards</h2>
           <ul className="president-cards president-hand">
-            {gameState.myHand.map((c: any) => (
+            {gameState.myHand.map((c) => (
               <li key={c}>
                 <button
                   type="button"

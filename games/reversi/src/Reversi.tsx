@@ -7,7 +7,24 @@ import { RoomCode } from "@browser-games/game-client/RoomCode";
 import { Chat } from "@browser-games/game-client/Chat";
 import { SpectatorView } from "@browser-games/game-client/SpectatorView";
 import { useYourTurn } from "@browser-games/game-client/useYourTurn";
+import type { GameState } from "@browser-games/game-client/protocol";
 import "@browser-games/game-client/chrome.css";
+
+interface ReversiPlayer {
+  seat: number;
+  name: string;
+}
+
+interface ReversiState extends GameState {
+  legalMoves?: { row: number; col: number }[];
+  players?: ReversiPlayer[];
+  winner?: string;
+  myColor?: string;
+  passedSeat: number;
+  score?: { B: number; W: number };
+  board?: (string | null)[];
+  mySeat?: number;
+}
 
 export function Reversi() {
   const {
@@ -16,8 +33,8 @@ export function Reversi() {
     lockRoom, startEarly, send, restart, needsRefresh,
     gameState: rawGameState,
   } = useGameSocket("reversi");
-  // Engine-specific per-seat view; read through a permissive alias.
-  const gameState = rawGameState as Record<string, any> | null;
+  // Engine-specific per-seat view; read through a typed local view.
+  const gameState = rawGameState as ReversiState | null;
 
   useYourTurn(rawGameState, room?.seat);
 
@@ -34,9 +51,9 @@ export function Reversi() {
 
   if (room.seat === -1) return <SpectatorView gameState={rawGameState} gameId="reversi" />;
 
-  const legalSet = new Set((gameState.legalMoves ?? []).map(({ row, col }: any) => `${row},${col}`));
+  const legalSet = new Set((gameState.legalMoves ?? []).map(({ row, col }) => `${row},${col}`));
   const isMyTurn = gameState.activeSeat === room.seat;
-  const activePlayer = gameState.players?.find((p: any) => p.seat === gameState.activeSeat);
+  const activePlayer = gameState.players?.find((p) => p.seat === gameState.activeSeat);
 
   let statusText;
   if (gameState.phase === "done") {
@@ -48,7 +65,7 @@ export function Reversi() {
   } else {
     statusText = isMyTurn ? "Your turn" : `${activePlayer?.name}'s turn`;
     if (gameState.passedSeat >= 0) {
-      const passed = gameState.players?.find((p: any) => p.seat === gameState.passedSeat);
+      const passed = gameState.players?.find((p) => p.seat === gameState.passedSeat);
       const who = gameState.passedSeat === room.seat ? "You have" : `${passed?.name} has`;
       statusText = `${who} no legal move — turn passed. ${statusText}`;
     }
@@ -76,7 +93,7 @@ export function Reversi() {
       </p>
 
       <div className="reversi-board" role="grid" aria-label="Reversi board">
-        {(gameState.board ?? []).map((cell: any, i: number) => {
+        {(gameState.board ?? []).map((cell, i) => {
           const row = Math.floor(i / 8);
           const col = i % 8;
           const isHint = !cell && legalSet.has(`${row},${col}`);
