@@ -80,12 +80,17 @@ function isOpen(client: SocketLike): boolean {
 export class Session {
   client: SocketLike;
   playerId: string;
+  // The secret the client presented at the handshake. Replaced with the room's
+  // authoritative token once seated, so host-action guards in the same session
+  // compare against the stored value.
+  reconnectToken: string | null;
   room: Room<EngineState> | null;
   spectator: boolean;
 
-  constructor(client: SocketLike, playerId: string) {
+  constructor(client: SocketLike, playerId: string, reconnectToken: string | null = null) {
     this.client = client;
     this.playerId = playerId;
+    this.reconnectToken = reconnectToken;
     this.room = null;
     this.spectator = false;
   }
@@ -147,11 +152,17 @@ function requireRoom(session: Session): Room<EngineState> {
   return session.room;
 }
 
-// Seat a player, join their Socket.IO rooms, and send joined + state.
+// Seat a player, join their Socket.IO rooms, and send joined + state. Mints or
+// verifies the seat's secret token, then hands the authoritative token back to
+// this owner only (never broadcast) and adopts it onto the session so later
+// host-action guards in the same connection compare against the stored value.
 function joinRoom(room: Room<EngineState>, session: Session, name: string): void {
-  const seat = room.addPlayer(session.playerId, name, session.client);
+  const seat = room.addPlayer(session.playerId, name, session.client, {
+    presentedToken: session.reconnectToken,
+  });
   session.spectator = false;
   session.room = room;
+  session.reconnectToken = room.tokenFor(session.playerId);
   session.client?.join?.(`game:${room.code}`);
   session.client?.join?.(`player:${session.playerId}`);
   session.send({
@@ -161,6 +172,7 @@ function joinRoom(room: Room<EngineState>, session: Session, name: string): void
     isHost: session.playerId === room.host,
     options: room.options,
     engineVersion: room.adapter.engineVersion,
+    reconnectToken: session.reconnectToken,
   });
   broadcastRoom(room);
 }
@@ -235,6 +247,7 @@ export function handleMessage(
       }
       case 'host:kick': {
         const room = requireRoom(session);
+        room.assertOwner(session.playerId, session.reconnectToken);
         room.kick(session.playerId, msg.targetId as string);
         broadcastRoom(room);
         onLobbyChange(room.gameId);
@@ -242,6 +255,7 @@ export function handleMessage(
       }
       case 'host:lock': {
         const room = requireRoom(session);
+        room.assertOwner(session.playerId, session.reconnectToken);
         room.lock(session.playerId, msg.locked as boolean);
         broadcastRoom(room);
         onLobbyChange(room.gameId);
@@ -249,6 +263,7 @@ export function handleMessage(
       }
       case 'host:start': {
         const room = requireRoom(session);
+        room.assertOwner(session.playerId, session.reconnectToken);
         room.startEarly(session.playerId);
         broadcastRoom(room);
         return;
@@ -405,9 +420,13 @@ export function registerSocketEvents(io: Server, deps: SocketDeps): void {
   const { manager, logger, lobbyHooks, metrics, getFunnel, rateLimit, rateLimitMap } = deps;
 
   io.on('connection', (socket: Socket) => {
-    const clientId = socket.handshake.query.playerId;
+    // Identity arrives in the handshake auth (playerId + secret reconnectToken).
+    // Fall back to the query playerId for older clients that predate auth.
+    const auth = (socket.handshake.auth ?? {}) as { playerId?: unknown; reconnectToken?: unknown };
+    const clientId = isValidUUID(auth.playerId) ? auth.playerId : socket.handshake.query.playerId;
     const playerId = isValidUUID(clientId) ? clientId : crypto.randomUUID();
-    const session = new Session(socket as unknown as SocketLike, playerId);
+    const reconnectToken = typeof auth.reconnectToken === 'string' ? auth.reconnectToken : null;
+    const session = new Session(socket as unknown as SocketLike, playerId, reconnectToken);
     const remoteIp = socket.handshake.address ?? '?';
 
     // Version handshake: a client left open across a deploy compares this on

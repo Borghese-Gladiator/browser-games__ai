@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import { ConnectionBanner } from './ConnectionBanner.jsx';
+import { ConnectionBanner } from './ConnectionBanner.tsx';
 
 afterEach(cleanup);
 

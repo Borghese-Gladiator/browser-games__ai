@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { applyOptimistic, reconcile } from './optimistic.js';
+import { applyOptimistic, reconcile } from './optimistic.ts';
 
 describe('applyOptimistic', () => {
   it('returns reduce(state, action)', () => {
-    const reduce = (state, action) => ({ ...state, count: state.count + action.by });
+    const reduce = (state: { count: number }, action: { by: number }) => ({
+      ...state,
+      count: state.count + action.by,
+    });
     expect(applyOptimistic({ count: 1 }, { by: 2 }, reduce)).toEqual({ count: 3 });
   });
 });

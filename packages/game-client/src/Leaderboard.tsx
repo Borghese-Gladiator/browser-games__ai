@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react';
-import { fetchLeaderboard } from './leaderboard.js';
+import { fetchLeaderboard } from './leaderboard.ts';
+
+interface LeaderboardEntry {
+  playerId: string;
+  rank: number;
+  wins: number;
+  games: number;
+}
 
 // Generic leaderboard chrome: renders the board scopes (all-time / weekly /
 // daily) for a game, optionally scoped to a room.
-export function Leaderboard({ gameId, roomCode }) {
+export function Leaderboard({ gameId, roomCode }: { gameId: string; roomCode?: string }) {
   const [window, setWindow] = useState('all-time');
-  const [entries, setEntries] = useState([]);
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   useEffect(() => {
     fetchLeaderboard({ gameId, roomCode, window }).then((d) =>
-      setEntries(d.entries ?? []),
+      setEntries((d as { entries?: LeaderboardEntry[] })?.entries ?? []),
     );
   }, [gameId, roomCode, window]);
   return (

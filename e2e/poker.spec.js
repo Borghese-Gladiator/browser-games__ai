@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
+import { createRoomAs, joinRoomByCode } from "./helpers/transport.js";
 
 test("4-player Texas Hold'em plays a full hand to showdown", async ({ browser }) => {
   const artifactDir = path.resolve("e2e/artifacts");
@@ -26,17 +27,10 @@ test("4-player Texas Hold'em plays a full hand to showdown", async ({ browser })
 
   // Player 1 creates a room; the rest join it by its code.
   const [host, ...guests] = pages;
-  await host.getByLabel("Your name").fill("Player1");
-  await host.getByRole("button", { name: "Create room" }).click();
-
-  // The host's view shows "Room: <CODE>" once seated; share it with guests.
-  const roomText = await host.getByText(/^Room: /).textContent();
-  const code = roomText.replace("Room:", "").replace(/Copy.*/i, "").trim();
+  const code = await createRoomAs(host, "Player1");
 
   for (const [i, page] of guests.entries()) {
-    await page.getByLabel("Your name").fill(`Player${i + 2}`);
-    await page.getByLabel("Room code").fill(code);
-    await page.getByRole("button", { name: "Join by code" }).click();
+    await joinRoomByCode(page, code, `Player${i + 2}`);
   }
 
   // Server auto-starts the hand once all 4 are seated — wait for hole cards.

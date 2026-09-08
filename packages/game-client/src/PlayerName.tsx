@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useIdentity } from './useIdentity.js';
-import { PlayerCodeModal } from './PlayerCodeModal.jsx';
+import { useIdentity } from './useIdentity.ts';
+import { PlayerCodeModal } from './PlayerCodeModal.tsx';
 
 // In-game identity chip: colored avatar + optional display name + the
 // export/import player-code affordance.
-export function PlayerName({ name }) {
+export function PlayerName({ name }: { name?: string }) {
   const { color, playerCode, importIdentity } = useIdentity();
   const [showCode, setShowCode] = useState(false);
   return (

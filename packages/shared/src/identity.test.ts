@@ -35,26 +35,33 @@ describe('playerColor', () => {
 });
 
 describe('encodePlayerCode / decodePlayerCode', () => {
-  it('round-trips id, name, and guest type', () => {
+  it('round-trips id, reconnectToken, and name', () => {
     const id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-    expect(decodePlayerCode(encodePlayerCode(id, 'Alice'))).toEqual({
+    const rt = 'deadbeefcafef00d';
+    expect(decodePlayerCode(encodePlayerCode(id, rt, 'Alice'))).toEqual({
       playerId: id,
+      reconnectToken: rt,
       name: 'Alice',
-      type: 'guest',
     });
   });
 
   it('round-trips with an empty name by default', () => {
     const id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-    expect(decodePlayerCode(encodePlayerCode(id))).toEqual({
+    const rt = 'deadbeefcafef00d';
+    expect(decodePlayerCode(encodePlayerCode(id, rt))).toEqual({
       playerId: id,
+      reconnectToken: rt,
       name: '',
-      type: 'guest',
     });
   });
 
   it('throws on non-base64 input', () => {
     expect(() => decodePlayerCode('notbase64!!')).toThrow('invalid code');
+  });
+
+  it('throws when the reconnectToken is missing', () => {
+    const id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    expect(() => decodePlayerCode(btoa(JSON.stringify({ v: 2, id })))).toThrow('invalid code');
   });
 
   it('throws when required fields are missing', () => {

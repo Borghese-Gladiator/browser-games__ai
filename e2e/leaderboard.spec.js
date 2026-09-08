@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
+import { createRoomAs, joinRoomByCode } from "./helpers/transport.js";
 
 // Plays a full 4-player poker hand to showdown, then asserts the framework's
 // leaderboard/stats layer recorded the result: the winner tops the per-game
@@ -23,16 +24,10 @@ test("completed game reflects in leaderboard scope and match history", async ({ 
   await Promise.all(pages.map((p) => p.goto("http://localhost:5173/games/poker/")));
 
   const [host, ...guests] = pages;
-  await host.getByLabel("Your name").fill("Player1");
-  await host.getByRole("button", { name: "Create room" }).click();
-
-  const roomText = await host.getByText(/^Room: /).textContent();
-  const code = roomText.replace("Room:", "").replace(/Copy.*/i, "").trim();
+  const code = await createRoomAs(host, "Player1");
 
   for (const [i, page] of guests.entries()) {
-    await page.getByLabel("Your name").fill(`Player${i + 2}`);
-    await page.getByLabel("Room code").fill(code);
-    await page.getByRole("button", { name: "Join by code" }).click();
+    await joinRoomByCode(page, code, `Player${i + 2}`);
   }
 
   await Promise.all(
@@ -87,9 +82,11 @@ test("completed game reflects in leaderboard scope and match history", async ({ 
   );
   expect(winnerId).toBeTruthy();
 
-  // Leaderboard (all-time, per-game): the winner is rank 1.
+  // Leaderboard (all-time, per-game): the winner tops this room's board. Scope by
+  // roomCode so a sibling spec's concurrent poker hand on the shared gateway can't
+  // outrank this room's winner.
   const allTime = await host.request
-    .get(`${API}/api/leaderboard?gameId=poker&window=all-time`)
+    .get(`${API}/api/leaderboard?gameId=poker&roomCode=${code}&window=all-time`)
     .then((r) => r.json());
   const allEntry = allTime.entries.find((e) => e.playerId === winnerId);
   expect(allEntry, "winner missing from all-time board").toBeTruthy();
@@ -98,7 +95,7 @@ test("completed game reflects in leaderboard scope and match history", async ({ 
 
   // Daily window: same game is within the day, so the winner appears here too.
   const daily = await host.request
-    .get(`${API}/api/leaderboard?gameId=poker&window=daily`)
+    .get(`${API}/api/leaderboard?gameId=poker&roomCode=${code}&window=daily`)
     .then((r) => r.json());
   expect(daily.entries.some((e) => e.playerId === winnerId)).toBe(true);
 

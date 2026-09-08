@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 // Shows the room code with one-click copy.
-export function RoomCode({ code }) {
+export function RoomCode({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard.writeText(code);

@@ -1,6 +1,8 @@
+import type { ConnectionStatus } from './useGameSocket.types.ts';
+
 // Driven by useGameSocket's connectionStatus. Hidden when connected;
 // role="alert" so assistive tech announces drops/reconnects.
-export function ConnectionBanner({ connectionStatus }) {
+export function ConnectionBanner({ connectionStatus }: { connectionStatus: ConnectionStatus }) {
   if (connectionStatus === 'connected') return null;
   const msg =
     connectionStatus === 'reconnecting'

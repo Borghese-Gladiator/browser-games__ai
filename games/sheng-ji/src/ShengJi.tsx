@@ -1,6 +1,34 @@
 import { useGameSocket } from "@browser-games/game-client/useGameSocket";
 import { Lobby } from "@browser-games/game-client/Lobby";
 import { RefreshBanner } from "@browser-games/game-client/RefreshBanner";
+import type { GameState } from "@browser-games/game-client/protocol";
+
+interface ShengJiPlayer {
+  seat: number;
+  name: string;
+  handCount: number;
+}
+
+interface ShengJiTrickPlay {
+  seat: number;
+  card: string;
+}
+
+interface ShengJiState extends GameState {
+  players: ShengJiPlayer[];
+  trumpSuit?: string;
+  trumpRank?: string | number;
+  dealerSeat?: number;
+  activeSeat: number;
+  currentTrick: { plays: ShengJiTrickPlay[] };
+  completedTricks: number;
+  teamPoints: [number, number];
+  lastTrickWinner?: number | null;
+  result?: { winnerTeam: number };
+  mySeat?: number;
+  myHand: string[];
+  legalCards?: string[];
+}
 
 const SUIT_NAMES: Record<string, string> = { S: "Spades", H: "Hearts", D: "Diamonds", C: "Clubs" };
 const SUIT_SYMBOLS: Record<string, string> = { S: "♠", H: "♥", D: "♦", C: "♣" };
@@ -27,7 +55,6 @@ export function ShengJi() {
   const {
     rooms,
     room,
-    gameState,
     error,
     listRooms,
     createRoom,
@@ -39,7 +66,10 @@ export function ShengJi() {
     send,
     restart,
     needsRefresh,
-  }: any = useGameSocket("sheng-ji");
+    gameState: rawGameState,
+  } = useGameSocket("sheng-ji");
+  // Engine-specific per-seat view; read through a typed local view.
+  const gameState = rawGameState as ShengJiState | null;
 
   if (!room || !gameState) {
     return (
@@ -79,7 +109,7 @@ export function ShengJi() {
   } = gameState;
 
   const playCard = (cardId: string) => send({ cardId });
-  const nameForSeat = (seat: number) => players.find((p: any) => p.seat === seat)?.name ?? `Seat ${seat}`;
+  const nameForSeat = (seat: number) => players.find((p) => p.seat === seat)?.name ?? `Seat ${seat}`;
   const legalSet = new Set(legalCards ?? []);
 
   let status;
@@ -144,7 +174,7 @@ export function ShengJi() {
           </p>
         ) : (
           <ul className="sj-trick">
-            {currentTrick.plays.map((play: any) => (
+            {currentTrick.plays.map((play) => (
               <li key={play.seat}>
                 {nameForSeat(play.seat)}: {cardShort(play.card)}
               </li>
@@ -155,7 +185,7 @@ export function ShengJi() {
 
       <section aria-label="Your hand">
         <ul className="sj-hand">
-          {myHand.map((card: any) => (
+          {myHand.map((card) => (
             <li key={card}>
               <button
                 type="button"
@@ -173,7 +203,7 @@ export function ShengJi() {
 
       <section aria-label="Players">
         <ul>
-          {players.map((p: any) => (
+          {players.map((p) => (
             <li key={p.seat} aria-current={p.seat === activeSeat ? "true" : undefined}>
               {p.name} (seat {p.seat})
               {p.seat === dealerSeat ? " 🎲" : ""} — {p.handCount} cards

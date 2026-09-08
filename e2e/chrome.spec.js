@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
+import { createRoomAs, joinRoomByCode } from "./helpers/transport.js";
 
 // Proves the shared client framework works end-to-end against poker:
 //  - <ConnectionBanner> reacts to a drop and a reconnect
@@ -40,15 +41,8 @@ test("shared chrome: reconnect banner, presence/avatars, and chat delivery", asy
   ]);
 
   // Host creates a room; guest joins by code.
-  await host.getByLabel("Your name").fill("Host");
-  await host.getByRole("button", { name: "Create room" }).click();
-
-  const roomText = await host.getByText(/^Room: /).textContent();
-  const code = roomText.replace("Room:", "").replace(/Copy.*/i, "").trim();
-
-  await guest.getByLabel("Your name").fill("Guest");
-  await guest.getByLabel("Room code").fill(code);
-  await guest.getByRole("button", { name: "Join by code" }).click();
+  const code = await createRoomAs(host, "Host");
+  await joinRoomByCode(guest, code, "Guest");
 
   // Host fills the table with bots so the hand goes live.
   await host.getByRole("button", { name: "Start with bots" }).click();

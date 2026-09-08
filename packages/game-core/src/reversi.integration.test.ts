@@ -33,6 +33,7 @@ function session(playerId: string) {
   return {
     client,
     playerId,
+    reconnectToken: null as string | null,
     room: null as Room<EngineState> | null,
     spectator: false,
     get key(): string {
