@@ -1,58 +1,63 @@
-# Plan: mahjong browser page
+# Plan: Repo cleanup, agent docs, and lobby overhaul
+
+Supersedes the historical planning log (moved to `docs/history.md`).
 
 ## Brief
-Build the browser page at `games/mahjong/` on the `games/sheng-ji` template.
-Render the player hand, the player discard area, three opponent areas, a centre
-table with wall count and last discard, and an action bar. The action bar and
-tile enablement come only from the engine `availableActions`; React never
-re-derives legality. Tile selection is by click. Add a Playwright spec that
-starts a game, makes a legal discard, completes a turn, and resolves one claim
-window.
+Four workstreams, low-risk → high-risk:
+1. **Cleanup + validation** — remove runtime-state cruft from the tree, gitignore
+   it, give the repo one health command, and make e2e start from clean state.
+2. **Agent docs** — lean README + new `AGENTS.md`; move the deep adapter contract
+   and planning history into `docs/`.
+3. **Lobby logic (F1–F4)** — quick-match-with-bots primary CTA, remember name,
+   live room-list broadcast, explicit leave.
+4. **Lobby UI** — restructure `Lobby.jsx` + `lobby.css` around one primary CTA,
+   a private-lobby block, and a live public-tables list.
 
 ## Changes
-- `packages/engines/mahjong/src/**`: rewrite the internal import specifiers from
-  `.js` to `.ts` (270 across 50 files). The gateway runs `.ts` directly through
-  Node type-stripping, which needs the specifier to match the real file, like
-  the poker engine (`./handEval.ts`). Without this the server fails to boot the
-  mahjong adapter (`ERR_MODULE_NOT_FOUND` on `./random/rng.js`). Content is
-  otherwise unchanged.
-- `packages/game-core/src/games.ts`: add `myDiscards` (the requesting seat own
-  discards) to `mahjongPublicState`, so the page can render the player discard
-  area. This reveals only the seat own discards; opponent hiding is unchanged.
-- `games/mahjong/src/Mahjong.tsx`: rewrite the table page.
-  - Components: `TileButton`, `OpponentArea`, `ActionBar`, plus helpers
-    `statusText`, `tileLabel`, `tileShort`.
-  - Partition `availableActions` into per-tile discard actions and the rest.
-  - The hand renders one clickable `TileButton` per tile. A tile is enabled only
-    when the engine offers a discard action for it. A click sends that discard.
-  - `ActionBar` renders every non-discard engine action (draw, pass, chow, pong,
-    kong, win) verbatim.
-  - Layout: three opponent areas across the top, a centre table (wall + last
-    discard) below, then the player discard area, the hand, and the action bar.
-- `games/mahjong/src/mahjong.css`: table grid, opponent areas, discard rows,
-  hand, and action bar layout. Reuse the theme tokens (`--cell`, `--line`,
-  `--accent`, `--muted`).
-- `e2e/mahjong.spec.js`: Playwright spec. Four browser contexts join one room,
-  the server auto-starts the hand, and a driver clicks Draw, a discard tile, or
-  Pass each tick until a result. The spec asserts a legal discard advanced a
-  turn and that at least one claim window opened and resolved.
 
-## Note on AI seats
-The gateway starts a 4-seat game only when four members are seated
-(`autoStart` at 4) and `startEarly` needs `minPlayers` real members first, so a
-solo human cannot start against three bots (the same limit applies to sheng-ji
-and president). The spec therefore seats four browser clients, which is the
-proven multiplayer e2e pattern. Idle seats are still driven by the adapter
-`botMove`/`timeoutAction`, so the play is engine-legal.
+### 1. Cleanup + validation
+- Delete the stray empty `${QA_SPEC_DIR}/` directory.
+- Delete leftover untracked `snapshots/*.json` (leftover local rooms).
+- `.gitignore`: add `snapshots/` and stray-var guard.
+- `package.json`: add `check` script (unit tests) and `check:all` (unit + e2e);
+  add a `clean:state` script that removes runtime state.
+- `bin/dev-server.js`: read `OUTCOMES_PATH`, `ACHIEVEMENTS_PATH`, `SNAPSHOTS_PATH`
+  from env and pass to `createGateway` (already parameterized) — lets e2e point
+  at a scratch dir.
+- `playwright.config.js`: point the gateway at a throwaway state dir per run so
+  the suite starts hermetic (TODO C4/#4).
+
+### 2. Agent docs
+- Rewrite `README.md`: orientation + the four commands + one-paragraph "add a
+  game" pointer. ~60 lines, link out for depth.
+- New `AGENTS.md`: workspace map, where things live, validation commands, the
+  golden rules an agent needs (registry is source of truth; engines are pure;
+  one gateway; how to run/validate).
+- New `docs/adding-a-game.md`: the full adapter contract currently inline in
+  README.
+- Move `plan.md` planning history → `docs/history.md`.
+
+### 3. Lobby logic
+- `useIdentity.js` (or Lobby): persist last-used name in localStorage; prefill.
+- Gateway: broadcast a fresh `rooms` frame to all lobby watchers of a game on
+  any membership change (create/join/leave/lock).
+- Add `lobby:leave` protocol + `leaveRoom` client action; free seat, return to
+  lobby, keep name.
+- Portal/Lobby: make quick-match the dominant CTA (bots fill), create/join
+  demoted.
+
+### 4. Lobby UI
+- Rebuild `Lobby.jsx` layout: hero Quick-Match card, "Private Lobby"
+  (host/join-by-code), "Public Tables" live list. One primary button.
+- `lobby.css`: match the mockups (dark cards, single accent CTA).
 
 ## Tests
-### Manual
-- `npm run dev`, open `http://localhost:5173/games/mahjong/`, create a room,
-  seat four clients, confirm the hand renders and a discard completes a turn.
-
-### E2E
-- `npx playwright test e2e/mahjong.spec.js`
-
 ### Unit
-- `npm run check` (adapter + engine unit tests still pass after the
-  `myDiscards` field addition).
+- Existing ~250 vitest pass unchanged after cleanup/docs.
+- Lobby logic: new tests for name persistence, `rooms` re-broadcast on
+  membership change, `lobby:leave` frees the seat.
+### Manual (browser)
+- `npm run dev`; portal → poker: "Play now" fills bots and starts immediately.
+- Second tab creates a room → its code shows in the first tab's public list
+  without pressing Refresh (live broadcast).
+- Leave room → back to lobby, name still prefilled.
