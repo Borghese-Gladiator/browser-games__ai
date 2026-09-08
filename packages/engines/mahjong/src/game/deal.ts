@@ -104,7 +104,19 @@ export function replaceFlowers(state: GameState, player: PlayerId): ReplaceFlowe
   const handWithout = removeAt(held.hand, flowerIndex);
   const drawn = drawReplacement(state);
   if (drawn.tile === null) {
-    return { ok: true, exhausted: true, state, events: [] };
+    const revealed: PlayerState = {
+      ...held,
+      hand: handWithout,
+      flowers: [...held.flowers, flower],
+    };
+    const stateRevealed = withPlayer(state, player, revealed);
+    const recorded = recordEvent(stateRevealed, {
+      type: 'FLOWER_REPLACED',
+      player,
+      flower,
+      replacement: null,
+    });
+    return { ok: true, exhausted: true, state: recorded.state, events: [recorded.event] };
   }
   const replacement = drawn.tile;
   const replaced: PlayerState = {

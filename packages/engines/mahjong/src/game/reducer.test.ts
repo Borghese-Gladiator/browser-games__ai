@@ -107,17 +107,28 @@ describe('wall exhaustion', () => {
     expect(result.events.at(-1)?.type).toBe('WALL_EXHAUSTED');
   });
 
-  it('plays seed s2 to an exhaustive draw with no short-hand discard', () => {
-    const final = playToTerminal(dealtGame('s2'));
-    expect(final.phase).toBe('FINISHED');
-    expect(final.outcome?.kind).toBe('DRAW');
-    expect(final.turn.phase).toBe('NEEDS_DRAW');
-    expect(final.events.at(-1)?.type).toBe('WALL_EXHAUSTED');
-    for (const player of final.players) {
-      const minimum = rules.concealedHandSize - 3 * player.melds.length;
-      expect(player.hand.length).toBeGreaterThanOrEqual(minimum);
-    }
-  });
+  it.each(['seed-1', 'seed-13', 'seed-25', 's2'])(
+    'plays seed %s to an exhaustive draw with every flower revealed and no short-hand discard',
+    (seed) => {
+      const final = playToTerminal(dealtGame(seed));
+      expect(final.phase).toBe('FINISHED');
+      expect(final.outcome?.kind).toBe('DRAW');
+      expect(final.turn.phase).toBe('NEEDS_DRAW');
+      expect(final.events.at(-1)?.type).toBe('WALL_EXHAUSTED');
+      for (let player = 0; player < rules.playerCount; player++) {
+        const held = final.players[player];
+        expect(held.hand.some((tile) => tile.suit === 'flower')).toBe(false);
+        const unreplaced = final.events.filter(
+          (event) =>
+            event.type === 'FLOWER_REPLACED' &&
+            event.replacement === null &&
+            event.player === player,
+        ).length;
+        const minimum = rules.concealedHandSize - 3 * held.melds.length - unreplaced;
+        expect(held.hand.length).toBeGreaterThanOrEqual(minimum);
+      }
+    },
+  );
 });
 
 describe('event sequence numbers', () => {

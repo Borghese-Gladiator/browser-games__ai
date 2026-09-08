@@ -21,7 +21,7 @@ export interface FlowerReplacedEvent extends GameEventBase {
   readonly type: 'FLOWER_REPLACED';
   readonly player: PlayerId;
   readonly flower: Tile;
-  readonly replacement: Tile;
+  readonly replacement: Tile | null;
 }
 
 export interface TileDiscardedEvent extends GameEventBase {
