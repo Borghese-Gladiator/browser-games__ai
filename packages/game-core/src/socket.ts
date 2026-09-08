@@ -39,6 +39,7 @@ export interface HeartbeatOpts {
 
 export const HEARTBEAT = {
   PING_MS: 5000,
+  TICK_MS: 2000,
   DEAD_MS: 15000,
   GRACE_MS: 10000,
   FORFEIT_MS: 60000,
@@ -328,8 +329,10 @@ export function leave(
   onLobbyChange(gameId);
 }
 
-// One pass of room maintenance, driven by the heartbeat. Applies bot moves and
-// timeout auto-actions, then reaps rooms honoring the grace window.
+// One pass of room maintenance, driven by the heartbeat. Applies every pending
+// bot move, then every timeout auto-action, then closes the window once when its
+// hard deadline has expired. Broadcasts when anything changed or the deadline
+// expired, then reaps rooms honoring the grace window.
 export function runHeartbeat(
   manager: RoomManager,
   broadcast: (room: Room<EngineState>) => void,
@@ -337,31 +340,40 @@ export function runHeartbeat(
   now: number = Date.now(),
 ): void {
   for (const room of manager.rooms.values()) {
-    const { reaped, timeout, botMsg, botSeat } = room.tick({
+    const { reaped, timeouts, botMsgs, deadlineExpired } = room.tick({
       now, deadAfterMs: opts.DEAD_MS, graceMs: opts.GRACE_MS, forfeitMs: opts.FORFEIT_MS,
     });
     let changed = reaped.length > 0;
 
-    if (botMsg && botSeat != null) {
-      const botId = room.state.players[botSeat]?.id;
-      if (botId) {
-        try {
-          room.applyMessage(botId, botMsg, { now });
-          changed = true;
-        } catch (e) {
-          log.error('bot move failed', { roomId: room.code, gameId: room.gameId, err: (e as Error).message });
-        }
+    for (const { seat, msg } of botMsgs) {
+      const botId = room.state.players[seat]?.id;
+      if (!botId) continue;
+      try {
+        room.applyMessage(botId, msg, { now });
+        changed = true;
+      } catch (e) {
+        log.error('bot move failed', { roomId: room.code, gameId: room.gameId, err: (e as Error).message });
       }
-    } else if (timeout) {
-      const playerId = room.state.players[timeout.seat]?.id;
-      if (playerId) {
-        try {
-          room.applyMessage(playerId, timeout.msg, { now });
-          changed = true;
-        } catch (e) {
-          log.error('timeout action failed', { roomId: room.code, gameId: room.gameId, err: (e as Error).message });
-        }
+    }
+
+    for (const { seat, msg } of timeouts) {
+      const playerId = room.state.players[seat]?.id;
+      if (!playerId) continue;
+      try {
+        room.applyMessage(playerId, msg, { now });
+        changed = true;
+      } catch (e) {
+        log.error('timeout action failed', { roomId: room.code, gameId: room.gameId, err: (e as Error).message });
       }
+    }
+
+    if (deadlineExpired) {
+      try {
+        room.closeWindow(now);
+      } catch (e) {
+        log.error('window close failed', { roomId: room.code, gameId: room.gameId, err: (e as Error).message });
+      }
+      changed = true;
     }
 
     if (changed) broadcast(room);

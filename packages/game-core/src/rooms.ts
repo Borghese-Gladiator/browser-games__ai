@@ -8,7 +8,7 @@
 
 import crypto from 'node:crypto';
 import { makeBot, botActionFor } from './bots.ts';
-import { decideTimeout } from './timers.ts';
+import { decideTimeout, windowDeadlineExpired } from './timers.ts';
 import { validateOptions } from './options.ts';
 import { pickQuickMatchRoom } from './matchmaking.ts';
 import { hashState } from './observability.ts';
@@ -65,12 +65,12 @@ export class Room<TState extends EngineState> {
   spectators: Map<string, Spectator>;
   host: string | null;
   locked: boolean;
-  turnStartedAt: number | null;
+  windowOpenedAt: number | null;
   createdAt: number;
   eventLog: RoomSnapshot<TState>['eventLog'];
   phaseEnteredAt: number | null;
   emptySince: number | null;
-  _lastActiveSeat: number | null;
+  _windowKey: string;
   _eventSeq: number;
   _gameStarted: boolean;
   _kicked: Set<string>;
@@ -97,8 +97,8 @@ export class Room<TState extends EngineState> {
     this.spectators = new Map();
     this.host = null;
     this.locked = false;
-    this.turnStartedAt = null;
-    this._lastActiveSeat = null;
+    this.windowOpenedAt = null;
+    this._windowKey = '';
     this._onGameEnd = onGameEnd;
     this.createdAt = Date.now();
     this.eventLog = [];
@@ -253,7 +253,9 @@ export class Room<TState extends EngineState> {
     const started = this.adapter.autoStart?.(this.state);
     if (started) {
       this.state = started;
-      this.phaseEnteredAt = Date.now();
+      const now = Date.now();
+      this.phaseEnteredAt = now;
+      this._refreshTurnClock(now);
       if (this._onGameStart) this._onGameStart();
       this._gameStarted = true;
     }
@@ -309,13 +311,33 @@ export class Room<TState extends EngineState> {
     }
   }
 
-  // Reset the turn clock whenever the active seat changes, so each player gets a
-  // fresh budget for their own turn.
+  // The seats that owe a decision right now. A game with a multi-seat window
+  // supplies pendingSeats; otherwise the window is the single active seat (empty
+  // when no seat is active). This is what the turn clock and timers key on.
+  _pendingSeats(state: TState): Set<number> {
+    if (this.adapter.pendingSeats) {
+      return new Set(this.adapter.pendingSeats(state).filter((s) => s >= 0));
+    }
+    const seat = this.adapter.activeSeat?.(state);
+    return seat != null && seat >= 0 ? new Set([seat]) : new Set();
+  }
+
+  // Stable key for a pending-seat set so the clock resets only when the window
+  // membership changes, not on every refresh.
+  _windowSignature(seats: Set<number>): string {
+    return [...seats].sort((a, b) => a - b).join(',');
+  }
+
+  // Keep windowOpenedAt across an activeSeat of -1: the clock is tied to the
+  // pending-seat window, not a single seat. Start it when a non-empty window
+  // opens; clear it when the window empties; reset it only when the window
+  // membership (signature) changes, so each fresh window gets its own budget.
   _refreshTurnClock(now: number): void {
-    const seat = this.adapter.activeSeat?.(this.state);
-    if (seat !== this._lastActiveSeat) {
-      this._lastActiveSeat = seat ?? null;
-      this.turnStartedAt = seat != null && seat >= 0 ? now : null;
+    const seats = this._pendingSeats(this.state);
+    const key = this._windowSignature(seats);
+    if (key !== this._windowKey) {
+      this._windowKey = key;
+      this.windowOpenedAt = seats.size > 0 ? now : null;
     }
   }
 
@@ -329,8 +351,10 @@ export class Room<TState extends EngineState> {
   }
 
   // One heartbeat tick of room logic (pure w.r.t. sockets — returns intents the
-  // gateway executes). Reaps dead human members, then asks the timer whether the
-  // active seat should be auto-acted, then whether a bot should move.
+  // gateway executes). Reaps dead human members, then collects a bot move for
+  // every pending bot seat and a timeout auto-action for every pending human seat
+  // that has run out of time, plus a flag when the whole window has hit its hard
+  // deadline and must be closed once.
   tick({ now = Date.now(), deadAfterMs, graceMs, forfeitMs }: {
     now?: number; deadAfterMs: number; graceMs: number; forfeitMs: number;
   }): TickResult {
@@ -346,16 +370,39 @@ export class Room<TState extends EngineState> {
       if (now - s.lastPong >= deadAfterMs) this.spectators.delete(key);
     }
 
+    const pending = this._pendingSeats(this.state);
+    const botSeats = this.botSeats;
+    const humanPending = new Set([...pending].filter((s) => !botSeats.has(s)));
     const liveSeats = this.liveSeats(now, graceMs);
-    const timeout = decideTimeout(
-      { state: this.state, adapter: this.adapter, turnStartedAt: this.turnStartedAt, liveSeats },
+
+    const timeouts = decideTimeout(
+      {
+        state: this.state,
+        adapter: this.adapter,
+        windowOpenedAt: this.windowOpenedAt,
+        liveSeats,
+        pendingSeats: humanPending,
+      },
       { now, graceMs, forfeitMs },
     );
 
-    const botMsg = botActionFor(this.state, this.adapter, this.botSeats);
-    const botSeat = botMsg ? this.adapter.activeSeat!(this.state) : null;
+    const botMsgs = botActionFor(this.state, this.adapter, botSeats, pending);
 
-    return { reaped, timeout, botMsg, botSeat };
+    const deadlineExpired =
+      !!this.adapter.resolveWindow &&
+      pending.size > 0 &&
+      windowDeadlineExpired(this.windowOpenedAt, now, forfeitMs);
+
+    return { reaped, timeouts, botMsgs, deadlineExpired };
+  }
+
+  // Close an expired multi-seat window once, at state level, instead of N
+  // per-seat timeoutAction calls. Applies the adapter's resolveWindow and
+  // refreshes the turn clock; the close is not attributed to any single seat.
+  closeWindow(now: number = Date.now()): void {
+    if (!this.adapter.resolveWindow) return;
+    this.state = this.adapter.resolveWindow(this.state);
+    this._refreshTurnClock(now);
   }
 
   // Public lobby view of this room.
@@ -399,8 +446,8 @@ export class Room<TState extends EngineState> {
       _eventSeq: this._eventSeq,
       host: this.host,
       locked: this.locked,
-      turnStartedAt: this.turnStartedAt,
-      _lastActiveSeat: this._lastActiveSeat,
+      windowOpenedAt: this.windowOpenedAt,
+      _windowKey: this._windowKey,
       createdAt: this.createdAt,
       phaseEnteredAt: this.phaseEnteredAt,
       _gameStarted: this._gameStarted,
@@ -423,8 +470,8 @@ export class Room<TState extends EngineState> {
     room._eventSeq = snap._eventSeq ?? room.eventLog.length;
     room.host = snap.host;
     room.locked = snap.locked;
-    room.turnStartedAt = snap.turnStartedAt;
-    room._lastActiveSeat = snap._lastActiveSeat;
+    room.windowOpenedAt = snap.windowOpenedAt ?? snap.turnStartedAt ?? null;
+    room._windowKey = snap._windowKey ?? room._windowSignature(room._pendingSeats(room.state));
     room.createdAt = snap.createdAt;
     room.phaseEnteredAt = snap.phaseEnteredAt;
     room._gameStarted = snap._gameStarted;

@@ -306,10 +306,11 @@ describe('Room.tick (heartbeat-driven)', () => {
     room.addPlayer('h', 'Host', noClient, { now: 0 });
     room.addPlayer('g', 'Guest', noClient, { now: 0 });
     room.state.turn = 1;
-    room.turnStartedAt = 0;
+    room.windowOpenedAt = 0;
     room.recordPong('h', { now: 190 });
-    const { timeout } = room.tick({ now: 200, ...tickOpts });
-    expect(timeout).toMatchObject({ seat: 1, reason: 'disconnect' });
+    const { timeouts } = room.tick({ now: 200, ...tickOpts });
+    expect(timeouts).toHaveLength(1);
+    expect(timeouts[0]).toMatchObject({ seat: 1, reason: 'disconnect' });
   });
 
   it('drives a bot move on the bot seat turn', () => {
@@ -318,9 +319,8 @@ describe('Room.tick (heartbeat-driven)', () => {
     room.fillWithBots();
     room.state.turn = 1;
     room.recordPong('h', { now: 0 });
-    const { botMsg, botSeat } = room.tick({ now: 0, ...tickOpts });
-    expect(botSeat).toBe(1);
-    expect(botMsg).toEqual({ bot: 1 });
+    const { botMsgs } = room.tick({ now: 0, ...tickOpts });
+    expect(botMsgs).toEqual([{ seat: 1, msg: { bot: 1 } }]);
   });
 });
 
