@@ -2,13 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { tiles } from '../hand/test-helpers.ts';
 import type { Tile } from '../tiles/tile.ts';
 import type { Meld } from '../tiles/meld.ts';
+import { tileToKind } from '../tiles/tile-kind.ts';
 import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.ts';
 import type { GameAction } from '../game/actions.ts';
 import type { GameState, PlayerId, PlayerState } from '../game/state.ts';
 import { createGame } from '../game/deal.ts';
 import { applyAction } from '../game/reducer.ts';
 import { getAvailableActions } from '../game/getAvailableActions.ts';
-import { createStandardAi, evaluateDiscards, shouldClaimPong } from './standard.ts';
+import { createStandardAi, shouldClaimPong } from './standard.ts';
+import { rankDiscards } from '@browser-games/engine-mahjong-analysis';
 import { createRng } from './random.ts';
 
 function chooseActingSeat(state: GameState): PlayerId | null {
@@ -143,10 +145,28 @@ describe('shouldClaimPong', () => {
   });
 });
 
-describe('evaluateDiscards', () => {
-  it('ranks an isolated honor above a connected tile', () => {
+function discardState(hand: Tile[], melds: Meld[], seat: PlayerId): GameState {
+  const empty: PlayerState = { hand: [], melds: [], flowers: [], discards: [] };
+  const players: PlayerState[] = [empty, empty, empty, empty];
+  players[seat] = { hand, melds, flowers: [], discards: [] };
+  return {
+    rules: DEFAULT_TAIWANESE_RULES,
+    players,
+    pendingClaim: null,
+  } as unknown as GameState;
+}
+
+describe('createStandardAi discard delegation', () => {
+  it('discards the tile whose kind rankDiscards ranks first', () => {
+    const ai = createStandardAi();
     const hand = tiles('1m 2m 3m 4m 5m 6m 7m 8m 9m 1s 2s 3s 4s 4s 5s east');
-    const evaluations = evaluateDiscards({ concealed: hand, exposedMelds: [] });
-    expect(evaluations[0].kind).toBe('east');
+    const state = discardState(hand, [], 0);
+    const actions: GameAction[] = hand.map((tile) => ({ type: 'DISCARD', player: 0, tile }));
+    const ranked = rankDiscards({ concealed: hand, exposedMelds: [], rules: DEFAULT_TAIWANESE_RULES });
+    const action = ai(state, actions, createRng(1));
+    expect(action.type).toBe('DISCARD');
+    if (action.type === 'DISCARD') {
+      expect(tileToKind(action.tile)).toBe(ranked[0].kind);
+    }
   });
 });

@@ -12,6 +12,9 @@
     "typecheck": "tsc --noEmit -p ../../../tsconfig.json",
     "simulate": "vite-node src/simulation.cli.ts"
   },
+  "dependencies": {
+    "@browser-games/engine-mahjong-analysis": "*"
+  },
   "devDependencies": {
     "fast-check": "^4.9.0"
   }
