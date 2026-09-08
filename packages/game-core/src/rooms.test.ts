@@ -572,7 +572,7 @@ describe('reapRoom event flush', () => {
 
     await reapRoom(room, eventStore);
 
-    const log = await eventStore.readLog('test');
+    const log = await eventStore.readLog(room.code);
     expect(log).toHaveLength(250);
     expect(log.map((e) => e.sequence)).toEqual(Array.from({ length: 250 }, (_, i) => i));
     expect(log[0].stateHash).toBe(room.eventLog[0].stateHash);
@@ -591,8 +591,31 @@ describe('reapRoom event flush', () => {
 
     // The flush is fire-and-forget; allow the microtask queue to drain.
     await new Promise((resolve) => setTimeout(resolve, 20));
-    const log = await eventStore.readLog('test');
+    const log = await eventStore.readLog(room.code);
     expect(log).toHaveLength(1);
     expect(log[0].payload).toMatchObject({ msg: { move: 1 } });
+  });
+
+  // qa: two-rooms-same-type-separate-logs
+  it('keeps two rooms of the same game type in separate per-instance logs', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'reap-'));
+    const eventStore = createFileEventStore(dir);
+    const m = manager();
+    const a = m.createRoom('test');
+    const b = m.createRoom('test');
+    a.applyMessage('h', { move: 'a1' });
+    a.applyMessage('h', { move: 'a2' });
+    b.applyMessage('h', { move: 'b1' });
+
+    await reapRoom(a, eventStore);
+    await reapRoom(b, eventStore);
+
+    const logA = await eventStore.readLog(a.code);
+    const logB = await eventStore.readLog(b.code);
+    expect(logA.map((e) => (e.payload as { msg: unknown }).msg)).toEqual([
+      { move: 'a1' },
+      { move: 'a2' },
+    ]);
+    expect(logB.map((e) => (e.payload as { msg: unknown }).msg)).toEqual([{ move: 'b1' }]);
   });
 });

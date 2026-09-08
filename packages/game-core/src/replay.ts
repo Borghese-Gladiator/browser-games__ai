@@ -17,7 +17,8 @@ import type {
 } from '@browser-games/engine-mahjong';
 
 export interface ReplayResult {
-  gameId: string;
+  instanceId: string;
+  gameType: string;
   finalState: unknown;
   steps: number;
   stateHash: string;
@@ -42,15 +43,19 @@ const drivers: Record<string, ReplayDriver> = {
   },
 };
 
-export function replayDriverFor(gameId: string): ReplayDriver | undefined {
-  return drivers[gameId];
+export function replayDriverFor(gameType: string): ReplayDriver | undefined {
+  return drivers[gameType];
 }
 
-export async function replayGame(gameId: string, eventStore: EventStore): Promise<ReplayResult> {
-  const driver = drivers[gameId];
-  if (!driver) throw new Error(`no replay driver for game: ${gameId}`);
-  const log = await eventStore.readLog(gameId);
-  if (log.length === 0) throw new Error(`no events to replay for game: ${gameId}`);
+export async function replayGame(
+  instanceId: string,
+  gameType: string,
+  eventStore: EventStore,
+): Promise<ReplayResult> {
+  const driver = drivers[gameType];
+  if (!driver) throw new Error(`no replay driver for game: ${gameType}`);
+  const log = await eventStore.readLog(instanceId);
+  if (log.length === 0) throw new Error(`no events to replay for game: ${instanceId}`);
 
   let state: unknown;
   let steps = 0;
@@ -68,5 +73,5 @@ export async function replayGame(gameId: string, eventStore: EventStore): Promis
     }
     steps += 1;
   }
-  return { gameId, finalState: state, steps, stateHash };
+  return { instanceId, gameType, finalState: state, steps, stateHash };
 }

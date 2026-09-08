@@ -26,6 +26,7 @@ import {
   isOutcomeRecordArray,
   assertRoomSnapshot,
 } from './guards.ts';
+import { isEnoent } from './eventStore.ts';
 import type { AchievementUnlock, OutcomeRecord, PlayerOutcome, RoomSnapshot } from './types.ts';
 
 // A persisted file that is present but does not parse is corrupt (a torn or
@@ -87,13 +88,23 @@ export async function readJsonStrict<T>(path: string): Promise<T> {
 }
 
 function load<T>(filePath: string, fallback: T, guard?: (v: unknown) => v is T): T {
+  let body: string;
   try {
-    const parsed: unknown = JSON.parse(readFileSync(filePath, 'utf8'));
-    if (guard && !guard(parsed)) return fallback;
-    return parsed as T;
-  } catch {
-    return fallback;
+    body = readFileSync(filePath, 'utf8');
+  } catch (e) {
+    if (isEnoent(e)) return fallback;
+    throw e;
   }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body);
+  } catch (e) {
+    throw new TornWriteError(filePath, e);
+  }
+  if (guard && !guard(parsed)) {
+    throw new TornWriteError(filePath);
+  }
+  return parsed as T;
 }
 
 // One append-only log of finished games. Every leaderboard scope, the match

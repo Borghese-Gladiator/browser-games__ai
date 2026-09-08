@@ -58,6 +58,7 @@ export interface Adapter<TState extends EngineState> {
   timeoutAction?(state: TState, seat: number): GameMessage | null;
   resolveWindow?(state: TState): TState;
   botMove?(state: TState, seat: number): GameMessage | null;
+  replayStartEvent?(state: TState): { type: string; payload: unknown; stateHash: string } | null;
 }
 
 export type AdapterTable = Record<string, Adapter<EngineState>>;

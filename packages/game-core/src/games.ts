@@ -24,6 +24,7 @@ import type {
 import type { GameRecord } from '@portal/shared/leaderboard';
 import type { Adapter, AdapterTable, EngineState, GameMessage, Outcome, GameEngine } from './types.ts';
 import type { OptionsBag, OptionsSchema } from './options.ts';
+import { hashState } from './observability.ts';
 
 // True exactly once: when newRecord is the player's first recorded rank-1 finish.
 const isFirstWin = (playerId: string, _newRecord: GameRecord, playerRecords: GameRecord[]): boolean =>
@@ -631,6 +632,10 @@ export const mahjongAdapter: Adapter<MahjongState> = {
   timeoutAction: mahjongTimeout,
   botMove: mahjongBotMove,
   getOutcome: mahjongGetOutcome,
+  replayStartEvent: (state) => {
+    const config: MahjongConfig = { rules: state.rules, seed: state.seed, dealer: 0, roundWind: 'E' };
+    return { type: 'create', payload: config, stateHash: hashState(mahjong.createGame(config)) };
+  },
   achievements: [{ id: 'mahjong-first-win', name: 'First Win', predicate: isFirstWin }],
 };
 

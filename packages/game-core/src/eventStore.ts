@@ -26,7 +26,7 @@ export interface EventStore {
   readLog(gameId: string): Promise<GameEvent[]>;
 }
 
-function isEnoent(e: unknown): boolean {
+export function isEnoent(e: unknown): boolean {
   return typeof e === 'object' && e !== null && (e as { code?: string }).code === 'ENOENT';
 }
 
