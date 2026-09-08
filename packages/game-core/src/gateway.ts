@@ -9,9 +9,11 @@ import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { Server } from 'socket.io';
-import { RoomManager } from './rooms.ts';
+import { RoomManager, reapRoom } from './rooms.ts';
 import { adapters } from './games.ts';
 import { OutcomeStore, AchievementStore, SnapshotStore } from './store.ts';
+import { createFileEventStore } from './eventStore.ts';
+import type { EventStore } from './eventStore.ts';
 import { checkAchievements } from '@portal/shared/leaderboard';
 import { log } from './logger.ts';
 import {
@@ -38,8 +40,15 @@ export interface GatewayOptions {
   outcomesPath?: string;
   achievementsPath?: string;
   snapshotsPath?: string;
+  eventsPath?: string;
   staticDir?: string | null;
   manager?: RoomManager;
+  // Store injection seam. Any store not provided defaults to a file-backed
+  // implementation built from the matching *Path option.
+  outcomeStore?: OutcomeStore;
+  achievementStore?: AchievementStore;
+  snapshotStore?: SnapshotStore;
+  eventStore?: EventStore;
 }
 
 export interface Gateway {
@@ -54,13 +63,15 @@ export function createGateway(opts: GatewayOptions = {}): Gateway {
     outcomesPath = './outcomes.json',
     achievementsPath = './achievements.json',
     snapshotsPath = './snapshots',
+    eventsPath = './.state/events',
     staticDir = null,
   } = opts;
 
   const resolvedStaticDir = resolveStaticDir(staticDir);
-  const outcomeStore = new OutcomeStore(outcomesPath);
-  const achievementStore = new AchievementStore(achievementsPath);
-  const snapshotStore = new SnapshotStore(snapshotsPath);
+  const outcomeStore = opts.outcomeStore ?? new OutcomeStore(outcomesPath);
+  const achievementStore = opts.achievementStore ?? new AchievementStore(achievementsPath);
+  const snapshotStore = opts.snapshotStore ?? new SnapshotStore(snapshotsPath);
+  const eventStore = opts.eventStore ?? createFileEventStore(eventsPath);
 
   const funnel: Record<string, Funnel> = {};
   function getFunnel(gid: string): Funnel {
@@ -96,7 +107,7 @@ export function createGateway(opts: GatewayOptions = {}): Gateway {
     log.info('game started', { gameId, roomCode });
   }
 
-  const manager = opts.manager ?? new RoomManager(adapters, { onGameEnd, onGameStart });
+  const manager = opts.manager ?? new RoomManager(adapters, { onGameEnd, onGameStart, eventStore });
 
   let draining = false;
   const rateLimitMap = new Map<string, TokenBucket>();
@@ -215,4 +226,11 @@ export function createGateway(opts: GatewayOptions = {}): Gateway {
   return { app, io, shutdown };
 }
 
-export { RoomManager, adapters, handleMessage, runHeartbeat, Session, broadcastRoom };
+export { RoomManager, adapters, handleMessage, runHeartbeat, Session, broadcastRoom, reapRoom };
+export { createFileEventStore } from './eventStore.ts';
+export type { EventStore, GameEvent, EventInput } from './eventStore.ts';
+export { selectStores, createFileStores } from './stores.ts';
+export type { GatewayStores, OutcomeStore as DurableOutcomeStore } from './stores.ts';
+export { replayGame } from './replay.ts';
+export type { ReplayResult } from './replay.ts';
+export { runMigrations, loadMigrations } from './migrate.ts';

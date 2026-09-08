@@ -1,5 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { RoomManager, Room, ROOM_GRACE_MS } from './rooms.js';
+import { describe, it, expect, afterEach } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { RoomManager, Room, ROOM_GRACE_MS, reapRoom } from './rooms.js';
+import { createFileEventStore } from './eventStore.ts';
 import type { Adapter, EngineState, GameEngine, RoomSnapshot } from './types.ts';
 
 // A tiny fake engine so room/manager behavior is tested without real game logic.
@@ -448,13 +452,14 @@ describe('Room event log', () => {
     expect(e.stateHash).toHaveLength(16);
   });
 
-  it('ring buffer caps at 200 entries', () => {
+  it('never truncates the event log past 200 entries', () => {
     const room = mgr().createRoom('test');
     room.addPlayer('h', 'Host', noClient);
     room.addPlayer('g', 'Guest', noClient);
     for (let i = 0; i < 201; i++) room.applyMessage('h', { skip: i });
-    expect(room.eventLog).toHaveLength(200);
-    expect(room.eventLog[0].msg).toEqual({ skip: 1 });
+    expect(room.eventLog).toHaveLength(201);
+    expect(room.eventLog[0].msg).toEqual({ skip: 0 });
+    expect(room.eventLog[0].seq).toBe(0);
   });
 
   it('phaseEnteredAt is set when state.phase changes', () => {
@@ -470,11 +475,13 @@ describe('Room event log', () => {
     expect(room.phaseEnteredAt).toBeGreaterThan(0);
   });
 
-  it('seq keeps advancing past the ring-buffer cap (no reuse)', () => {
+  it('seq keeps advancing with no reuse and no truncation', () => {
     const room = mgr().createRoom('test');
     room.addPlayer('h', 'Host', noClient);
     room.addPlayer('g', 'Guest', noClient);
     for (let i = 0; i < 205; i++) room.applyMessage('h', { skip: i });
+    expect(room.eventLog).toHaveLength(205);
+    expect(room.eventLog[0].seq).toBe(0);
     expect(room.eventLog[room.eventLog.length - 1].seq).toBe(204);
   });
 });
@@ -545,5 +552,47 @@ describe('snapshot / restore', () => {
     const snap = { code: 'AAAA', gameId: 'off', options: {}, state: { players: [] }, members: [] } as unknown as RoomSnapshot;
     m.restoreRoom(snap);
     expect(m.rooms.has('AAAA')).toBe(false);
+  });
+});
+
+describe('reapRoom event flush', () => {
+  let dir: string;
+  afterEach(() => {
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  });
+
+  // qa: event-log-exceeds-200-entries-survives-intact (survives reaping too)
+  it('flushes a >200-entry event log to the durable store on reap', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'reap-'));
+    const eventStore = createFileEventStore(dir);
+    const room = manager().createRoom('test');
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
+    for (let i = 0; i < 250; i++) room.applyMessage('h', { skip: i });
+
+    await reapRoom(room, eventStore);
+
+    const log = await eventStore.readLog('test');
+    expect(log).toHaveLength(250);
+    expect(log.map((e) => e.sequence)).toEqual(Array.from({ length: 250 }, (_, i) => i));
+    expect(log[0].stateHash).toBe(room.eventLog[0].stateHash);
+    expect(log[249].stateHash).toBe(room.eventLog[249].stateHash);
+  });
+
+  it('reapEmptyRooms flushes a reaped room to the injected event store', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'reap-'));
+    const eventStore = createFileEventStore(dir);
+    const m = new RoomManager({ test: makeAdapter() }, { eventStore });
+    const room = m.createRoom('test');
+    room.applyMessage('h', { move: 1 });
+
+    m.reapEmptyRooms(0);
+    expect(m.reapEmptyRooms(ROOM_GRACE_MS * 2)).toEqual([room.code]);
+
+    // The flush is fire-and-forget; allow the microtask queue to drain.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const log = await eventStore.readLog('test');
+    expect(log).toHaveLength(1);
+    expect(log[0].payload).toMatchObject({ msg: { move: 1 } });
   });
 });
