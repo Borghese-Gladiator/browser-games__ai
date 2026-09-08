@@ -1,15 +1,15 @@
-import type { Tile } from '../tiles/tile.js';
-import type { TileKind } from '../tiles/tile-kind.js';
-import { tileToKind } from '../tiles/tile-kind.js';
-import type { TaiwaneseRules } from '../rules/taiwanese.js';
-import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.js';
-import { ALL_TILE_KINDS } from '../hand/counts.js';
-import type { HandInput } from '../hand/winning.js';
-import { findWaits } from '../hand/waits.js';
-import type { DiscardAction, GameAction } from '../game/actions.js';
-import type { GameState } from '../game/state.js';
-import { getPlayer } from '../game/state.js';
-import type { Rng } from './random.js';
+import type { Tile } from '../tiles/tile.ts';
+import type { TileKind } from '../tiles/tile-kind.ts';
+import { tileToKind } from '../tiles/tile-kind.ts';
+import type { TaiwaneseRules } from '../rules/taiwanese.ts';
+import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.ts';
+import { ALL_TILE_KINDS } from '../hand/counts.ts';
+import type { HandInput } from '../hand/winning.ts';
+import { findWaits } from '../hand/waits.ts';
+import type { DiscardAction, GameAction } from '../game/actions.ts';
+import type { GameState } from '../game/state.ts';
+import { getPlayer } from '../game/state.ts';
+import type { Rng } from './random.ts';
 
 const TOTAL_MELDS = 5;
 const MAX_COPIES = 4;

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.js';
-import type { GameConfig, GameState } from './state.js';
-import { getPlayer } from './state.js';
-import { createGame } from './deal.js';
-import { applyAction } from './reducer.js';
+import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.ts';
+import type { GameConfig, GameState } from './state.ts';
+import { getPlayer } from './state.ts';
+import { createGame } from './deal.ts';
+import { applyAction } from './reducer.ts';
 
 const rules = DEFAULT_TAIWANESE_RULES;
 

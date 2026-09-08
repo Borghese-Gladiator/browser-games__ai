@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import type { Tile } from '../tiles/tile.js';
-import type { FlowerKind } from '../tiles/tile.js';
-import { DEFAULT_TAIWANESE_RULES, winningHandSize } from '../rules/taiwanese.js';
-import { tiles } from '../hand/test-helpers.js';
-import type { GameConfig, GameState, PlayerState } from './state.js';
-import { getPlayer, withPlayer } from './state.js';
-import { createGame, dealHand, replaceFlowers } from './deal.js';
-import { applyAction } from './reducer.js';
+import type { Tile } from '../tiles/tile.ts';
+import type { FlowerKind } from '../tiles/tile.ts';
+import { DEFAULT_TAIWANESE_RULES, winningHandSize } from '../rules/taiwanese.ts';
+import { tiles } from '../hand/test-helpers.ts';
+import type { GameConfig, GameState, PlayerState } from './state.ts';
+import { getPlayer, withPlayer } from './state.ts';
+import { createGame, dealHand, replaceFlowers } from './deal.ts';
+import { applyAction } from './reducer.ts';
 
 const rules = DEFAULT_TAIWANESE_RULES;
 

@@ -1,5 +1,5 @@
-import type { RandomSource } from '../random/rng.js';
-import type { Tile } from './tile.js';
+import type { RandomSource } from '../random/rng.ts';
+import type { Tile } from './tile.ts';
 
 export function shuffleTiles(tileSet: readonly Tile[], rng: RandomSource): Tile[] {
   const out = tileSet.slice();

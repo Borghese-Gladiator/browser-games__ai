@@ -83,6 +83,12 @@ export function useGameSocket(gameId: string): UseGameSocketApi {
       forceNew: true,
     });
     socketRef.current = socket;
+    // Dev/e2e affordance: expose the live Socket.IO socket so a test can drop the
+    // connection deterministically via socket.disconnect() instead of racing a
+    // raw-WebSocket close. Never present in a production build.
+    if (import.meta.env.DEV) {
+      (window as unknown as { __gameSocket?: Socket }).__gameSocket = socket;
+    }
 
     const emit = (obj: ClientMessage) => {
       const { t, ...rest } = obj;

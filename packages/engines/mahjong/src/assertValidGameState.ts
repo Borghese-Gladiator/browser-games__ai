@@ -1,6 +1,6 @@
-import type { Tile } from './tiles/tile.js';
-import { createTaiwaneseTileSet } from './tiles/tile-set.js';
-import type { GameState, PlayerState } from './game/state.js';
+import type { Tile } from './tiles/tile.ts';
+import { createTaiwaneseTileSet } from './tiles/tile-set.ts';
+import type { GameState, PlayerState } from './game/state.ts';
 
 export interface AssertOptions {
   readonly seed?: number;

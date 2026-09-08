@@ -16,6 +16,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@browser-games/engine-mahjong": "*",
     "@browser-games/engine-poker": "*",
     "@browser-games/engine-president": "*",
     "@browser-games/engine-reversi": "*",

@@ -1,4 +1,4 @@
-import type { Suit, Tile } from './tile.js';
+import type { Suit, Tile } from './tile.ts';
 
 export type TileKind =
   | '1m'

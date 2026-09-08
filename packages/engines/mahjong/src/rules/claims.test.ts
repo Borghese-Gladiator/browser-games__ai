@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { DEFAULT_TAIWANESE_RULES } from './taiwanese.js';
-import type { Claim } from './claims.js';
-import { claimRank, isChowSeat, resolveClaims } from './claims.js';
+import { DEFAULT_TAIWANESE_RULES } from './taiwanese.ts';
+import type { Claim } from './claims.ts';
+import { claimRank, isChowSeat, resolveClaims } from './claims.ts';
 
 const rules = DEFAULT_TAIWANESE_RULES;
 

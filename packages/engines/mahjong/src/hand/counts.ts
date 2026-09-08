@@ -1,6 +1,6 @@
-import type { Tile } from '../tiles/tile.js';
-import type { TileKind } from '../tiles/tile-kind.js';
-import { tileToKind } from '../tiles/tile-kind.js';
+import type { Tile } from '../tiles/tile.ts';
+import type { TileKind } from '../tiles/tile-kind.ts';
+import { tileToKind } from '../tiles/tile-kind.ts';
 
 export type TileCounts = Map<TileKind, number>;
 

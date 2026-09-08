@@ -1,4 +1,4 @@
-import type { TaiwaneseRules } from './taiwanese.js';
+import type { TaiwaneseRules } from './taiwanese.ts';
 
 export type ClaimType = 'WIN' | 'KONG' | 'PONG' | 'CHOW';
 

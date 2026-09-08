@@ -1,16 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { DEFAULT_TAIWANESE_RULES } from './rules/taiwanese.js';
-import type { GameConfig, GameState, PlayerId } from './game/state.js';
-import { createGame } from './game/deal.js';
-import { applyAction } from './game/reducer.js';
-import { getAvailableActions } from './game/getAvailableActions.js';
-import { createRandomAi, createRng } from './ai/random.js';
+import { DEFAULT_TAIWANESE_RULES } from './rules/taiwanese.ts';
+import type { GameConfig, GameState, PlayerId } from './game/state.ts';
+import { createGame } from './game/deal.ts';
+import { applyAction } from './game/reducer.ts';
+import { getAvailableActions } from './game/getAvailableActions.ts';
+import { createRandomAi, createRng } from './ai/random.ts';
 import {
   assertValidGameState,
   collectAllTiles,
   InvalidGameStateError,
-} from './assertValidGameState.js';
+} from './assertValidGameState.ts';
 
 const rules = DEFAULT_TAIWANESE_RULES;
 

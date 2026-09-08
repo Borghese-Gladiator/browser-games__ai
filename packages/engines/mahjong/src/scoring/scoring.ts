@@ -1,11 +1,11 @@
-import type { Tile, FlowerKind } from '../tiles/tile.js';
-import type { TileKind } from '../tiles/tile-kind.js';
-import type { Wind } from '../game/state.js';
-import type { TaiwaneseRules } from '../rules/taiwanese.js';
-import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.js';
-import type { HandDecomposition } from '../hand/decomposition.js';
-import type { HandInput } from '../hand/winning.js';
-import { findWinningDecompositions } from '../hand/winning.js';
+import type { Tile, FlowerKind } from '../tiles/tile.ts';
+import type { TileKind } from '../tiles/tile-kind.ts';
+import type { Wind } from '../game/state.ts';
+import type { TaiwaneseRules } from '../rules/taiwanese.ts';
+import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.ts';
+import type { HandDecomposition } from '../hand/decomposition.ts';
+import type { HandInput } from '../hand/winning.ts';
+import { findWinningDecompositions } from '../hand/winning.ts';
 
 export interface TaiValues {
   readonly selfDraw: number;

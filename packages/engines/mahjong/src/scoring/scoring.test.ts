@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import type { Tile, FlowerKind } from '../tiles/tile.js';
-import type { Wind } from '../game/state.js';
-import { tiles, meld } from '../hand/test-helpers.js';
-import type { ScoreContext } from './scoring.js';
-import { scoreHand, TAI_VALUES } from './scoring.js';
+import type { Tile, FlowerKind } from '../tiles/tile.ts';
+import type { Wind } from '../game/state.ts';
+import { tiles, meld } from '../hand/test-helpers.ts';
+import type { ScoreContext } from './scoring.ts';
+import { scoreHand, TAI_VALUES } from './scoring.ts';
 
 function flower(kind: FlowerKind, copy = 1): Tile {
   return { id: `${kind}-${copy}`, suit: 'flower', flower: kind };

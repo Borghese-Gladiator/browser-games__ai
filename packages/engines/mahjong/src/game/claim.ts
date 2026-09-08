@@ -1,9 +1,9 @@
-import type { Tile } from '../tiles/tile.js';
-import type { Meld, MeldKind } from '../tiles/meld.js';
-import { tileToKind } from '../tiles/tile-kind.js';
-import { isWinningHand } from '../hand/winning.js';
-import type { ClaimType } from '../rules/claims.js';
-import { isChowSeat, resolveClaims } from '../rules/claims.js';
+import type { Tile } from '../tiles/tile.ts';
+import type { Meld, MeldKind } from '../tiles/meld.ts';
+import { tileToKind } from '../tiles/tile-kind.ts';
+import { isWinningHand } from '../hand/winning.ts';
+import type { ClaimType } from '../rules/claims.ts';
+import { isChowSeat, resolveClaims } from '../rules/claims.ts';
 import type {
   ClaimDeclaration,
   ClaimOption,
@@ -12,13 +12,13 @@ import type {
   GameOutcome,
   GameState,
   PlayerId,
-} from './state.js';
-import { getPlayer, withPlayer } from './state.js';
-import type { ApplyResult } from './result.js';
-import type { GameEventDraft } from './events.js';
-import { recordEvent } from './events.js';
-import { advanceDealer, dealerContinues, nextTurn } from './turn.js';
-import { drawReplacement, finishAsDraw, replaceFlowers } from './deal.js';
+} from './state.ts';
+import { getPlayer, withPlayer } from './state.ts';
+import type { ApplyResult } from './result.ts';
+import type { GameEventDraft } from './events.ts';
+import { recordEvent } from './events.ts';
+import { advanceDealer, dealerContinues, nextTurn } from './turn.ts';
+import { drawReplacement, finishAsDraw, replaceFlowers } from './deal.ts';
 
 function nonFlowerKind(tile: Tile): string | null {
   return tile.suit === 'flower' ? null : tileToKind(tile);

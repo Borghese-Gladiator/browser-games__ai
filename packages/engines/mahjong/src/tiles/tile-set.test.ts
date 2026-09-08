@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createTaiwaneseTileSet } from './tile-set.js';
-import { tileToKind } from './tile-kind.js';
+import { createTaiwaneseTileSet } from './tile-set.ts';
+import { tileToKind } from './tile-kind.ts';
 
 describe('createTaiwaneseTileSet', () => {
   const tiles = createTaiwaneseTileSet();

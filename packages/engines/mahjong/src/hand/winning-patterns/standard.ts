@@ -1,7 +1,7 @@
-import type { TileKind } from '../../tiles/tile-kind.js';
-import type { TileCounts } from '../counts.js';
-import { ALL_TILE_KINDS } from '../counts.js';
-import type { DecomposedMeld, HandDecomposition } from '../decomposition.js';
+import type { TileKind } from '../../tiles/tile-kind.ts';
+import type { TileCounts } from '../counts.ts';
+import { ALL_TILE_KINDS } from '../counts.ts';
+import type { DecomposedMeld, HandDecomposition } from '../decomposition.ts';
 
 const NUMBER_SUFFIXES = new Set(['m', 's', 'p']);
 

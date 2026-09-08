@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { DEFAULT_TAIWANESE_RULES } from '../../rules/taiwanese.js';
-import { toTileCounts } from '../counts.js';
-import { isWinningHand } from '../winning.js';
-import { isSevenPairs } from './seven-pairs.js';
-import { tiles } from '../test-helpers.js';
+import { DEFAULT_TAIWANESE_RULES } from '../../rules/taiwanese.ts';
+import { toTileCounts } from '../counts.ts';
+import { isWinningHand } from '../winning.ts';
+import { isSevenPairs } from './seven-pairs.ts';
+import { tiles } from '../test-helpers.ts';
 
 const EIGHT_PAIRS = '1s 1s 2s 2s 3s 3s 4s 4s 5s 5s 6s 6s 7s 7s 8s 8s';
 const TERMINALS_AND_HONORS =

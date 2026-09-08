@@ -1,4 +1,4 @@
-import type { GameAction } from './actions.js';
+import type { GameAction } from './actions.ts';
 
 export type GameErrorCode =
   | 'WRONG_TURN'

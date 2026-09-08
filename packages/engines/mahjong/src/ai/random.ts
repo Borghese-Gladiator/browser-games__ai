@@ -1,6 +1,6 @@
-import { createSeededRandom } from '../random/rng.js';
-import type { GameAction } from '../game/actions.js';
-import type { GameState } from '../game/state.js';
+import { createSeededRandom } from '../random/rng.ts';
+import type { GameAction } from '../game/actions.ts';
+import type { GameState } from '../game/state.ts';
 
 export type Rng = () => number;
 

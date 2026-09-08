@@ -1,0 +1,10 @@
+{
+  "name": "@portal/game-mahjong",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "@portal/shared": "*",
+    "@browser-games/game-client": "*"
+  }
+}

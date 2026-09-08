@@ -1,4 +1,4 @@
-import type { Tile } from './tile.js';
+import type { Tile } from './tile.ts';
 
 export type MeldKind = 'pong' | 'chow' | 'kong' | 'pair';
 

@@ -1,13 +1,13 @@
-import type { Tile } from '../tiles/tile.js';
-import { tileToKind } from '../tiles/tile-kind.js';
-import type { Meld } from '../tiles/meld.js';
-import type { TaiwaneseRules } from '../rules/taiwanese.js';
-import { DEFAULT_TAIWANESE_RULES, winningHandSize } from '../rules/taiwanese.js';
-import type { TileCounts } from './counts.js';
-import { toTileCounts } from './counts.js';
-import type { DecomposedMeld, HandDecomposition, WinningHandResult } from './decomposition.js';
-import { decomposeStandard } from './winning-patterns/standard.js';
-import { decomposeSevenPairs } from './winning-patterns/seven-pairs.js';
+import type { Tile } from '../tiles/tile.ts';
+import { tileToKind } from '../tiles/tile-kind.ts';
+import type { Meld } from '../tiles/meld.ts';
+import type { TaiwaneseRules } from '../rules/taiwanese.ts';
+import { DEFAULT_TAIWANESE_RULES, winningHandSize } from '../rules/taiwanese.ts';
+import type { TileCounts } from './counts.ts';
+import { toTileCounts } from './counts.ts';
+import type { DecomposedMeld, HandDecomposition, WinningHandResult } from './decomposition.ts';
+import { decomposeStandard } from './winning-patterns/standard.ts';
+import { decomposeSevenPairs } from './winning-patterns/seven-pairs.ts';
 
 const TOTAL_MELDS = 5;
 const TILES_PER_EXPOSED_MELD = 3;

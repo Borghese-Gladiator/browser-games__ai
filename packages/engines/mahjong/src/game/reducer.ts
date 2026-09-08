@@ -1,4 +1,4 @@
-import { isWinningHand } from '../hand/winning.js';
+import { isWinningHand } from '../hand/winning.ts';
 import type {
   ClaimChowAction,
   ClaimKongAction,
@@ -9,15 +9,15 @@ import type {
   DrawAction,
   GameAction,
   PassClaimAction,
-} from './actions.js';
-import type { GameState } from './state.js';
-import { getPlayer, withPlayer } from './state.js';
-import type { ApplyResult } from './result.js';
-import type { GameEvent } from './events.js';
-import { recordEvent } from './events.js';
-import { gameError } from './errors.js';
-import { dealHand, drawFromWall, finishAsDraw, replaceFlowers } from './deal.js';
-import { validateAction } from './validate.js';
+} from './actions.ts';
+import type { GameState } from './state.ts';
+import { getPlayer, withPlayer } from './state.ts';
+import type { ApplyResult } from './result.ts';
+import type { GameEvent } from './events.ts';
+import { recordEvent } from './events.ts';
+import { gameError } from './errors.ts';
+import { dealHand, drawFromWall, finishAsDraw, replaceFlowers } from './deal.ts';
+import { validateAction } from './validate.ts';
 import {
   applyConcealedKong,
   finishWin,
@@ -26,7 +26,7 @@ import {
   registerPass,
   resolveClaimWindow,
   sameKind,
-} from './claim.js';
+} from './claim.ts';
 
 function applyDeal(state: GameState, _action: DealAction): ApplyResult {
   return dealHand(state);
