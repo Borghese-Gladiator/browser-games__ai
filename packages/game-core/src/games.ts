@@ -620,7 +620,7 @@ export const mahjongAdapter: Adapter<MahjongState> = {
     { restart: 'boolean' },
   ],
   anticheat: mahjongAnticheat,
-  minPlayers: 4,
+  minPlayers: 2,
   maxPlayers: 4,
   autoStart: (state) => (state.players.length === 4 && !state.game ? mahjongDeal(state) : null),
   onMessage: mahjongOnMessage,

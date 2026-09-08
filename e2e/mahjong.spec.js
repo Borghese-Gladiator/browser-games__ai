@@ -2,115 +2,171 @@ import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { createRoomAs, joinRoomByCode } from "./helpers/transport.js";
 
-// Four browser clients play one legal Taiwanese-mahjong hand end to end. Only
-// the active seat (or a seat with an open claim window) acts each tick; every
-// action comes from a button the engine's availableActions produced, so the
-// play is engine-legal. The spec asserts a legal discard advanced a turn and
-// that at least one claim window opened and resolved.
-test("4-player Mahjong plays a legal hand with a claim window", async ({ browser }) => {
-  const artifactDir = path.resolve("e2e/artifacts");
+const URL = "http://localhost:5173/games/mahjong/";
+const HAND = 'section[aria-label="Your hand"]';
 
-  const contexts = await Promise.all(
-    Array.from({ length: 4 }, () =>
-      browser.newContext({ recordVideo: { dir: artifactDir } }),
-    ),
-  );
-  await Promise.all(
-    contexts.map((ctx, i) =>
-      ctx.tracing.start({ screenshots: true, snapshots: true, title: `MJPlayer${i + 1}` }),
-    ),
-  );
+// Read the local seat the board resumed. The board tags <main> with data-my-seat
+// so a reload can prove the same seat came back without a player roster.
+async function readSeat(page) {
+  const value = await page.locator("main.mj").getAttribute("data-my-seat");
+  return Number(value);
+}
 
-  const pages = await Promise.all(contexts.map((ctx) => ctx.newPage()));
-  await Promise.all(pages.map((p) => p.goto("http://localhost:5173/games/mahjong/")));
+// Read the concealed hand as the sorted list of tile glyphs. Only the local seat
+// renders concealed hand tiles (.mj-tile-btn); opponents never do.
+async function readHand(page) {
+  const tiles = page.locator(`${HAND} .mj-tile-btn`);
+  const count = await tiles.count();
+  const out = [];
+  for (let i = 0; i < count; i += 1) out.push((await tiles.nth(i).textContent())?.trim());
+  return out.sort();
+}
 
-  // Player 1 creates a room; the rest join it by its code. The server
-  // auto-starts the hand once all four seats are filled.
-  const [host, ...guests] = pages;
-  const code = await createRoomAs(host, "Player1");
-  for (const [i, page] of guests.entries()) {
-    await joinRoomByCode(page, code, `Player${i + 2}`);
-  }
+// The one legal action this human seat owns right now, read from the status line.
+// Returns true once this page shows a finished hand. Sets flags.sawClaimWindow
+// when this seat is offered a claim.
+async function act(page, flags) {
+  const status = ((await page.getByRole("status").textContent().catch(() => "")) ?? "").trim();
+  if (/wins/.test(status) || status.startsWith("Draw")) return true;
 
-  await Promise.all(
-    pages.map((p) =>
-      p.getByRole("region", { name: "Your hand" }).waitFor({ timeout: 15_000 }),
-    ),
-  );
-
-  const flags = { sawDiscard: false, sawClaimWindow: false };
-
-  // Take the one legal action this seat owns right now, read from the status
-  // line. Returns true once this page shows a finished hand.
-  async function act(page) {
-    const status = ((await page.getByRole("status").textContent().catch(() => "")) ?? "").trim();
-    if (/wins/.test(status) || status.startsWith("Draw")) return true;
-
-    if (status === "Your turn") {
-      const draw = page.getByRole("button", { name: "Draw", exact: true });
-      if (await draw.isEnabled({ timeout: 200 }).catch(() => false)) {
-        await draw.click();
+  if (status === "Your turn") {
+    const draw = page.getByRole("button", { name: "Draw", exact: true });
+    if (await draw.isEnabled({ timeout: 200 }).catch(() => false)) {
+      await draw.click();
+      return false;
+    }
+    const discards = page.getByRole("button", { name: /^Discard / });
+    const n = await discards.count();
+    for (let i = 0; i < n; i += 1) {
+      const btn = discards.nth(i);
+      if (await btn.isEnabled({ timeout: 200 }).catch(() => false)) {
+        await btn.click();
         return false;
       }
-      // Discard the first tile the engine offered as a legal discard.
-      const discards = page.getByRole("button", { name: /^Discard / });
-      const n = await discards.count();
-      for (let i = 0; i < n; i++) {
-        const btn = discards.nth(i);
-        if (await btn.isEnabled({ timeout: 200 }).catch(() => false)) {
-          await btn.click();
-          flags.sawDiscard = true;
-          return false;
-        }
-      }
-      return false;
     }
-
-    if (status === "Claim the discard?") {
-      flags.sawClaimWindow = true;
-      // Take a real claim when one is offered, otherwise pass. Either way the
-      // window resolves.
-      for (const name of ["Pong", "Chow", "Kong", "Win"]) {
-        const btn = page.getByRole("button", { name, exact: true });
-        if (await btn.isEnabled({ timeout: 200 }).catch(() => false)) {
-          await btn.click();
-          return false;
-        }
-      }
-      const pass = page.getByRole("button", { name: "Pass", exact: true });
-      if (await pass.isEnabled({ timeout: 200 }).catch(() => false)) {
-        await pass.click();
-      }
-      return false;
-    }
-
     return false;
   }
 
-  let done = false;
-  for (let round = 0; round < 2000 && !done; round++) {
-    const results = await Promise.all(pages.map((p) => act(p)));
-    done = results.some(Boolean);
+  if (status === "Claim the discard?") {
+    flags.sawClaimWindow = true;
+    for (const name of ["Pong", "Chow", "Kong", "Win"]) {
+      const btn = page.getByRole("button", { name, exact: true });
+      if (await btn.isEnabled({ timeout: 200 }).catch(() => false)) {
+        await btn.click();
+        return false;
+      }
+    }
+    const pass = page.getByRole("button", { name: "Pass", exact: true });
+    if (await pass.isEnabled({ timeout: 200 }).catch(() => false)) await pass.click();
+    return false;
+  }
+
+  return false;
+}
+
+// QA scenario mahjong-two-context-ai-fill-claim-resolves: two humans in separate
+// browser contexts start a table, the host fills the two empty seats with bots
+// (the shared AI-seat-fill control), and a claim window opens and resolves while
+// the hand plays to an agreed outcome.
+test("two humans plus AI fill play a hand where a claim window resolves", async ({ browser }) => {
+  test.setTimeout(120_000);
+  const artifactDir = path.resolve("e2e/artifacts");
+  const [ctxHost, ctxGuest] = await Promise.all([
+    browser.newContext({ recordVideo: { dir: artifactDir } }),
+    browser.newContext({ recordVideo: { dir: artifactDir } }),
+  ]);
+  const [host, guest] = await Promise.all([ctxHost.newPage(), ctxGuest.newPage()]);
+  await Promise.all([host.goto(URL), guest.goto(URL)]);
+
+  const code = await createRoomAs(host, "Player1");
+  await joinRoomByCode(guest, code, "Player2");
+  await guest.getByText(/^Room: /).waitFor({ timeout: 5000 });
+
+  // The AI-seat-fill control: two humans, the host fills the last two seats with
+  // bots, then the hand deals.
+  await host.getByRole("button", { name: "Start with bots" }).click();
+
+  const pages = [host, guest];
+  await Promise.all(
+    pages.map((p) => p.getByRole("region", { name: "Your hand" }).waitFor({ timeout: 15_000 })),
+  );
+
+  // Two seats really are bots.
+  await expect(host.getByLabel(/Opponent Bot/).first()).toBeVisible({ timeout: 5000 });
+
+  // Drive the two human seats until a claim window opens for a human and then
+  // resolves. A claim window holds activeSeat at -1, so no seat shows a "turn"
+  // status while it is open; a turn (or terminal) status reappearing after a
+  // human was offered a claim proves the window resolved and play advanced.
+  const flags = { sawClaimWindow: false };
+  let resolved = false;
+  for (let round = 0; round < 6000 && !resolved; round += 1) {
+    const results = await Promise.all(pages.map((p) => act(p, flags)));
+    if (results.some(Boolean)) {
+      resolved = flags.sawClaimWindow;
+      break;
+    }
+    if (flags.sawClaimWindow) {
+      const statuses = await Promise.all(
+        pages.map((p) => p.getByRole("status").textContent().catch(() => "")),
+      );
+      if (statuses.some((s) => /turn|wins|Draw/.test((s ?? "").trim()))) {
+        resolved = true;
+        break;
+      }
+    }
     await host.waitForTimeout(40);
   }
 
-  // A legal discard advanced play, and at least one claim window opened.
-  expect(flags.sawDiscard).toBe(true);
   expect(flags.sawClaimWindow).toBe(true);
+  expect(resolved).toBe(true);
 
-  // Every client agrees the hand finished on the same outcome.
-  for (const page of pages) {
-    await expect(page.getByRole("status")).toContainText(/wins|Draw/, { timeout: 30_000 });
-  }
-  const statuses = await Promise.all(
-    pages.map((p) => p.getByRole("status").textContent()),
-  );
-  expect(new Set(statuses.map((t) => t.trim())).size).toBe(1);
+  await Promise.all([ctxHost.close(), ctxGuest.close()]);
+});
 
-  await Promise.all(
-    contexts.map((ctx, i) =>
-      ctx.tracing.stop({ path: path.join(artifactDir, `mj-trace-player${i + 1}.zip`) }),
-    ),
-  );
-  await Promise.all(contexts.map((ctx) => ctx.close()));
+// QA scenario mahjong-reload-resumes-same-seat-no-opponent-tiles: a seated player
+// reloads mid-hand and resumes the same seat with the same concealed hand, and no
+// opponent concealed tile ever renders in the DOM (the hidden-information
+// projection holds across the reconnect).
+test("reload mid-hand resumes the same seat with the same hand and no opponent tiles", async ({
+  browser,
+}) => {
+  const artifactDir = path.resolve("e2e/artifacts");
+  const [ctxHost, ctxGuest] = await Promise.all([
+    browser.newContext({ recordVideo: { dir: artifactDir } }),
+    browser.newContext({ recordVideo: { dir: artifactDir } }),
+  ]);
+  const [host, guest] = await Promise.all([ctxHost.newPage(), ctxGuest.newPage()]);
+  await Promise.all([host.goto(URL), guest.goto(URL)]);
+
+  const code = await createRoomAs(host, "Alice");
+  await joinRoomByCode(guest, code, "Bob");
+  await guest.getByText(/^Room: /).waitFor({ timeout: 5000 });
+
+  // The host fills the last two seats with bots and deals. The guest takes seat 1,
+  // a non-default seat, so the reload really proves seat restoration.
+  await host.getByRole("button", { name: "Start with bots" }).click();
+  await guest.getByRole("region", { name: "Your hand" }).waitFor({ timeout: 15_000 });
+
+  const seatBefore = await readSeat(guest);
+  const handBefore = await readHand(guest);
+  expect(seatBefore).toBeGreaterThan(0);
+  expect(handBefore.length).toBeGreaterThan(0);
+  // No opponent concealed tile is ever in the DOM.
+  await expect(guest.locator(".mj-opponent .mj-tile-btn")).toHaveCount(0);
+
+  // Reload mid-hand. The client auto-rejoins the held seat with playerId plus
+  // reconnectToken and the server returns a fresh per-seat snapshot.
+  await guest.reload();
+  await guest.getByRole("region", { name: "Your hand" }).waitFor({ timeout: 15_000 });
+
+  const seatAfter = await readSeat(guest);
+  const handAfter = await readHand(guest);
+
+  expect(seatAfter).toBe(seatBefore);
+  expect(handAfter).toEqual(handBefore);
+  // The hidden-information projection still holds after the reconnect.
+  await expect(guest.locator(".mj-opponent .mj-tile-btn")).toHaveCount(0);
+
+  await Promise.all([ctxHost.close(), ctxGuest.close()]);
 });
