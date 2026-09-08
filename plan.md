@@ -1,68 +1,84 @@
-# Plan: Replay-driven post-game review (milestone 11)
+# Plan: Mahjong felt-table visual pass
 
 ## Brief
-The target repo is `browser-games`. All milestone-8/9 prerequisites are present:
-`replayGame` + append-only `game_events` (`packages/game-core/src/replay.ts`,
-`eventStore.ts`, `migrations/001_create_game_tables.sql`), `rankDiscards`
-(`packages/engines/mahjong-analysis`), and the trainer `severity.ts` /
-`reasons.ts`. The repo matches, so this slice builds the review, not an
-escalation.
+Give the Mahjong board a visual design pass. Build a reusable tile-face UI as
+CSS plus inline SVG. Keep `tileLabel` as the aria-label and keep the existing
+roles and section labels intact. Restyle the board into a dark-green felt table
+seen from above. Add name plates, a player area, a HUD, a Visible-copies panel,
+and a tai indicator.
 
-Add a post-game review. Replay a stored mahjong game step-by-step against
-`stateHash`. For each actual discard, rank the discard with `rankDiscards` using
-only that player's public information (that seat's own concealed hand + exposed
-melds). Compute `mistakeScore = best.score - chosen.score`, classify it with the
-shared severity thresholds, and render chosen vs best plus structured reasons.
-Show Previous/Next turn stepping and per-player severity counts on a `/history`
-page derived from the registry.
+The board reads a per-seat public projection (`mahjongPublicState`). That view
+gives phase, activeSeat, wallCount, lastDiscard, players, mySeat, myHand,
+myMelds, myFlowers, myDiscards, opponents (count, melds, flowers, discards),
+availableActions, and result. The view carries no scores, seat winds, dealer
+flag, bot flag, round number, or turn timer. This slice derives only honest
+values from the data that exists:
+- seat wind and prevailing wind from the fixed Taiwanese config (dealer seat 0,
+  East round): `["E","S","W","N"][seat]`.
+- dealer badge: seat 0.
+- bot badge: player name matches `Bot N` (the gateway's bot naming).
+- just-drawn tile: the last raw `myHand` tile while a discard action exists
+  (the reducer appends the drawn tile last and does not re-sort).
+- tiles-left: `wallCount`.
+- turn timer: a local countdown that restarts when `availableActions` changes.
+- tai: `scoreHand` from `@browser-games/engine-mahjong`, computed from the local
+  hand only; the panel shows the ruleset tai reference until the hand wins.
+- visible copies: counted only from public tiles, never `myHand`.
 
 ## Changes
-- `packages/shared/src/severity.ts` (new): move `MistakeSeverity`,
-  `SEVERITY_THRESHOLDS`, `severityForDelta` here (shared single source). Export
-  `./severity` from the package.
-- `games/mahjong-trainer/src/severity.ts`: re-import the moved symbols from
-  `@portal/shared/severity`; keep `scoreChoice`/`PlayerChoiceResult`.
-- `packages/engines/mahjong-analysis/src/explanations/render.ts` (new): move
-  `renderReason`/`renderReasons` here; export from the engine index.
-- `games/mahjong-trainer/src/reasons.ts`: re-export the renderers from the
-  analysis engine.
-- `packages/game-core/src/review.ts` (new): `discardPositionForSeat` (public
-  info only) + `reviewGame` (step-by-step replay + per-discard analysis +
-  per-seat summary).
-- `packages/game-core/src/http.ts`: add `GET /api/reviews` and
-  `GET /api/review/:gameId`; add optional `eventStore` to `HttpDeps`.
-- `packages/game-core/src/gateway.ts`: pass `eventStore` to the HTTP routes and
-  add a registry-driven static fallback for dynamic pages.
-- `packages/shared/src/registry.ts`: add a `pages` list (single source of truth
-  for non-game top-level pages) with the `/history` page.
-- `vite.config.js`: derive the input map from `games` + `pages`; add a
-  registry-driven dev SPA fallback for dynamic pages.
-- `history/` (new): `index.html`, `package.json`, `src/` React review UI
-  (games list + review detail with Previous/Next stepping).
-- `package.json`: add `history` to workspaces. `tsconfig.json`: include
-  `history`. `vitest.config.js`: alias `@portal/shared/severity`.
+- `games/mahjong/src/tiles.ts` (new): `Suit`, `TileSize`, `SeatPosition`,
+  `ParsedTile`, `parseTile`, `tileLabel` (verbatim old logic), `tileShort`,
+  `suitColor`, `sortTiles`, copy-count and kind helpers.
+- `games/mahjong/src/TileFace.tsx` (new): `TileFace`, `TileBack`, `CornerIndex`,
+  and the inline-SVG glyphs (`CharacterGlyph`, `DotGlyph`, `BambooGlyph`,
+  `HonourGlyph`, `FlowerGlyph`). `TileFace` sets `role="img"` and the tileLabel
+  aria-label unless it is decorative.
+- `games/mahjong/src/TileFace.test.tsx` (new): one glyph per suit and aria-label
+  parity with `tileLabel`.
+- `games/mahjong/src/board/visibleCopies.ts` (new): `computeVisibleCopies` from
+  a public projection only.
+- `games/mahjong/src/board/visibleCopies.test.ts` (new): counts and the
+  never-myHand rule.
+- `games/mahjong/src/board/NamePlate.tsx` (new): seat wind, name, Bot/Dealer
+  badges, score slot, amber turn outline.
+- `games/mahjong/src/board/Hud.tsx` (new): prevailing wind, tiles-left, ruleset
+  badge, pause/fullscreen/settings controls.
+- `games/mahjong/src/board/VisibleCopiesPanel.tsx` (new): the tally panel.
+- `games/mahjong/src/board/TaiIndicator.tsx` (new): reads the scoring module.
+- `games/mahjong/src/board/TurnTimerBar.tsx` (new): depleting bar from
+  availableActions timing only.
+- `games/mahjong/src/Mahjong.tsx` (edit): restyle OpponentArea, TileButton,
+  ActionBar; compose the felt table, seat grid, player area, HUD, and panels.
+  Keep every existing section aria-label, button name, and the `.mj-tile-btn`
+  and `.mj-opponent` hooks the test uses.
+- `games/mahjong/src/mahjong.css` (edit): dark-green felt table, seat grid,
+  name plates, HUD, panels, tile faces/backs, responsive rules.
+- `games/mahjong/src/Mahjong.test.tsx` (edit): keep the role/name assertions;
+  add a felt-layout smoke test.
+- `games/mahjong/package.json` (edit): add `@browser-games/engine-mahjong`.
+
+Out of scope: the trainer and history restyle, and shared-package tile module.
+The trainer and history use engine `Tile` objects, not the board's string ids;
+a shared string-based module would force a cross-package refactor that the slice
+objective and the required checks do not cover.
 
 ## Tests
 ### Unit (`npm run test`)
-- `packages/shared/src/severity.test.ts`: `SEVERITY_THRESHOLDS` boundary values
-  classify as intended.
-- `packages/game-core/src/review.test.ts`:
-  - `discardPositionForSeat` returns only that seat's hand + melds. Build a case
-    where pooling hidden hands flips the best discard; assert the verdict does
-    not flip.
-  - `reviewGame` on a small canonical log yields chosen vs best, `mistakeScore`,
-    severity, and a per-seat summary.
-- Existing trainer `severity.test.ts` / `reasons.test.ts` keep passing through
-  the re-exports.
+- `TileFace.test.tsx`: `data-suit` per suit; `aria-label` equals `tileLabel`;
+  a face-down back exposes no tile label.
+- `visibleCopies.test.ts`: seen and remaining counts; a hidden `myHand` tile is
+  never counted.
+- `Mahjong.test.tsx`: keep Leave, hand-tile count, no opponent concealed tiles,
+  and the "16 tiles" text; add a felt-table smoke render.
+
+### Types (`npm run typecheck`)
+- The engine import resolves and the board typechecks.
 
 ### Build (`npm run build`)
-- Vite builds `/history` through the registry-derived input map, no hand edit of
-  the input list.
+- Vite builds the mahjong page.
 
-### E2E (`e2e/history-review.spec.js`)
-- Seed a fixture mahjong event log. Open the game's review. Step forward one
-  turn. Assert a chosen-versus-best comparison renders.
-
-### Manual
-- `node bin/dev-all.js`, open `http://localhost:5173/history/`, open a game,
-  click Next, confirm chosen vs best and reasons render.
+### Manual (browser)
+- `npm run dev`, open the mahjong page, quick-match with bots.
+- Confirm the felt table, three opponent seats, backs, discard rivers, name
+  plates, HUD, player hand, action bar, timer bar, panels, and responsive
+  layout at a narrow width.

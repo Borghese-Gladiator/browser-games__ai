@@ -89,4 +89,17 @@ describe("Mahjong board", () => {
     // Opponents expose a tile count instead of the tiles themselves.
     expect(screen.getByLabelText("Opponent Alice").textContent).toContain("16 tiles");
   });
+
+  it("composes the felt table with the HUD, centre wall, and insight panels", () => {
+    socket.value = stubSocket();
+    render(<Mahjong />);
+
+    expect(screen.getByLabelText("Table")).toBeTruthy();
+    expect(screen.getByLabelText("Game status")).toBeTruthy();
+    // Tiles-left reads from wallCount, honestly, not a fabricated value.
+    expect(screen.getByLabelText("Game status").textContent).toContain("42");
+    expect(screen.getByLabelText("Centre").textContent).toContain("42");
+    expect(screen.getByLabelText("Visible copies")).toBeTruthy();
+    expect(screen.getByLabelText("Tai")).toBeTruthy();
+  });
 });
