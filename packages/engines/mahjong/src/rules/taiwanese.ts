@@ -15,3 +15,7 @@ export const DEFAULT_TAIWANESE_RULES: TaiwaneseRules = {
   dealerRepeatsOnWin: true,
   sevenPairsEnabled: true,
 };
+
+export function winningHandSize(rules: TaiwaneseRules): number {
+  return rules.concealedHandSize + 1;
+}

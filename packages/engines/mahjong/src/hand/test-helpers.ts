@@ -1,7 +1,7 @@
-import type { Suit, Tile } from '../../tiles/tile.js';
-import type { HonorKind } from '../../tiles/tile.js';
-import type { TileKind } from '../../tiles/tile-kind.js';
-import type { Meld, MeldKind } from '../../tiles/meld.js';
+import type { Suit, Tile } from '../tiles/tile.js';
+import type { HonorKind } from '../tiles/tile.js';
+import type { TileKind } from '../tiles/tile-kind.js';
+import type { Meld, MeldKind } from '../tiles/meld.js';
 
 const SUFFIX_SUIT: Record<string, Suit> = {
   m: 'characters',
