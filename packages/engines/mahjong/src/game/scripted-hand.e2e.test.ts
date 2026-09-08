@@ -25,6 +25,16 @@ describe('mahjong-full-hand-e2e', () => {
     let guard = 0;
     while (state.phase !== 'FINISHED' && guard < 1000) {
       guard += 1;
+      if (state.pendingClaim) {
+        const seat = state.pendingClaim.pending[0];
+        const passed = applyAction(state, { type: 'PASS_CLAIM', player: seat });
+        expect(passed.ok).toBe(true);
+        if (!passed.ok) {
+          return;
+        }
+        state = passed.state;
+        continue;
+      }
       const player = state.turn.player;
       if (state.turn.phase === 'NEEDS_DISCARD') {
         const held = getPlayer(state, player);

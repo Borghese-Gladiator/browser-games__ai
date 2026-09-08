@@ -5,6 +5,7 @@ export * from './tiles/tile-set.js';
 export * from './tiles/shuffle.js';
 export * from './tiles/meld.js';
 export * from './rules/taiwanese.js';
+export * from './rules/claims.js';
 export * from './hand/counts.js';
 export * from './hand/decomposition.js';
 export * from './hand/winning-patterns/standard.js';

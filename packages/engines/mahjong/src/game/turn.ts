@@ -28,6 +28,10 @@ export function nextTurn(state: GameState): GameState {
   return { ...state, currentPlayer: player, turn };
 }
 
+export function advanceDealer(rules: TaiwaneseRules, dealer: PlayerId): PlayerId {
+  return nextPlayer(rules, dealer);
+}
+
 export function dealerContinues(state: GameState, outcome: GameOutcome): boolean {
   if (outcome.kind === 'DRAW') {
     return true;

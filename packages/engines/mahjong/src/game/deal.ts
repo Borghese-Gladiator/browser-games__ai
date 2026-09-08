@@ -54,6 +54,7 @@ export function createGame(config: GameConfig): GameState {
     roundWind: config.roundWind,
     turn: { phase: 'NEEDS_DRAW', player: config.dealer, drawnTile: null },
     lastDiscard: null,
+    pendingClaim: null,
     phase: 'DEALING',
     outcome: null,
     events: [],

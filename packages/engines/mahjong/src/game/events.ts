@@ -44,6 +44,33 @@ export interface HandWonEvent extends GameEventBase {
   readonly type: 'HAND_WON';
   readonly player: PlayerId;
   readonly selfDraw: boolean;
+  readonly discardedBy: PlayerId | null;
+}
+
+export interface ChowDeclaredEvent extends GameEventBase {
+  readonly type: 'CHOW_DECLARED';
+  readonly player: PlayerId;
+  readonly discard: Tile;
+  readonly tiles: readonly Tile[];
+}
+
+export interface PongDeclaredEvent extends GameEventBase {
+  readonly type: 'PONG_DECLARED';
+  readonly player: PlayerId;
+  readonly tile: Tile;
+}
+
+export interface KongDeclaredEvent extends GameEventBase {
+  readonly type: 'KONG_DECLARED';
+  readonly player: PlayerId;
+  readonly tile: Tile;
+  readonly concealed: boolean;
+}
+
+export interface DealerChangedEvent extends GameEventBase {
+  readonly type: 'DEALER_CHANGED';
+  readonly previousDealer: PlayerId;
+  readonly dealer: PlayerId;
 }
 
 export type GameEvent =
@@ -53,7 +80,11 @@ export type GameEvent =
   | TileDiscardedEvent
   | TurnAdvancedEvent
   | WallExhaustedEvent
-  | HandWonEvent;
+  | HandWonEvent
+  | ChowDeclaredEvent
+  | PongDeclaredEvent
+  | KongDeclaredEvent
+  | DealerChangedEvent;
 
 export type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
 

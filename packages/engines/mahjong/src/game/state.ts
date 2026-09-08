@@ -1,6 +1,7 @@
 import type { Tile } from '../tiles/tile.js';
 import type { Meld } from '../tiles/meld.js';
 import type { TaiwaneseRules } from '../rules/taiwanese.js';
+import type { ClaimType } from '../rules/claims.js';
 import type { TurnState } from './turn.js';
 import type { GameEvent } from './events.js';
 
@@ -41,6 +42,24 @@ export interface GameOutcome {
   readonly dealerRepeats: boolean;
 }
 
+export interface ClaimOption {
+  readonly seat: PlayerId;
+  readonly kinds: readonly ClaimType[];
+}
+
+export interface ClaimDeclaration {
+  readonly seat: PlayerId;
+  readonly kind: ClaimType;
+  readonly tiles?: readonly Tile[];
+}
+
+export interface ClaimWindow {
+  readonly discard: DiscardRef;
+  readonly eligible: readonly ClaimOption[];
+  readonly declarations: readonly ClaimDeclaration[];
+  readonly pending: readonly PlayerId[];
+}
+
 export interface GameState {
   readonly config: GameConfig;
   readonly rules: TaiwaneseRules;
@@ -51,6 +70,7 @@ export interface GameState {
   readonly roundWind: Wind;
   readonly turn: TurnState;
   readonly lastDiscard: DiscardRef | null;
+  readonly pendingClaim: ClaimWindow | null;
   readonly phase: GamePhase;
   readonly outcome: GameOutcome | null;
   readonly events: readonly GameEvent[];
