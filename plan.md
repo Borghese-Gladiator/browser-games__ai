@@ -1,65 +1,63 @@
-# Plan: Durable persistence and deterministic replay
+# Plan: Repo cleanup, agent docs, and lobby overhaul
+
+Supersedes the historical planning log (moved to `docs/history.md`).
 
 ## Brief
-Add a durable, append-only per-game event log, atomic file writes that fail loud
-on torn reads, a Postgres store layer selected by `DATABASE_URL`, a deterministic
-`replayGame`, and a store injection seam on `createGateway`. The event log must
-survive room reaping and must never be truncated.
+Four workstreams, low-risk → high-risk:
+1. **Cleanup + validation** — remove runtime-state cruft from the tree, gitignore
+   it, give the repo one health command, and make e2e start from clean state.
+2. **Agent docs** — lean README + new `AGENTS.md`; move the deep adapter contract
+   and planning history into `docs/`.
+3. **Lobby logic (F1–F4)** — quick-match-with-bots primary CTA, remember name,
+   live room-list broadcast, explicit leave.
+4. **Lobby UI** — restructure `Lobby.jsx` + `lobby.css` around one primary CTA,
+   a private-lobby block, and a live public-tables list.
 
 ## Changes
 
-### store.ts
-- Add `TornWriteError`.
-- Add `atomicWriteJson` (async) and `atomicWriteJsonSync`: temp file + fsync + rename.
-- Add `readJsonStrict<T>` (async): parse errors throw `TornWriteError`; a missing
-  file throws ENOENT (the caller decides the empty case).
-- Switch the legacy store writes to `atomicWriteJsonSync`.
+### 1. Cleanup + validation
+- Delete the stray empty `${QA_SPEC_DIR}/` directory.
+- Delete leftover untracked `snapshots/*.json` (leftover local rooms).
+- `.gitignore`: add `snapshots/` and stray-var guard.
+- `package.json`: add `check` script (unit tests) and `check:all` (unit + e2e);
+  add a `clean:state` script that removes runtime state.
+- `bin/dev-server.js`: read `OUTCOMES_PATH`, `ACHIEVEMENTS_PATH`, `SNAPSHOTS_PATH`
+  from env and pass to `createGateway` (already parameterized) — lets e2e point
+  at a scratch dir.
+- `playwright.config.js`: point the gateway at a throwaway state dir per run so
+  the suite starts hermetic (TODO C4/#4).
 
-### eventStore.ts (new)
-- `GameEvent`, `EventInput`, `EventStore` contract.
-- `createFileEventStore(dir)`: append-only, one JSON file per game, monotonic
-  sequence, no truncation, atomic writes, strict reads.
+### 2. Agent docs
+- Rewrite `README.md`: orientation + the four commands + one-paragraph "add a
+  game" pointer. ~60 lines, link out for depth.
+- New `AGENTS.md`: workspace map, where things live, validation commands, the
+  golden rules an agent needs (registry is source of truth; engines are pure;
+  one gateway; how to run/validate).
+- New `docs/adding-a-game.md`: the full adapter contract currently inline in
+  README.
+- Move `plan.md` planning history → `docs/history.md`.
 
-### stores.ts (new)
-- Async contracts: `OutcomeStore`, `AchievementStore`, `SnapshotStore`,
-  `GatewayStores`, `LeaderboardEntry`.
-- File factories for all four stores.
-- `selectStores(env)`: Postgres when `DATABASE_URL` is set, else file.
+### 3. Lobby logic
+- `useIdentity.js` (or Lobby): persist last-used name in localStorage; prefill.
+- Gateway: broadcast a fresh `rooms` frame to all lobby watchers of a game on
+  any membership change (create/join/leave/lock).
+- Add `lobby:leave` protocol + `leaveRoom` client action; free seat, return to
+  lobby, keep name.
+- Portal/Lobby: make quick-match the dominant CTA (bots fill), create/join
+  demoted.
 
-### postgresStore.ts (new)
-- Postgres factories for every contract. SQL leaderboard aggregation.
-- No static `pg` import (pg is not installed and `npm run check` runs with no DB);
-  load `pg` through a lazy dynamic import guarded behind `DATABASE_URL`.
-
-### migrate.ts + migrations/001_create_game_tables.sql (new)
-- `loadMigrations`, `runMigrations`; a numbered SQL runner records applied versions.
-- SQL: games, game_players, game_events (unique `game_id, sequence`), plus
-  game_achievements and game_snapshots.
-
-### replay.ts (new)
-- `replayGame(gameId, eventStore)`: reconstruct the engine state from the log with
-  `createGame` then `applyAction`, and assert the `stateHash` at every step.
-
-### rooms.ts
-- Remove the 200-entry ring-buffer truncation in `applyMessage`.
-- Add `reapRoom(room, eventStore)` that flushes the room log to the durable store.
-- `RoomManager` takes an optional `eventStore` and flushes on reap.
-
-### gateway.ts
-- Injection seam: optional `outcomeStore`, `achievementStore`, `snapshotStore`,
-  and new `eventStore`, defaulting to file-backed implementations.
+### 4. Lobby UI
+- Rebuild `Lobby.jsx` layout: hero Quick-Match card, "Private Lobby"
+  (host/join-by-code), "Public Tables" live list. One primary button.
+- `lobby.css`: match the mockups (dark cards, single accent CTA).
 
 ## Tests
-### Unit (vitest)
-- `eventStore.test.ts`: torn-write fails loud (not empty history); a log of >200
-  entries survives intact; monotonic sequence.
-- `replay.test.ts`: replay of a completed scripted mahjong hand matches `stateHash`
-  at every step; a tampered middle hash makes replay throw.
-- `store.test.ts`: shared contract suite (EventStore + OutcomeStore leaderboard)
-  runs file always, Postgres only when `DATABASE_URL` is set.
-- Update the two rooms.test.ts truncation tests to assert the log is never truncated.
-
-### Manual
-- `npm run check` with no `DATABASE_URL` passes without a database.
-- Postgres pass: set `DATABASE_URL`, run the contract suite; verify the migration
-  and the unique `(game_id, sequence)` constraint.
+### Unit
+- Existing ~250 vitest pass unchanged after cleanup/docs.
+- Lobby logic: new tests for name persistence, `rooms` re-broadcast on
+  membership change, `lobby:leave` frees the seat.
+### Manual (browser)
+- `npm run dev`; portal → poker: "Play now" fills bots and starts immediately.
+- Second tab creates a room → its code shows in the first tab's public list
+  without pressing Refresh (live broadcast).
+- Leave room → back to lobby, name still prefilled.
