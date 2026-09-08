@@ -13,6 +13,7 @@
     "./identity": "./src/identity.ts",
     "./sanitize": "./src/sanitize.ts",
     "./leaderboard": "./src/leaderboard.ts",
-    "./metrics": "./src/metrics.ts"
+    "./metrics": "./src/metrics.ts",
+    "./severity": "./src/severity.ts"
   }
 }

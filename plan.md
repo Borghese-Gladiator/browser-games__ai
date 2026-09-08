@@ -1,63 +1,68 @@
-# Plan: Repo cleanup, agent docs, and lobby overhaul
-
-Supersedes the historical planning log (moved to `docs/history.md`).
+# Plan: Replay-driven post-game review (milestone 11)
 
 ## Brief
-Four workstreams, low-risk → high-risk:
-1. **Cleanup + validation** — remove runtime-state cruft from the tree, gitignore
-   it, give the repo one health command, and make e2e start from clean state.
-2. **Agent docs** — lean README + new `AGENTS.md`; move the deep adapter contract
-   and planning history into `docs/`.
-3. **Lobby logic (F1–F4)** — quick-match-with-bots primary CTA, remember name,
-   live room-list broadcast, explicit leave.
-4. **Lobby UI** — restructure `Lobby.jsx` + `lobby.css` around one primary CTA,
-   a private-lobby block, and a live public-tables list.
+The target repo is `browser-games`. All milestone-8/9 prerequisites are present:
+`replayGame` + append-only `game_events` (`packages/game-core/src/replay.ts`,
+`eventStore.ts`, `migrations/001_create_game_tables.sql`), `rankDiscards`
+(`packages/engines/mahjong-analysis`), and the trainer `severity.ts` /
+`reasons.ts`. The repo matches, so this slice builds the review, not an
+escalation.
+
+Add a post-game review. Replay a stored mahjong game step-by-step against
+`stateHash`. For each actual discard, rank the discard with `rankDiscards` using
+only that player's public information (that seat's own concealed hand + exposed
+melds). Compute `mistakeScore = best.score - chosen.score`, classify it with the
+shared severity thresholds, and render chosen vs best plus structured reasons.
+Show Previous/Next turn stepping and per-player severity counts on a `/history`
+page derived from the registry.
 
 ## Changes
-
-### 1. Cleanup + validation
-- Delete the stray empty `${QA_SPEC_DIR}/` directory.
-- Delete leftover untracked `snapshots/*.json` (leftover local rooms).
-- `.gitignore`: add `snapshots/` and stray-var guard.
-- `package.json`: add `check` script (unit tests) and `check:all` (unit + e2e);
-  add a `clean:state` script that removes runtime state.
-- `bin/dev-server.js`: read `OUTCOMES_PATH`, `ACHIEVEMENTS_PATH`, `SNAPSHOTS_PATH`
-  from env and pass to `createGateway` (already parameterized) — lets e2e point
-  at a scratch dir.
-- `playwright.config.js`: point the gateway at a throwaway state dir per run so
-  the suite starts hermetic (TODO C4/#4).
-
-### 2. Agent docs
-- Rewrite `README.md`: orientation + the four commands + one-paragraph "add a
-  game" pointer. ~60 lines, link out for depth.
-- New `AGENTS.md`: workspace map, where things live, validation commands, the
-  golden rules an agent needs (registry is source of truth; engines are pure;
-  one gateway; how to run/validate).
-- New `docs/adding-a-game.md`: the full adapter contract currently inline in
-  README.
-- Move `plan.md` planning history → `docs/history.md`.
-
-### 3. Lobby logic
-- `useIdentity.js` (or Lobby): persist last-used name in localStorage; prefill.
-- Gateway: broadcast a fresh `rooms` frame to all lobby watchers of a game on
-  any membership change (create/join/leave/lock).
-- Add `lobby:leave` protocol + `leaveRoom` client action; free seat, return to
-  lobby, keep name.
-- Portal/Lobby: make quick-match the dominant CTA (bots fill), create/join
-  demoted.
-
-### 4. Lobby UI
-- Rebuild `Lobby.jsx` layout: hero Quick-Match card, "Private Lobby"
-  (host/join-by-code), "Public Tables" live list. One primary button.
-- `lobby.css`: match the mockups (dark cards, single accent CTA).
+- `packages/shared/src/severity.ts` (new): move `MistakeSeverity`,
+  `SEVERITY_THRESHOLDS`, `severityForDelta` here (shared single source). Export
+  `./severity` from the package.
+- `games/mahjong-trainer/src/severity.ts`: re-import the moved symbols from
+  `@portal/shared/severity`; keep `scoreChoice`/`PlayerChoiceResult`.
+- `packages/engines/mahjong-analysis/src/explanations/render.ts` (new): move
+  `renderReason`/`renderReasons` here; export from the engine index.
+- `games/mahjong-trainer/src/reasons.ts`: re-export the renderers from the
+  analysis engine.
+- `packages/game-core/src/review.ts` (new): `discardPositionForSeat` (public
+  info only) + `reviewGame` (step-by-step replay + per-discard analysis +
+  per-seat summary).
+- `packages/game-core/src/http.ts`: add `GET /api/reviews` and
+  `GET /api/review/:gameId`; add optional `eventStore` to `HttpDeps`.
+- `packages/game-core/src/gateway.ts`: pass `eventStore` to the HTTP routes and
+  add a registry-driven static fallback for dynamic pages.
+- `packages/shared/src/registry.ts`: add a `pages` list (single source of truth
+  for non-game top-level pages) with the `/history` page.
+- `vite.config.js`: derive the input map from `games` + `pages`; add a
+  registry-driven dev SPA fallback for dynamic pages.
+- `history/` (new): `index.html`, `package.json`, `src/` React review UI
+  (games list + review detail with Previous/Next stepping).
+- `package.json`: add `history` to workspaces. `tsconfig.json`: include
+  `history`. `vitest.config.js`: alias `@portal/shared/severity`.
 
 ## Tests
-### Unit
-- Existing ~250 vitest pass unchanged after cleanup/docs.
-- Lobby logic: new tests for name persistence, `rooms` re-broadcast on
-  membership change, `lobby:leave` frees the seat.
-### Manual (browser)
-- `npm run dev`; portal → poker: "Play now" fills bots and starts immediately.
-- Second tab creates a room → its code shows in the first tab's public list
-  without pressing Refresh (live broadcast).
-- Leave room → back to lobby, name still prefilled.
+### Unit (`npm run test`)
+- `packages/shared/src/severity.test.ts`: `SEVERITY_THRESHOLDS` boundary values
+  classify as intended.
+- `packages/game-core/src/review.test.ts`:
+  - `discardPositionForSeat` returns only that seat's hand + melds. Build a case
+    where pooling hidden hands flips the best discard; assert the verdict does
+    not flip.
+  - `reviewGame` on a small canonical log yields chosen vs best, `mistakeScore`,
+    severity, and a per-seat summary.
+- Existing trainer `severity.test.ts` / `reasons.test.ts` keep passing through
+  the re-exports.
+
+### Build (`npm run build`)
+- Vite builds `/history` through the registry-derived input map, no hand edit of
+  the input list.
+
+### E2E (`e2e/history-review.spec.js`)
+- Seed a fixture mahjong event log. Open the game's review. Step forward one
+  turn. Assert a chosen-versus-best comparison renders.
+
+### Manual
+- `node bin/dev-all.js`, open `http://localhost:5173/history/`, open a game,
+  click Next, confirm chosen vs best and reasons render.

@@ -13,6 +13,6 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["packages", "portal", "games"],
+  "include": ["packages", "portal", "games", "history"],
   "exclude": ["node_modules", "dist", "e2e", "games/fps"]
 }

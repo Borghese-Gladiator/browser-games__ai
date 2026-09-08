@@ -19,6 +19,7 @@ export default defineConfig({
         SNAPSHOTS_PATH: ".state/e2e/snapshots",
         OUTCOMES_PATH: ".state/e2e/outcomes.json",
         ACHIEVEMENTS_PATH: ".state/e2e/achievements.json",
+        EVENTS_PATH: ".state/e2e/events",
         // One shared per-IP bucket serves the whole suite; widen it so combined
         // load doesn't trip a production-tight limit (see TODO §3).
         RATE_LIMIT_CAPACITY: "100000",

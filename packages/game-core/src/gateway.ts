@@ -15,6 +15,7 @@ import { OutcomeStore, AchievementStore, SnapshotStore } from './store.ts';
 import { createFileEventStore } from './eventStore.ts';
 import type { EventStore } from './eventStore.ts';
 import { checkAchievements } from '@portal/shared/leaderboard';
+import { pages } from '@portal/shared/registry';
 import { log } from './logger.ts';
 import {
   Session,
@@ -150,12 +151,23 @@ export function createGateway(opts: GatewayOptions = {}): Gateway {
   const io = new Server(app.server, { cors: { origin: '*' } });
   const startedAt = Date.now();
 
-  registerHttpRoutes(app, { manager, outcomeStore, io, metrics, funnel, startedAt });
+  registerHttpRoutes(app, { manager, outcomeStore, io, metrics, funnel, startedAt, eventStore });
 
   if (resolvedStaticDir) {
     app.register(fastifyStatic, { root: resolvedStaticDir });
-    // Unmatched paths fall back to the build's 404.html, mirroring the old server.
-    app.setNotFoundHandler((_req, reply) => {
+    app.setNotFoundHandler((req, reply) => {
+      // Dynamic registry pages (e.g. /history/:gameId) are single-page: serve the
+      // page's built entry for any sub-path so the client router can read it.
+      const url = (req.raw.url ?? '').split('?')[0];
+      const page = pages.find((p) => p.dynamic && url.startsWith(p.path));
+      if (page) {
+        const entry = `${resolvedStaticDir}/${page.entry}`;
+        if (fs.existsSync(entry)) {
+          reply.header('Content-Type', 'text/html; charset=utf-8').send(fs.readFileSync(entry));
+          return;
+        }
+      }
+      // Otherwise fall back to the build's 404.html, mirroring the old server.
       const notFound = `${resolvedStaticDir}/404.html`;
       if (fs.existsSync(notFound)) {
         reply.code(404).header('Content-Type', 'text/html; charset=utf-8').send(fs.readFileSync(notFound));
@@ -233,4 +245,6 @@ export { selectStores, createFileStores } from './stores.ts';
 export type { GatewayStores, OutcomeStore as DurableOutcomeStore } from './stores.ts';
 export { replayGame } from './replay.ts';
 export type { ReplayResult } from './replay.ts';
+export { reviewGame, discardPositionForSeat } from './review.ts';
+export type { GameReview, ReviewStep, SeatSummary, DiscardEvaluation } from './review.ts';
 export { runMigrations, loadMigrations } from './migrate.ts';

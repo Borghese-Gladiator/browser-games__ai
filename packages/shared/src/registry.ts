@@ -17,6 +17,29 @@ export interface GameMeta {
   enabled: boolean;
 }
 
+// Non-game top-level pages (e.g. the post-game review). Like `games`, this is the
+// single source of truth: the Vite multi-page `input` map and the gateway's
+// static fallback both derive from it. A `dynamic` page serves its one built
+// entry for every sub-path (/history/ and /history/:gameId), so the client reads
+// the sub-path itself.
+export interface PageMeta {
+  id: string;
+  title: string;
+  path: string;
+  entry: string;
+  dynamic: boolean;
+}
+
+export const pages: PageMeta[] = [
+  {
+    id: "history",
+    title: "Game Review",
+    path: "/history/",
+    entry: "history/index.html",
+    dynamic: true,
+  },
+];
+
 export const games: GameMeta[] = [
   {
     id: "tic-tac-toe",
