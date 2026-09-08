@@ -13,22 +13,11 @@ import type { GameEvent } from './events.js';
 import { recordEvent } from './events.js';
 import { gameError } from './errors.js';
 import { dealerContinues, nextTurn } from './turn.js';
-import { dealHand, drawFromWall, replaceFlowers } from './deal.js';
+import { dealHand, drawFromWall, finishAsDraw, replaceFlowers } from './deal.js';
 import { validateAction } from './validate.js';
 
 function applyDeal(state: GameState, _action: DealAction): ApplyResult {
   return dealHand(state);
-}
-
-function finishAsDraw(state: GameState): ApplyResult {
-  const outcome: GameOutcome = {
-    kind: 'DRAW',
-    winner: null,
-    dealerRepeats: dealerContinues(state, { kind: 'DRAW', winner: null, dealerRepeats: false }),
-  };
-  const finished: GameState = { ...state, phase: 'FINISHED', outcome };
-  const recorded = recordEvent(finished, { type: 'WALL_EXHAUSTED' });
-  return { ok: true, state: recorded.state, events: [recorded.event] };
 }
 
 function applyDraw(state: GameState, action: DrawAction): ApplyResult {
@@ -44,6 +33,17 @@ function applyDraw(state: GameState, action: DrawAction): ApplyResult {
   const replaced = replaceFlowers(current, action.player);
   if (!replaced.ok) {
     return replaced;
+  }
+  if (replaced.exhausted) {
+    const draw = finishAsDraw(replaced.state);
+    if (!draw.ok) {
+      return draw;
+    }
+    return {
+      ok: true,
+      state: draw.state,
+      events: [drawnEvent.event, ...replaced.events, ...draw.events],
+    };
   }
   current = replaced.state;
   const finalHand = getPlayer(current, action.player).hand;

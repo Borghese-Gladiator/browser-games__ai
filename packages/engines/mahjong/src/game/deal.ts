@@ -4,12 +4,22 @@ import type { TaiwaneseRules } from '../rules/taiwanese.js';
 import { createSeededRandom } from '../random/rng.js';
 import { createTaiwaneseTileSet } from '../tiles/tile-set.js';
 import { shuffleTiles } from '../tiles/shuffle.js';
-import type { GameConfig, GameState, PlayerId, PlayerState, Wall } from './state.js';
+import type { GameConfig, GameOutcome, GameState, PlayerId, PlayerState, Wall } from './state.js';
 import { getPlayer, withPlayer } from './state.js';
 import type { ApplyResult } from './result.js';
+import type { GameError } from './errors.js';
 import type { GameEvent } from './events.js';
 import { recordEvent } from './events.js';
-import { initialTurn } from './turn.js';
+import { dealerContinues, initialTurn } from './turn.js';
+
+export type ReplaceFlowersResult =
+  | {
+      readonly ok: true;
+      readonly exhausted: boolean;
+      readonly state: GameState;
+      readonly events: readonly GameEvent[];
+    }
+  | { readonly ok: false; readonly error: GameError };
 
 function isFlower(tile: Tile): boolean {
   return tile.suit === 'flower';
@@ -73,22 +83,28 @@ export function drawReplacement(
   return { state: { ...state, wall: nextWall }, tile };
 }
 
-export function replaceFlowers(state: GameState, player: PlayerId): ApplyResult {
+export function finishAsDraw(state: GameState): ApplyResult {
+  const outcome: GameOutcome = {
+    kind: 'DRAW',
+    winner: null,
+    dealerRepeats: dealerContinues(state, { kind: 'DRAW', winner: null, dealerRepeats: false }),
+  };
+  const finished: GameState = { ...state, phase: 'FINISHED', outcome };
+  const recorded = recordEvent(finished, { type: 'WALL_EXHAUSTED' });
+  return { ok: true, state: recorded.state, events: [recorded.event] };
+}
+
+export function replaceFlowers(state: GameState, player: PlayerId): ReplaceFlowersResult {
   const held = getPlayer(state, player);
   const flowerIndex = held.hand.findIndex(isFlower);
   if (flowerIndex === -1) {
-    return { ok: true, state, events: [] };
+    return { ok: true, exhausted: false, state, events: [] };
   }
   const flower = held.hand[flowerIndex];
   const handWithout = removeAt(held.hand, flowerIndex);
   const drawn = drawReplacement(state);
   if (drawn.tile === null) {
-    const withoutFlower: PlayerState = {
-      ...held,
-      hand: handWithout,
-      flowers: [...held.flowers, flower],
-    };
-    return replaceFlowers(withPlayer(state, player, withoutFlower), player);
+    return { ok: true, exhausted: true, state, events: [] };
   }
   const replacement = drawn.tile;
   const replaced: PlayerState = {
@@ -107,7 +123,12 @@ export function replaceFlowers(state: GameState, player: PlayerId): ApplyResult 
   if (!rest.ok) {
     return rest;
   }
-  return { ok: true, state: rest.state, events: [recorded.event, ...rest.events] };
+  return {
+    ok: true,
+    exhausted: rest.exhausted,
+    state: rest.state,
+    events: [recorded.event, ...rest.events],
+  };
 }
 
 function dealTiles(state: GameState, player: PlayerId, count: number): GameState {
@@ -155,6 +176,13 @@ export function dealHand(state: GameState): ApplyResult {
     }
     current = replaced.state;
     events.push(...replaced.events);
+    if (replaced.exhausted) {
+      const draw = finishAsDraw(current);
+      if (!draw.ok) {
+        return draw;
+      }
+      return { ok: true, state: draw.state, events: [...events, ...draw.events] };
+    }
   }
   return { ok: true, state: current, events };
 }
