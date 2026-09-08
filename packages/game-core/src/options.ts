@@ -11,7 +11,16 @@
 // validateOptions throws on an invalid value so the gateway can reply with an
 // error; it never partially applies.
 
-function validateOne(key, spec, value) {
+export type OptionSpec =
+  | { type: 'enum'; values: unknown[]; default?: unknown }
+  | { type: 'int'; min?: number; max?: number; default?: number }
+  | { type: 'boolean'; default?: boolean };
+
+export type OptionsSchema = Record<string, OptionSpec>;
+
+export type OptionsBag = Record<string, unknown>;
+
+function validateOne(key: string, spec: OptionSpec, value: unknown): unknown {
   if (value === undefined) {
     if ('default' in spec) return spec.default;
     throw new Error(`missing option: ${key}`);
@@ -24,10 +33,10 @@ function validateOne(key, spec, value) {
       return value;
     case 'int':
       if (!Number.isInteger(value)) throw new Error(`option ${key} must be an integer`);
-      if (spec.min !== undefined && value < spec.min) {
+      if (spec.min !== undefined && (value as number) < spec.min) {
         throw new Error(`option ${key} below min ${spec.min}`);
       }
-      if (spec.max !== undefined && value > spec.max) {
+      if (spec.max !== undefined && (value as number) > spec.max) {
         throw new Error(`option ${key} above max ${spec.max}`);
       }
       return value;
@@ -35,15 +44,18 @@ function validateOne(key, spec, value) {
       if (typeof value !== 'boolean') throw new Error(`option ${key} must be a boolean`);
       return value;
     default:
-      throw new Error(`unknown option spec type for ${key}: ${spec.type}`);
+      throw new Error(`unknown option spec type for ${key}: ${(spec as { type: string }).type}`);
   }
 }
 
 // Validate `bag` against `schema`, returning a normalized bag containing exactly
 // the schema's keys. An absent schema means the game takes no options → {}.
-export function validateOptions(schema, bag = {}) {
+export function validateOptions(
+  schema: OptionsSchema | null | undefined,
+  bag: OptionsBag = {},
+): OptionsBag {
   if (!schema) return {};
-  const out = {};
+  const out: OptionsBag = {};
   for (const [key, spec] of Object.entries(schema)) {
     out[key] = validateOne(key, spec, bag[key]);
   }

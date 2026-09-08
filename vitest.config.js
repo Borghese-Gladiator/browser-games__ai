@@ -34,7 +34,7 @@ export default defineConfig({
       ),
       "@browser-games/game-core": resolve(
         __dirname,
-        "packages/game-core/src/gateway.js",
+        "packages/game-core/src/gateway.ts",
       ),
       "@browser-games/game-client": resolve(
         __dirname,

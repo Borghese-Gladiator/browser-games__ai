@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { validateOptions } from './options.js';
+import type { OptionsSchema } from './options.ts';
 
 const schema = {
   stakes: { type: 'enum', values: ['low', 'normal', 'high'], default: 'normal' },
   hands: { type: 'int', min: 1, max: 10, default: 3 },
   ranked: { type: 'boolean', default: false },
-};
+} satisfies OptionsSchema;
 
 describe('validateOptions', () => {
   it('returns {} when there is no schema', () => {
@@ -40,7 +41,7 @@ describe('validateOptions', () => {
   });
 
   it('throws when a no-default key is missing', () => {
-    const req = { ruleset: { type: 'enum', values: ['a', 'b'] } };
+    const req = { ruleset: { type: 'enum', values: ['a', 'b'] } } satisfies OptionsSchema;
     expect(() => validateOptions(req, {})).toThrow(/missing option: ruleset/);
   });
 });

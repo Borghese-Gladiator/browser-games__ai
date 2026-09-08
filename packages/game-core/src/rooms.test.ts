@@ -1,34 +1,48 @@
 import { describe, it, expect } from 'vitest';
-import { RoomManager } from './rooms.js';
+import { RoomManager, Room, ROOM_GRACE_MS } from './rooms.js';
+import type { Adapter, EngineState, GameEngine, RoomSnapshot } from './types.ts';
 
 // A tiny fake engine so room/manager behavior is tested without real game logic.
-const fakeEngine = {
+// It implements removePlayer so seat-truth assertions read engine state.players.
+interface FakeState extends EngineState {
+  started: boolean;
+  moved?: boolean;
+  n?: number;
+}
+
+const fakeEngine: GameEngine<FakeState> = {
   createGame: () => ({ players: [], started: false }),
   addPlayer: (state, { id, name }) => {
     if (state.players.length >= 4) throw new Error('table full');
     if (state.players.some((p) => p.name === name)) throw new Error('name taken');
-    return {
-      ...state,
-      players: [...state.players, { id, name, seat: state.players.length }],
-    };
+    return { ...state, players: [...state.players, { id, name, seat: state.players.length }] };
   },
+  removePlayer: (state, playerId) => ({
+    ...state,
+    players: state.players.filter((p) => p.id !== playerId).map((p, i) => ({ ...p, seat: i })),
+  }),
   publicState: (state, seat) => ({ players: state.players, started: state.started, mySeat: seat }),
 };
 
-function makeAdapter(overrides = {}) {
-  return {
+const asAdapter = (a: Adapter<FakeState>): Adapter<EngineState> => a as unknown as Adapter<EngineState>;
+const asRoom = <T extends EngineState>(r: Room<EngineState>): Room<T> => r as unknown as Room<T>;
+
+function makeAdapter(overrides: Partial<Adapter<FakeState>> = {}): Adapter<EngineState> {
+  return asAdapter({
     engine: fakeEngine,
     minPlayers: 2,
     maxPlayers: 4,
     autoStart: (state) => (state.players.length === 4 ? { ...state, started: true } : null),
     onMessage: (state) => state,
     ...overrides,
-  };
+  });
 }
 
 function manager() {
   return new RoomManager({ test: makeAdapter() });
 }
+
+const noClient = null;
 
 describe('RoomManager', () => {
   it('creates a room with a unique 4-char code', () => {
@@ -45,24 +59,24 @@ describe('RoomManager', () => {
 
   it('assigns sequential seats as players join', () => {
     const room = manager().createRoom('test');
-    expect(room.addPlayer('p1', 'Alice', {})).toBe(0);
-    expect(room.addPlayer('p2', 'Bob', {})).toBe(1);
+    expect(room.addPlayer('p1', 'Alice', noClient)).toBe(0);
+    expect(room.addPlayer('p2', 'Bob', noClient)).toBe(1);
   });
 
   it('rejects a player past max capacity', () => {
     const room = manager().createRoom('test');
-    room.addPlayer('p1', 'A', {});
-    room.addPlayer('p2', 'B', {});
-    room.addPlayer('p3', 'C', {});
-    room.addPlayer('p4', 'D', {});
-    expect(() => room.addPlayer('p5', 'E', {})).toThrow(/table full/);
+    room.addPlayer('p1', 'A', noClient);
+    room.addPlayer('p2', 'B', noClient);
+    room.addPlayer('p3', 'C', noClient);
+    room.addPlayer('p4', 'D', noClient);
+    expect(() => room.addPlayer('p5', 'E', noClient)).toThrow(/table full/);
   });
 
   it('fires autoStart when the room reaches capacity', () => {
-    const room = manager().createRoom('test');
-    for (const [id, n] of [['p1', 'A'], ['p2', 'B'], ['p3', 'C']]) room.addPlayer(id, n, {});
+    const room = asRoom<FakeState>(manager().createRoom('test'));
+    for (const [id, n] of [['p1', 'A'], ['p2', 'B'], ['p3', 'C']]) room.addPlayer(id, n, noClient);
     expect(room.state.started).toBe(false);
-    room.addPlayer('p4', 'D', {});
+    room.addPlayer('p4', 'D', noClient);
     expect(room.state.started).toBe(true);
   });
 
@@ -70,7 +84,7 @@ describe('RoomManager', () => {
     const m = manager();
     const r1 = m.createRoom('test');
     const r2 = m.createRoom('test');
-    r1.addPlayer('p1', 'Alice', {});
+    r1.addPlayer('p1', 'Alice', noClient);
     expect(r1.playerCount).toBe(1);
     expect(r2.playerCount).toBe(0);
   });
@@ -79,10 +93,10 @@ describe('RoomManager', () => {
     const m = manager();
     const full = m.createRoom('test');
     for (const [id, n] of [['a', 'A'], ['b', 'B'], ['c', 'C'], ['d', 'D']]) {
-      full.addPlayer(id, n, {});
+      full.addPlayer(id, n, noClient);
     }
     const open = m.createRoom('test');
-    open.addPlayer('e', 'E', {});
+    open.addPlayer('e', 'E', noClient);
     const listed = m.listRooms('test');
     expect(listed.map((r) => r.code)).toEqual([open.code]);
     expect(listed[0]).toMatchObject({ players: 1, max: 4 });
@@ -90,36 +104,85 @@ describe('RoomManager', () => {
 
   it('viewFor returns the caller seat', () => {
     const room = manager().createRoom('test');
-    room.addPlayer('p1', 'Alice', {});
-    room.addPlayer('p2', 'Bob', {});
-    expect(room.viewFor('p2').mySeat).toBe(1);
+    room.addPlayer('p1', 'Alice', noClient);
+    room.addPlayer('p2', 'Bob', noClient);
+    expect((room.viewFor('p2') as { mySeat: number }).mySeat).toBe(1);
   });
 
-  it('reconnecting player reclaims the same seat without re-adding to engine state', () => {
+  it('re-seats a player after removal without stale engine seats', () => {
     const room = manager().createRoom('test');
-    const fakeClient = { readyState: 1, send: () => {} };
-    room.addPlayer('p1', 'Alice', fakeClient);
-    room.removePlayer('p1'); // simulate disconnect
-    const seat = room.addPlayer('p1', 'Alice', fakeClient); // reconnect
+    room.addPlayer('p1', 'Alice', noClient);
+    room.removePlayer('p1'); // frees the engine seat
+    expect(room.state.players).toHaveLength(0);
+    const seat = room.addPlayer('p1', 'Alice', noClient); // rejoin
     expect(seat).toBe(0);
-    expect(room.state.players).toHaveLength(1); // not double-added
+    expect(room.state.players).toHaveLength(1);
   });
 });
 
-// --- Rooms / matchmaking platform layer ---------------------------------
+// --- Seat truth: the engine is the single source of seat state ------------
 
-// A fake engine with a turn pointer so timeout/bot driving can be exercised.
-const turnEngine = {
+describe('Room seat truth', () => {
+  it('lobby:leave (removePlayer) frees the engine seat, not just the member map', () => {
+    const room = manager().createRoom('test');
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
+    expect(room.state.players.map((p) => p.id)).toEqual(['h', 'g']);
+
+    room.removePlayer('g');
+    // Assert engine state, not members.size: the seat is gone from the engine.
+    expect(room.state.players.map((p) => p.id)).toEqual(['h']);
+    expect(room.state.players).toHaveLength(1);
+  });
+
+  it('kick frees the engine seat and re-seats the remaining players', () => {
+    const room = manager().createRoom('test');
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
+    room.addPlayer('x', 'Extra', noClient);
+
+    room.kick('h', 'g');
+    expect(room.state.players.map((p) => p.id)).toEqual(['h', 'x']);
+    expect(room.state.players.map((p) => p.seat)).toEqual([0, 1]);
+  });
+
+  it('applyMessage rejects a kicked player before mutating state', () => {
+    const room = asRoom<FakeState>(
+      new RoomManager({ test: makeAdapter({ onMessage: (s) => ({ ...s, moved: true }) }) }).createRoom('test'),
+    );
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
+    room.kick('h', 'g');
+
+    expect(() => room.applyMessage('g', { go: true })).toThrow(/kicked/);
+    expect(room.state.moved).toBeUndefined();
+    expect(room.isKicked('g')).toBe(true);
+  });
+});
+
+// --- Rooms / matchmaking platform layer ----------------------------------
+
+interface TurnState extends EngineState {
+  turn: number;
+  log: Array<{ playerId: string; msg: unknown }>;
+  options?: Record<string, unknown>;
+}
+
+const turnEngine: GameEngine<TurnState> = {
   createGame: (options = {}) => ({ players: [], turn: 0, log: [], options }),
   addPlayer: (state, { id, name }) => ({
     ...state,
     players: [...state.players, { id, name, seat: state.players.length }],
   }),
+  removePlayer: (state, playerId) => ({
+    ...state,
+    players: state.players.filter((p) => p.id !== playerId).map((p, i) => ({ ...p, seat: i })),
+  }),
   publicState: (state, seat) => ({ turn: state.turn, mySeat: seat, log: state.log }),
 };
 
-function turnAdapter(overrides = {}) {
-  return {
+function turnAdapter(overrides: Partial<Adapter<TurnState>> = {}): Adapter<EngineState> {
+  const a: Adapter<TurnState> = {
     engine: turnEngine,
     minPlayers: 2,
     maxPlayers: 4,
@@ -135,6 +198,7 @@ function turnAdapter(overrides = {}) {
     optionsSchema: { stakes: { type: 'enum', values: ['low', 'high'], default: 'low' } },
     ...overrides,
   };
+  return a as unknown as Adapter<EngineState>;
 }
 
 const mgr = () => new RoomManager({ test: turnAdapter() });
@@ -142,43 +206,42 @@ const mgr = () => new RoomManager({ test: turnAdapter() });
 describe('Room host controls', () => {
   it('makes the first human the host', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {});
-    room.addPlayer('g', 'Guest', {});
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
     expect(room.host).toBe('h');
   });
 
   it('lets the host lock the room, blocking new joins', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {});
+    room.addPlayer('h', 'Host', noClient);
     room.lock('h', true);
-    expect(() => room.addPlayer('g', 'Guest', {})).toThrow(/room locked/);
+    expect(() => room.addPlayer('g', 'Guest', noClient)).toThrow(/room locked/);
   });
 
   it('rejects host controls from a non-host', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {});
-    room.addPlayer('g', 'Guest', {});
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
     expect(() => room.lock('g', true)).toThrow(/host only/);
     expect(() => room.kick('g', 'h')).toThrow(/host only/);
   });
 
-  it('kicks a member but never the host', () => {
+  it('kicks a member but never the host, freeing the engine seat', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {});
-    room.addPlayer('g', 'Guest', {});
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
     room.kick('h', 'g');
-    expect(room.members.has('g')).toBe(false);
+    expect(room.state.players.map((p) => p.id)).toEqual(['h']);
     expect(() => room.kick('h', 'h')).toThrow(/cannot kick the host/);
   });
 
   it('start-early fills empty seats with bots and starts', () => {
-    // autoStart that flips a started flag without dropping the players array.
     const m = new RoomManager({
       test: turnAdapter({ autoStart: (state) => ({ ...state, started: true }) }),
     });
-    const room = m.createRoom('test');
-    room.addPlayer('h', 'Host', {});
-    room.addPlayer('g', 'Guest', {});
+    const room = asRoom<TurnState & { started?: boolean }>(m.createRoom('test'));
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
     room.startEarly('h');
     expect(room.isFull).toBe(true);
     expect(room.botSeats.size).toBe(2);
@@ -187,7 +250,7 @@ describe('Room host controls', () => {
 
   it('start-early requires minPlayers', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {});
+    room.addPlayer('h', 'Host', noClient);
     expect(() => room.startEarly('h')).toThrow(/not enough players/);
   });
 });
@@ -195,7 +258,7 @@ describe('Room host controls', () => {
 describe('Room bots & spectators', () => {
   it('fills remaining seats with bots', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {});
+    room.addPlayer('h', 'Host', noClient);
     expect(room.fillWithBots()).toBe(3);
     expect(room.isFull).toBe(true);
     expect(room.botSeats).toEqual(new Set([1, 2, 3]));
@@ -203,15 +266,14 @@ describe('Room bots & spectators', () => {
 
   it('a spectator never receives another seat private view', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {});
-    room.addSpectator('spec:x', {});
-    // viewFor an unknown id is the seatless view.
-    expect(room.viewFor('spec:x').mySeat).toBe(-1);
+    room.addPlayer('h', 'Host', noClient);
+    room.addSpectator('spec:x', noClient);
+    expect((room.viewFor('spec:x') as { mySeat: number }).mySeat).toBe(-1);
   });
 
   it('counts a bot-only room as having no humans (for GC)', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {});
+    room.addPlayer('h', 'Host', noClient);
     room.fillWithBots();
     expect(room.hasHumanMembers).toBe(true);
     room.removePlayer('h');
@@ -224,39 +286,36 @@ describe('Room.tick (heartbeat-driven)', () => {
 
   it('reaps a member whose pong is stale', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {}, { now: 0 });
-    room.addPlayer('g', 'Guest', {}, { now: 0 });
+    room.addPlayer('h', 'Host', noClient, { now: 0 });
+    room.addPlayer('g', 'Guest', noClient, { now: 0 });
     const { reaped } = room.tick({ now: 200, ...tickOpts });
-    // Neither has ponged since now=0, so both are >100ms stale.
     expect(reaped.sort()).toEqual(['g', 'h']);
     expect(room.members.size).toBe(0);
   });
 
   it('keeps a member alive after a fresh pong', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {}, { now: 0 });
+    room.addPlayer('h', 'Host', noClient, { now: 0 });
     room.recordPong('h', { now: 180 });
     const { reaped } = room.tick({ now: 200, ...tickOpts });
     expect(reaped).toEqual([]);
   });
 
   it('auto-acts (timeout) for the active seat when its player is dark', () => {
-    const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {}, { now: 0 });
-    room.addPlayer('g', 'Guest', {}, { now: 0 });
-    // Host (seat 0) keeps ponging; guest (seat 1) goes dark. Make it seat 1's turn.
+    const room = asRoom<TurnState>(mgr().createRoom('test'));
+    room.addPlayer('h', 'Host', noClient, { now: 0 });
+    room.addPlayer('g', 'Guest', noClient, { now: 0 });
     room.state.turn = 1;
     room.turnStartedAt = 0;
     room.recordPong('h', { now: 190 });
     const { timeout } = room.tick({ now: 200, ...tickOpts });
-    // seat 0 still live; seat 1 dark and past grace -> timeout for seat 1.
     expect(timeout).toMatchObject({ seat: 1, reason: 'disconnect' });
   });
 
   it('drives a bot move on the bot seat turn', () => {
-    const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {}, { now: 0 });
-    room.fillWithBots(); // seats 1..3 are bots
+    const room = asRoom<TurnState>(mgr().createRoom('test'));
+    room.addPlayer('h', 'Host', noClient, { now: 0 });
+    room.fillWithBots();
     room.state.turn = 1;
     room.recordPong('h', { now: 0 });
     const { botMsg, botSeat } = room.tick({ now: 0, ...tickOpts });
@@ -276,16 +335,16 @@ describe('RoomManager quick-match & GC', () => {
   it('reuses the fullest open room instead of creating one', () => {
     const m = mgr();
     const a = m.createRoom('test');
-    a.addPlayer('p1', 'A', {});
-    a.addPlayer('p2', 'B', {});
+    a.addPlayer('p1', 'A', noClient);
+    a.addPlayer('p2', 'B', noClient);
     const b = m.createRoom('test');
-    b.addPlayer('p3', 'C', {});
-    expect(m.quickMatch('test').code).toBe(a.code); // a is fuller
+    b.addPlayer('p3', 'C', noClient);
+    expect(m.quickMatch('test').code).toBe(a.code);
   });
 
   it('plumbs validated options into the engine on create', () => {
     const m = mgr();
-    const room = m.createRoom('test', { stakes: 'high' });
+    const room = asRoom<TurnState>(m.createRoom('test', { stakes: 'high' }));
     expect(room.options).toEqual({ stakes: 'high' });
     expect(room.state.options).toEqual({ stakes: 'high' });
   });
@@ -294,22 +353,39 @@ describe('RoomManager quick-match & GC', () => {
     expect(() => mgr().createRoom('test', { stakes: 'nope' })).toThrow(/invalid option stakes/);
   });
 
-  it('GCs rooms with no humans', () => {
+  it('GCs a bot-only room only after the grace window lapses', () => {
     const m = mgr();
     const room = m.createRoom('test');
-    room.addPlayer('h', 'Host', {});
+    room.addPlayer('h', 'Host', noClient);
     room.fillWithBots();
-    room.removePlayer('h'); // only bots remain
-    expect(m.reapEmptyRooms()).toEqual([room.code]);
+    room.removePlayer('h'); // only bots remain -> reap-empty
+    // Within the grace window the bot table survives a blip.
+    expect(m.reapEmptyRooms(1000)).toEqual([]);
+    expect(m.rooms.size).toBe(1);
+    // Past the grace window it is collected.
+    expect(m.reapEmptyRooms(1000 + ROOM_GRACE_MS)).toEqual([room.code]);
     expect(m.rooms.size).toBe(0);
+  });
+
+  it('a reconnecting human clears emptySince so the room is not reaped', () => {
+    const m = mgr();
+    const room = m.createRoom('test');
+    room.addPlayer('h', 'Host', noClient);
+    room.fillWithBots();
+    room.removePlayer('h');
+    expect(m.reapEmptyRooms(0)).toEqual([]); // marks emptySince = 0
+    room.addPlayer('h2', 'Human', noClient); // human returns
+    // Even well past the window, a room with a live human is never reaped.
+    expect(m.reapEmptyRooms(ROOM_GRACE_MS * 2)).toEqual([]);
+    expect(room.emptySince).toBeNull();
   });
 });
 
 describe('Room event log', () => {
   it('applyMessage appends an entry with stateHash, seq, playerId, msg', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {});
-    room.addPlayer('g', 'Guest', {});
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
     room.applyMessage('h', { skip: 0 });
     expect(room.eventLog).toHaveLength(1);
     const e = room.eventLog[0];
@@ -322,21 +398,21 @@ describe('Room event log', () => {
 
   it('ring buffer caps at 200 entries', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {});
-    room.addPlayer('g', 'Guest', {});
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
     for (let i = 0; i < 201; i++) room.applyMessage('h', { skip: i });
     expect(room.eventLog).toHaveLength(200);
-    expect(room.eventLog[0].msg).toEqual({ skip: 1 }); // oldest dropped
+    expect(room.eventLog[0].msg).toEqual({ skip: 1 });
   });
 
   it('phaseEnteredAt is set when state.phase changes', () => {
     const phaseAdapter = makeAdapter({
-      onMessage: (state, _pid, msg) => ({ ...state, phase: msg.phase }),
+      onMessage: (state, _pid, msg) => ({ ...state, phase: (msg as { phase: string }).phase }),
     });
     const m = new RoomManager({ test: phaseAdapter });
     const room = m.createRoom('test');
-    room.addPlayer('h', 'Host', {});
-    room.addPlayer('g', 'Guest', {});
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
     expect(room.phaseEnteredAt).toBeNull();
     room.applyMessage('h', { phase: 'active' });
     expect(room.phaseEnteredAt).toBeGreaterThan(0);
@@ -344,8 +420,8 @@ describe('Room event log', () => {
 
   it('seq keeps advancing past the ring-buffer cap (no reuse)', () => {
     const room = mgr().createRoom('test');
-    room.addPlayer('h', 'Host', {});
-    room.addPlayer('g', 'Guest', {});
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
     for (let i = 0; i < 205; i++) room.applyMessage('h', { skip: i });
     expect(room.eventLog[room.eventLog.length - 1].seq).toBe(204);
   });
@@ -367,25 +443,25 @@ describe('anti-cheat hook', () => {
   function anticheatManager() {
     return new RoomManager({
       test: makeAdapter({
-        anticheat: (_state, _pid, msg) => (msg.illegal ? 'illegal action' : null),
+        anticheat: (_state, _pid, msg) => ((msg as { illegal?: boolean }).illegal ? 'illegal action' : null),
         onMessage: (state) => ({ ...state, moved: true }),
       }),
     });
   }
 
   it('rejects an illegal action and does not mutate state', () => {
-    const room = anticheatManager().createRoom('test');
-    room.addPlayer('h', 'Host', {});
-    room.addPlayer('g', 'Guest', {});
+    const room = asRoom<FakeState>(anticheatManager().createRoom('test'));
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
     expect(() => room.applyMessage('h', { illegal: true })).toThrow(/anticheat: illegal action/);
     expect(room.state.moved).toBeUndefined();
     expect(room.eventLog).toHaveLength(0);
   });
 
   it('allows a legal action through', () => {
-    const room = anticheatManager().createRoom('test');
-    room.addPlayer('h', 'Host', {});
-    room.addPlayer('g', 'Guest', {});
+    const room = asRoom<FakeState>(anticheatManager().createRoom('test'));
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
     room.applyMessage('h', { ok: true });
     expect(room.state.moved).toBe(true);
   });
@@ -395,12 +471,11 @@ describe('snapshot / restore', () => {
   it('round-trips room state and members through a snapshot', () => {
     const m = new RoomManager({ test: makeAdapter({ onMessage: (s) => ({ ...s, n: (s.n ?? 0) + 1 }) }) });
     const room = m.createRoom('test');
-    room.addPlayer('h', 'Host', {});
-    room.addPlayer('g', 'Guest', {});
+    room.addPlayer('h', 'Host', noClient);
+    room.addPlayer('g', 'Guest', noClient);
     room.applyMessage('h', { go: true });
 
     const snap = room.snapshot();
-    snap.gameId = 'test';
 
     const m2 = new RoomManager({ test: makeAdapter() });
     m2.restoreRoom(snap);
@@ -409,13 +484,14 @@ describe('snapshot / restore', () => {
     expect(restored.state).toEqual(room.state);
     expect(restored._eventSeq).toBe(room._eventSeq);
     expect(restored.host).toBe('h');
-    expect(restored.members.get('h').seat).toBe(0);
-    expect(restored.members.get('h').client).toBeNull();
+    expect(restored.members.get('h')!.seat).toBe(0);
+    expect(restored.members.get('h')!.client).toBeNull();
   });
 
   it('restoreRoom skips a disabled game', () => {
     const m = new RoomManager({ off: makeAdapter({ enabled: false }) });
-    m.restoreRoom({ code: 'AAAA', gameId: 'off', options: {}, state: {}, members: [] });
+    const snap = { code: 'AAAA', gameId: 'off', options: {}, state: { players: [] }, members: [] } as unknown as RoomSnapshot;
+    m.restoreRoom(snap);
     expect(m.rooms.has('AAAA')).toBe(false);
   });
 });
