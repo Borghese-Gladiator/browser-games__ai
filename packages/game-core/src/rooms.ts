@@ -13,6 +13,7 @@ import { decideTimeout, windowDeadlineExpired } from './timers.ts';
 import { validateOptions } from './options.ts';
 import { pickQuickMatchRoom } from './matchmaking.ts';
 import { hashState } from './observability.ts';
+import { log } from './logger.ts';
 import type { EventStore } from './eventStore.ts';
 import type {
   Adapter,
@@ -581,11 +582,16 @@ export class RoomManager {
     return room;
   }
 
-  _persistStartEvent(room: Room<EngineState>): void {
-    if (!this.eventStore) return;
+  _persistStartEvent(room: Room<EngineState>): Promise<void> {
+    if (!this.eventStore) return Promise.resolve();
     const start = room.adapter.replayStartEvent?.(room.state);
-    if (!start) return;
-    void this.eventStore.append(room.code, start).catch(() => {});
+    if (!start) return Promise.resolve();
+    return this.eventStore.append(room.code, start).then(
+      () => {},
+      (e) => {
+        log.error('start event persist failed', { roomCode: room.code, err: (e as Error).message });
+      },
+    );
   }
 
   getRoom(code: string): Room<EngineState> {
@@ -635,13 +641,21 @@ export class RoomManager {
   // Empty-room garbage collection with a grace window: a room is only dropped
   // after it has been empty (no live humans, no spectators) for at least graceMs,
   // so a bot table survives a short blip and a reconnecting human finds it.
-  reapEmptyRooms(now: number = Date.now(), graceMs: number = ROOM_GRACE_MS): string[] {
+  async reapEmptyRooms(now: number = Date.now(), graceMs: number = ROOM_GRACE_MS): Promise<string[]> {
     const removed: string[] = [];
     for (const [code, room] of this.rooms) {
       room.markEmptyState(now);
       if (room.emptySince != null && now - room.emptySince >= graceMs) {
         if (this.eventStore && room.eventLog.length > 0) {
-          void reapRoom(room, this.eventStore).catch(() => {});
+          try {
+            await reapRoom(room, this.eventStore);
+          } catch (e) {
+            log.error('room event flush failed; keeping room', {
+              roomCode: code,
+              err: (e as Error).message,
+            });
+            continue;
+          }
         }
         this.rooms.delete(code);
         removed.push(code);

@@ -348,12 +348,12 @@ export function leave(
 // bot move, then every timeout auto-action, then closes the window once when its
 // hard deadline has expired. Broadcasts when anything changed or the deadline
 // expired, then reaps rooms honoring the grace window.
-export function runHeartbeat(
+export async function runHeartbeat(
   manager: RoomManager,
   broadcast: (room: Room<EngineState>) => void,
   opts: HeartbeatOpts,
   now: number = Date.now(),
-): void {
+): Promise<void> {
   for (const room of manager.rooms.values()) {
     const { reaped, timeouts, botMsgs, deadlineExpired } = room.tick({
       now, deadAfterMs: opts.DEAD_MS, graceMs: opts.GRACE_MS, forfeitMs: opts.FORFEIT_MS,
@@ -393,7 +393,7 @@ export function runHeartbeat(
 
     if (changed) broadcast(room);
   }
-  manager.reapEmptyRooms(now, opts.ROOM_GRACE_MS ?? ROOM_GRACE_MS);
+  await manager.reapEmptyRooms(now, opts.ROOM_GRACE_MS ?? ROOM_GRACE_MS);
 }
 
 export interface SocketDeps {
