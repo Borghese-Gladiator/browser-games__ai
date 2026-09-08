@@ -30,7 +30,8 @@ export function TrainerPage({ initialSeed }: { initialSeed?: number } = {}): JSX
   }
 
   return (
-    <main className="dt">
+    <div className="dt-app">
+      <main className="dt">
       <a className="dt-back" href="/">
         ← All games
       </a>
@@ -51,6 +52,7 @@ export function TrainerPage({ initialSeed }: { initialSeed?: number } = {}): JSX
           Next puzzle
         </button>
       )}
-    </main>
+      </main>
+    </div>
   );
 }

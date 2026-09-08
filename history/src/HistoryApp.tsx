@@ -11,5 +11,9 @@ function gameIdFromPath(pathname: string): string | null {
 
 export function HistoryApp() {
   const gameId = gameIdFromPath(window.location.pathname);
-  return gameId ? <ReviewPage gameId={gameId} /> : <GamesList />;
+  return (
+    <div className="rv-app">
+      {gameId ? <ReviewPage gameId={gameId} /> : <GamesList />}
+    </div>
+  );
 }

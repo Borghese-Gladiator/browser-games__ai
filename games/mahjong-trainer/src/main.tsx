@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@portal/shared/theme.css";
+import "@portal/shared/tiles.css";
 import "./trainer.css";
 import { TrainerPage } from "./TrainerPage.tsx";
 

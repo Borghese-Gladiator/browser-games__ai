@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TileFace, kindToTileId } from "@portal/shared/tiles";
 import { fetchReview, type GameReview, type MistakeSeverity, type ReviewStep } from "./api.ts";
 
 type LoadState =
@@ -126,16 +127,28 @@ function StepView({
         <span className={`rv-badge rv-badge-${step.severity}`}>{SEVERITY_LABEL[step.severity]}</span>
       </div>
 
+      {step.hand.length > 0 && (
+        <div className="rv-hand" aria-label="Hand at this turn">
+          {step.hand.map((kind, i) => (
+            <TileFace key={`${kind}-${i}`} tile={kindToTileId(kind)} size="sm" decorative />
+          ))}
+        </div>
+      )}
+
       <div className="rv-compare" aria-label="Chosen versus best">
         <div className="rv-move rv-move-chosen">
           <h2>Chosen discard</h2>
-          <p className="rv-move-tile">{step.chosen.kind}</p>
+          <p className="rv-move-tile">
+            <TileFace tile={kindToTileId(step.chosen.kind)} size="lg" decorative />
+          </p>
           <p className="rv-muted rv-num">Score {step.chosen.score}</p>
           <ReasonList reasons={step.chosen.reasons} />
         </div>
         <div className="rv-move rv-move-best">
           <h2>Best discard</h2>
-          <p className="rv-move-tile">{step.best.kind}</p>
+          <p className="rv-move-tile">
+            <TileFace tile={kindToTileId(step.best.kind)} size="lg" decorative />
+          </p>
           <p className="rv-muted rv-num">Score {step.best.score}</p>
           <ReasonList reasons={step.best.reasons} />
         </div>

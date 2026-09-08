@@ -11,6 +11,14 @@ export function tileGlyph(tile: Tile): string {
   return tileToKind(tile);
 }
 
+// Board tile id ("dots-5", "honor-east", "flower-plum") for the shared TileFace.
+// The trainer works in engine Tile objects; the tile renderer works in ids.
+export function tileToId(tile: Tile): string {
+  if (tile.suit === "honor" && tile.honor) return `honor-${tile.honor}`;
+  if (tile.suit === "flower" && tile.flower) return `flower-${tile.flower}`;
+  return `${tile.suit}-${tile.rank}`;
+}
+
 export function tileLabel(tile: Tile): string {
   if (tile.suit === "honor" && tile.honor) {
     return tile.honor;

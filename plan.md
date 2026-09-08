@@ -26,15 +26,29 @@ values from the data that exists:
 - visible copies: counted only from public tiles, never `myHand`.
 
 ## Changes
-- `games/mahjong/src/tiles.ts` (new): `Suit`, `TileSize`, `SeatPosition`,
-  `ParsedTile`, `parseTile`, `tileLabel` (verbatim old logic), `tileShort`,
-  `suitColor`, `sortTiles`, copy-count and kind helpers.
-- `games/mahjong/src/TileFace.tsx` (new): `TileFace`, `TileBack`, `CornerIndex`,
-  and the inline-SVG glyphs (`CharacterGlyph`, `DotGlyph`, `BambooGlyph`,
-  `HonourGlyph`, `FlowerGlyph`). `TileFace` sets `role="img"` and the tileLabel
-  aria-label unless it is decorative.
-- `games/mahjong/src/TileFace.test.tsx` (new): one glyph per suit and aria-label
-  parity with `tileLabel`.
+The reusable tile module lives in the shared package so every tile surface reads
+one renderer. The board consumes it through thin local barrels.
+- `packages/shared/src/tiles/parseTile.ts` (new): `Suit`, `TileSize`,
+  `SeatPosition`, `ParsedTile`, `parseTile`, `tileLabel` (verbatim old logic),
+  `tileShort`, `tileKind`, `copiesForTile`, `kindToTileId`, `sortTiles`,
+  `suitColor`.
+- `packages/shared/src/tiles/TileGlyphs.tsx` (new): the inline-SVG glyphs
+  (`CharacterGlyph`, `DotGlyph`, `BambooGlyph`, `HonourGlyph`, `FlowerGlyph`),
+  `TileGlyph`, and `CornerIndex`.
+- `packages/shared/src/tiles/TileFace.tsx` (new): `TileFace` and `TileBack`.
+  `TileFace` sets `role="img"` and the tileLabel aria-label unless decorative.
+- `packages/shared/src/tiles/tiles.css` (new): tile face/back/glyph styles plus
+  the shared felt and typography tokens.
+- `packages/shared/src/tiles/index.ts` (new): barrel.
+- `packages/shared/src/tiles/TileFace.test.tsx` (new): one glyph per suit,
+  aria-label parity with `tileLabel`, and count backs.
+- `packages/shared/package.json`, `vitest.config.js`: export and alias
+  `@portal/shared/tiles` and `@portal/shared/tiles.css`.
+- `games/mahjong/src/tiles.ts`, `games/mahjong/src/TileFace.tsx`: board-local
+  barrels that re-export `@portal/shared/tiles`.
+- `games/mahjong/src/TileFace.test.tsx` (new): board barrel-integration test —
+  roles and accessible names stay intact through the re-export.
+- `games/mahjong/src/main.tsx`: import `@portal/shared/tiles.css`.
 - `games/mahjong/src/board/visibleCopies.ts` (new): `computeVisibleCopies` from
   a public projection only.
 - `games/mahjong/src/board/visibleCopies.test.ts` (new): counts and the
@@ -57,10 +71,10 @@ values from the data that exists:
   add a felt-layout smoke test.
 - `games/mahjong/package.json` (edit): add `@browser-games/engine-mahjong`.
 
-Out of scope: the trainer and history restyle, and shared-package tile module.
-The trainer and history use engine `Tile` objects, not the board's string ids;
-a shared string-based module would force a cross-package refactor that the slice
-objective and the required checks do not cover.
+Out of scope: the trainer and history restyle. This slice ships the reusable
+shared tile module and the board. `kindToTileId` bridges analysis kinds to tile
+ids, so the trainer and history can adopt the shared renderer in a later slice
+without a new module.
 
 ## Tests
 ### Unit (`npm run test`)

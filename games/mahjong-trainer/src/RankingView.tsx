@@ -1,7 +1,8 @@
 import type { RankedDiscard } from "@browser-games/engine-mahjong-analysis";
+import { TileFace, kindToTileId } from "@portal/shared/tiles";
 import { renderReasons } from "./reasons.ts";
 import type { MistakeSeverity, PlayerChoiceResult } from "./severity.ts";
-import { tileGlyph } from "./tiles.ts";
+import { tileToId } from "./tiles.ts";
 
 const SEVERITY_LABEL: Record<MistakeSeverity, string> = {
   optimal: "Optimal discard",
@@ -33,12 +34,17 @@ export function RankingView({
           <div>
             <dt>Your pick</dt>
             <dd>
-              {tileGlyph(result.choice)} (#{result.choiceRank})
+              <span className="dt-tile-stat">
+                <TileFace tile={tileToId(result.choice)} size="md" decorative />
+                <span className="dt-tile-rank">#{result.choiceRank}</span>
+              </span>
             </dd>
           </div>
           <div>
             <dt>Best</dt>
-            <dd>{result.best.kind}</dd>
+            <dd>
+              <TileFace tile={kindToTileId(result.best.kind)} size="md" decorative />
+            </dd>
           </div>
           <div>
             <dt>Points lost</dt>
@@ -61,7 +67,9 @@ export function RankingView({
             >
               <div className="dt-rank-head">
                 <span className="dt-rank-num">#{rank}</span>
-                <span className="dt-rank-tile">{entry.kind}</span>
+                <span className="dt-rank-tile">
+                  <TileFace tile={kindToTileId(entry.kind)} size="md" decorative />
+                </span>
                 <span className="dt-rank-score">{entry.score}</span>
                 {rank === 1 && <span className="dt-badge dt-badge-best">Best</span>}
                 {isChoice && <span className="dt-badge dt-badge-choice">Your pick</span>}
