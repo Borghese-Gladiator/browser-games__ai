@@ -82,4 +82,13 @@ export const games: GameMeta[] = [
     multiplayer: true,
     enabled: true,
   },
+  {
+    id: "mahjong-trainer",
+    title: "Discard Trainer",
+    description: "Single-player mahjong drill. Pick a discard, then compare your choice against the ranked analysis.",
+    emoji: "🎯",
+    path: "/games/mahjong-trainer/",
+    multiplayer: false,
+    enabled: true,
+  },
 ];

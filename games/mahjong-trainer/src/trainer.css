@@ -1,0 +1,221 @@
+.dt {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 4rem 1.5rem 3rem;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.dt-back {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  font-weight: 600;
+}
+
+.dt-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  letter-spacing: 0.02em;
+}
+
+.dt-muted {
+  margin: 0;
+  color: var(--muted);
+}
+
+.dt-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+/* Hand of selectable tiles. */
+.dt-hand {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dt-tile-btn {
+  font-size: 1.1rem;
+  font-weight: 700;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: var(--text);
+  cursor: pointer;
+  min-width: 3rem;
+}
+
+.dt-tile-btn:not(:disabled):hover {
+  border-color: var(--accent);
+  background: var(--cell-hover);
+}
+
+.dt-tile-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dt-tile-btn:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Result summary. */
+.dt-result {
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  background: var(--cell);
+}
+
+.dt-result-optimal {
+  border-left-color: #22c55e;
+}
+.dt-result-minor {
+  border-left-color: #eab308;
+}
+.dt-result-moderate {
+  border-left-color: #f97316;
+}
+.dt-result-severe {
+  border-left-color: #ef4444;
+}
+
+.dt-result-severity {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.dt-result-note {
+  margin: 0.25rem 0 0.75rem;
+  color: var(--muted);
+}
+
+.dt-result-stats {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.dt-result-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.dt-result-stats dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.dt-result-stats dd {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ranking list. */
+.dt-ranking-heading {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 1rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.dt-ranking {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dt-rank-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  background: var(--cell);
+}
+
+.dt-rank-choice {
+  border-color: var(--accent);
+}
+
+.dt-rank-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dt-rank-num {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 2rem;
+}
+
+.dt-rank-tile {
+  font-weight: 700;
+  font-size: 1.05rem;
+  min-width: 3rem;
+}
+
+.dt-rank-score {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
+.dt-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 999px;
+  padding: 0.125rem 0.5rem;
+}
+
+.dt-badge-best {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.dt-badge-choice {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent);
+}
+
+.dt-reasons {
+  list-style: none;
+  margin: 0.625rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.dt-next {
+  align-self: flex-start;
+}

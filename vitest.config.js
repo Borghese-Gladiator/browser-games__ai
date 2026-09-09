@@ -32,6 +32,14 @@ export default defineConfig({
         __dirname,
         "packages/engines/president/src/engine.ts",
       ),
+      "@browser-games/engine-mahjong-analysis": resolve(
+        __dirname,
+        "packages/engines/mahjong-analysis/src/index.ts",
+      ),
+      "@browser-games/engine-mahjong": resolve(
+        __dirname,
+        "packages/engines/mahjong/src/index.ts",
+      ),
       "@browser-games/game-core": resolve(
         __dirname,
         "packages/game-core/src/gateway.ts",
