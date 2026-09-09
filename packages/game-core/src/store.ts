@@ -7,7 +7,19 @@
 // as absent (fall back) rather than trusted, so a corrupt file cannot poison a
 // store or the boot restore.
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
+import {
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  readdirSync,
+  unlinkSync,
+  renameSync,
+  openSync,
+  fsyncSync,
+  closeSync,
+} from 'node:fs';
+import { readFile, rename, open, mkdir } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import crypto from 'node:crypto';
 import {
   isAchievementUnlockArray,
@@ -15,6 +27,64 @@ import {
   assertRoomSnapshot,
 } from './guards.ts';
 import type { AchievementUnlock, OutcomeRecord, PlayerOutcome, RoomSnapshot } from './types.ts';
+
+// A persisted file that is present but does not parse is corrupt (a torn or
+// partial write). The loader must fail loud with this error rather than silently
+// returning an empty history, which would hide data loss.
+export class TornWriteError extends Error {
+  constructor(filePath: string, cause?: unknown) {
+    super(`torn or corrupt file: ${filePath}`);
+    this.name = 'TornWriteError';
+    if (cause !== undefined) (this as { cause?: unknown }).cause = cause;
+  }
+}
+
+// Write JSON to a temp file, fsync it, then rename over the target. rename on the
+// same filesystem is atomic, so a reader never sees a half-written file.
+export async function atomicWriteJson(path: string, data: unknown): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
+  const tmp = `${path}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`;
+  const body = JSON.stringify(data, null, 2);
+  const handle = await open(tmp, 'w');
+  try {
+    await handle.writeFile(body);
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
+  await rename(tmp, path);
+}
+
+// Synchronous sibling of atomicWriteJson for the legacy synchronous stores.
+export function atomicWriteJsonSync(path: string, data: unknown): void {
+  mkdirSync(dirname(path), { recursive: true });
+  const tmp = `${path}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`;
+  const fd = openSync(tmp, 'w');
+  try {
+    writeFileSync(fd, JSON.stringify(data, null, 2));
+    fsyncSync(fd);
+  } finally {
+    closeSync(fd);
+  }
+  renameSync(tmp, path);
+}
+
+// Read and parse JSON. A parse failure means the file is present but corrupt, so
+// throw TornWriteError. A missing file rethrows its ENOENT so the caller can map
+// it to a legitimate empty result.
+export async function readJsonStrict<T>(path: string): Promise<T> {
+  let body: string;
+  try {
+    body = await readFile(path, 'utf8');
+  } catch (e) {
+    throw e;
+  }
+  try {
+    return JSON.parse(body) as T;
+  } catch (e) {
+    throw new TornWriteError(path, e);
+  }
+}
 
 function load<T>(filePath: string, fallback: T, guard?: (v: unknown) => v is T): T {
   try {
@@ -40,7 +110,7 @@ export class OutcomeStore {
   record({ gameId, roomCode, outcomes }: { gameId: string; roomCode: string; outcomes: PlayerOutcome[] }): OutcomeRecord {
     const entry: OutcomeRecord = { id: crypto.randomUUID(), gameId, roomCode, ts: Date.now(), outcomes };
     this.records.push(entry);
-    writeFileSync(this.filePath, JSON.stringify(this.records, null, 2));
+    atomicWriteJsonSync(this.filePath, this.records);
     return entry;
   }
 
@@ -66,7 +136,7 @@ export class AchievementStore {
       return false;
     }
     this.unlocks.push({ playerId, achievementId, gameId, ts: Date.now() });
-    writeFileSync(this.filePath, JSON.stringify(this.unlocks, null, 2));
+    atomicWriteJsonSync(this.filePath, this.unlocks);
     return true;
   }
 
@@ -87,7 +157,7 @@ export class SnapshotStore {
   }
 
   save(code: string, snapshot: RoomSnapshot): void {
-    writeFileSync(`${this.dir}/${code}.json`, JSON.stringify(snapshot));
+    atomicWriteJsonSync(`${this.dir}/${code}.json`, snapshot);
   }
 
   load(code: string): RoomSnapshot {

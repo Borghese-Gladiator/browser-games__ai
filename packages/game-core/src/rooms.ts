@@ -13,6 +13,7 @@ import { decideTimeout, windowDeadlineExpired } from './timers.ts';
 import { validateOptions } from './options.ts';
 import { pickQuickMatchRoom } from './matchmaking.ts';
 import { hashState } from './observability.ts';
+import type { EventStore } from './eventStore.ts';
 import type {
   Adapter,
   AdapterTable,
@@ -29,7 +30,6 @@ import type {
 } from './types.ts';
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1 ambiguity
-const MAX_EVENT_LOG = 200;
 
 // A bot-only (or fully empty) room is not deleted the instant its last human is
 // reaped: it lingers for this window so a human who blips off the network for a
@@ -343,7 +343,6 @@ export class Room<TState extends EngineState> {
     if (phaseAfter !== phaseBefore) this.phaseEnteredAt = now;
     this._refreshTurnClock(now);
     const entry = { seq: this._eventSeq++, ts: now, playerId, msg, stateHash: hashState(this.state) };
-    if (this.eventLog.length >= MAX_EVENT_LOG) this.eventLog.shift();
     this.eventLog.push(entry);
     if (this._onGameEnd && this.adapter.getOutcome) {
       const after = this.adapter.getOutcome(this.state);
@@ -529,21 +528,37 @@ export class Room<TState extends EngineState> {
   }
 }
 
+// Flush a room's full event log to the durable, append-only store before the room
+// is evicted, so a finished game's history survives reaping. The in-memory log is
+// never truncated, so this preserves every event.
+export async function reapRoom(room: Room<EngineState>, eventStore: EventStore): Promise<void> {
+  for (const entry of room.eventLog) {
+    await eventStore.append(room.gameId, {
+      type: 'action',
+      payload: { seq: entry.seq, playerId: entry.playerId, msg: entry.msg },
+      stateHash: entry.stateHash,
+    });
+  }
+}
+
 export class RoomManager {
   adapters: AdapterTable;
   rooms: Map<string, Room<EngineState>>;
+  eventStore?: EventStore;
   _onGameEnd?: (outcome: Outcome, ctx: { gameId: string; roomCode: string }) => void;
   _onGameStart?: (ctx: { gameId: string; roomCode: string }) => void;
 
   constructor(
     adapters: AdapterTable,
-    { onGameEnd, onGameStart }: {
+    { onGameEnd, onGameStart, eventStore }: {
       onGameEnd?: (outcome: Outcome, ctx: { gameId: string; roomCode: string }) => void;
       onGameStart?: (ctx: { gameId: string; roomCode: string }) => void;
+      eventStore?: EventStore;
     } = {},
   ) {
     this.adapters = adapters;
     this.rooms = new Map();
+    this.eventStore = eventStore;
     this._onGameEnd = onGameEnd;
     this._onGameStart = onGameStart;
   }
@@ -616,6 +631,9 @@ export class RoomManager {
     for (const [code, room] of this.rooms) {
       room.markEmptyState(now);
       if (room.emptySince != null && now - room.emptySince >= graceMs) {
+        if (this.eventStore && room.eventLog.length > 0) {
+          void reapRoom(room, this.eventStore).catch(() => {});
+        }
         this.rooms.delete(code);
         removed.push(code);
       }
