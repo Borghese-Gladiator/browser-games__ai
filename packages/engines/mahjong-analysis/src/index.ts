@@ -10,3 +10,4 @@ export type { ShapeKind, IdentifiedShape } from './shapes/identify-shapes.ts';
 export type { ShapeMetrics } from './shapes/shape-quality.ts';
 export type { DiscardReasonCode, DiscardReason } from './explanations/reasons.ts';
 export { renderReason, renderReasons } from './explanations/render.ts';
+export * from './analysis/index.ts';
