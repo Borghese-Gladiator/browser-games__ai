@@ -1,3 +1,8 @@
+// DEPRECATED: this static ruleset table no longer feeds the tai pill. The pill
+// and the fan and pattern guide now read estimateTai from
+// @browser-games/engine-mahjong-analysis, the single source of tai values and
+// rule sentences. This module stays for the winning-hand scoreHand helper only;
+// do not use TAI_REFERENCE as a UI data source.
 import {
   scoreHand,
   TAI_VALUES,
