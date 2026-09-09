@@ -1,5 +1,5 @@
 import type { Tile } from '../tiles/tile.ts';
-import type { PlayerId, GameState } from './state.ts';
+import type { PlayerId, GameState, Wind } from './state.ts';
 import type { TurnPhase } from './turn.ts';
 
 export interface GameEventBase {
@@ -45,6 +45,15 @@ export interface HandWonEvent extends GameEventBase {
   readonly player: PlayerId;
   readonly selfDraw: boolean;
   readonly discardedBy: PlayerId | null;
+  readonly deltas: readonly number[];
+}
+
+export interface NextHandEvent extends GameEventBase {
+  readonly type: 'NEXT_HAND';
+  readonly dealer: PlayerId;
+  readonly prevailingWind: Wind;
+  readonly seatWinds: readonly Wind[];
+  readonly scores: readonly number[];
 }
 
 export interface ChowDeclaredEvent extends GameEventBase {
@@ -84,7 +93,8 @@ export type GameEvent =
   | ChowDeclaredEvent
   | PongDeclaredEvent
   | KongDeclaredEvent
-  | DealerChangedEvent;
+  | DealerChangedEvent
+  | NextHandEvent;
 
 export type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
 

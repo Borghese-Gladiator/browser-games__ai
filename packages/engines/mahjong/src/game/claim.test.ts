@@ -23,7 +23,7 @@ function h(spec: string): Tile[] {
     .map((token) => u(token as TileKind));
 }
 function player(hand: Tile[], melds: Meld[] = []): PlayerState {
-  return { hand, melds, flowers: [], discards: [] };
+  return { hand, melds, flowers: [], discards: [], score: 0 };
 }
 
 function config(overrides: Partial<GameConfig> = {}): GameConfig {
@@ -89,7 +89,14 @@ describe('claim window resolution', () => {
     next = unwrap(applyAction(next, { type: 'CLAIM_PONG', player: 3 }));
     next = unwrap(applyAction(next, { type: 'DECLARE_WIN', player: 2 }));
     expect(next.phase).toBe('FINISHED');
-    expect(next.outcome).toEqual({ kind: 'WIN', winner: 2, dealerRepeats: false });
+    expect(next.outcome).toMatchObject({
+      kind: 'WIN',
+      winner: 2,
+      dealerRepeats: false,
+      dealtInSeat: 0,
+      selfDraw: false,
+    });
+    expect(next.outcome?.winningTile?.id).toBe(discard.id);
     const won = next.events.find((event) => event.type === 'HAND_WON');
     expect(won).toMatchObject({ player: 2, selfDraw: false, discardedBy: 0 });
   });
@@ -238,23 +245,29 @@ describe('dealer continuation on a win', () => {
   const winningHand = (): Tile[] =>
     h('1m 2m 3m 4m 5m 6m 7m 8m 9m 1s 2s 3s 4s 5s 6s east east');
 
-  it('keeps the dealer and emits no DEALER_CHANGED event when the dealer wins', () => {
+  it('keeps the dealer when the dealer wins and NEXT_HAND repeats the dealer', () => {
     const state = playing([player(winningHand()), player([]), player([]), player([])]);
-    const next = unwrap(applyAction(state, { type: 'DECLARE_WIN', player: 0 }));
-    expect(next.outcome).toEqual({ kind: 'WIN', winner: 0, dealerRepeats: true });
+    const won = unwrap(applyAction(state, { type: 'DECLARE_WIN', player: 0 }));
+    expect(won.outcome).toMatchObject({ kind: 'WIN', winner: 0, dealerRepeats: true });
+    expect(won.dealer).toBe(0);
+    const next = unwrap(applyAction(won, { type: 'NEXT_HAND' }));
     expect(next.dealer).toBe(0);
-    expect(next.events.some((event) => event.type === 'DEALER_CHANGED')).toBe(false);
+    expect(next.roundWind).toBe('E');
+    const nextHandEvent = next.events.find((event) => event.type === 'NEXT_HAND');
+    expect(nextHandEvent).toMatchObject({ dealer: 0, prevailingWind: 'E' });
   });
 
-  it('advances the dealer and emits DEALER_CHANGED when a non-dealer wins', () => {
+  it('advances the dealer on NEXT_HAND when a non-dealer wins', () => {
     const state = playing([player([]), player(winningHand()), player([]), player([])], {
       currentPlayer: 1,
       turn: { phase: 'NEEDS_DISCARD', player: 1 as PlayerId, drawnTile: null },
     });
-    const next = unwrap(applyAction(state, { type: 'DECLARE_WIN', player: 1 }));
-    expect(next.outcome).toEqual({ kind: 'WIN', winner: 1, dealerRepeats: false });
+    const won = unwrap(applyAction(state, { type: 'DECLARE_WIN', player: 1 }));
+    expect(won.outcome).toMatchObject({ kind: 'WIN', winner: 1, dealerRepeats: false });
+    expect(won.dealer).toBe(0);
+    const next = unwrap(applyAction(won, { type: 'NEXT_HAND' }));
     expect(next.dealer).toBe(1);
-    const changed = next.events.find((event) => event.type === 'DEALER_CHANGED');
-    expect(changed).toMatchObject({ previousDealer: 0, dealer: 1 });
+    const nextHandEvent = next.events.find((event) => event.type === 'NEXT_HAND');
+    expect(nextHandEvent).toMatchObject({ dealer: 1, seatWinds: ['N', 'E', 'S', 'W'] });
   });
 });

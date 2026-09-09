@@ -10,6 +10,7 @@ import type {
   GameAction,
   PassClaimAction,
 } from './actions.ts';
+import { nextHand } from './nextHand.ts';
 import type { GameState } from './state.ts';
 import { getPlayer, withPlayer } from './state.ts';
 import type { ApplyResult } from './result.ts';
@@ -122,7 +123,7 @@ function applyDeclareWin(state: GameState, action: DeclareWinAction): ApplyResul
       error: gameError('NOT_A_WINNING_HAND', action, `player ${action.player} has no winning hand`),
     };
   }
-  return finishWin(state, action.player, true, null);
+  return finishWin(state, action.player, true, null, state.turn.drawnTile);
 }
 
 function applyClaimChow(state: GameState, action: ClaimChowAction): ApplyResult {
@@ -210,6 +211,8 @@ export function applyAction(state: GameState, action: GameAction): ApplyResult {
       return applyClaimKong(state, action);
     case 'PASS_CLAIM':
       return applyPassClaim(state, action);
+    case 'NEXT_HAND':
+      return nextHand(state);
     default: {
       const unknown = action as GameAction;
       return {

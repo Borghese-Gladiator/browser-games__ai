@@ -1,3 +1,5 @@
+import type { SettlementRule } from '../scoring/settlement.ts';
+
 export interface TaiwaneseRules {
   playerCount: number;
   concealedHandSize: number;
@@ -5,6 +7,8 @@ export interface TaiwaneseRules {
   minimumTai: number;
   dealerRepeatsOnWin: boolean;
   sevenPairsEnabled: boolean;
+  startingScore: number;
+  settlement?: SettlementRule;
 }
 
 export const DEFAULT_TAIWANESE_RULES: TaiwaneseRules = {
@@ -14,6 +18,7 @@ export const DEFAULT_TAIWANESE_RULES: TaiwaneseRules = {
   minimumTai: 0,
   dealerRepeatsOnWin: true,
   sevenPairsEnabled: true,
+  startingScore: 500,
 };
 
 export function winningHandSize(rules: TaiwaneseRules): number {

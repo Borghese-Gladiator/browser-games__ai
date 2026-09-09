@@ -82,6 +82,7 @@ describe('replaceFlowers', () => {
       melds: [],
       flowers: [],
       discards: [],
+      score: 0,
     };
     const seeded = withPlayer(withWall, 0, player);
 
@@ -110,6 +111,7 @@ describe('replaceFlowers', () => {
       melds: [],
       flowers: [],
       discards: [],
+      score: 0,
     };
     const seeded = withPlayer(emptyReplacement, 0, player);
 

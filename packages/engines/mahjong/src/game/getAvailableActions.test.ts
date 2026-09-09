@@ -22,7 +22,7 @@ function h(spec: string): Tile[] {
     .map((token) => u(token as TileKind));
 }
 function player(hand: Tile[]): PlayerState {
-  return { hand, melds: [], flowers: [], discards: [] };
+  return { hand, melds: [], flowers: [], discards: [], score: 0 };
 }
 function config(): GameConfig {
   return { rules, seed: 'actions', dealer: 0, roundWind: 'E' };

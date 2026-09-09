@@ -37,9 +37,26 @@ exhaustion ends the hand as an exhaustive draw.
 ### Dealer continuation
 
 `DECLARE_WIN` finishes the hand with `winningHandSize(rules)` as the winning hand size.
-The dealer repeats on a dealer win when `rules.dealerRepeatsOnWin` is set. When the dealer
-does not repeat, the engine advances the dealer with `advanceDealer` and emits a
-`DealerChangedEvent`.
+`dealerContinues` computes `outcome.dealerRepeats`. The dealer repeats on a dealer win
+when `rules.dealerRepeatsOnWin` is set, and on any exhaustive draw. The finished hand does
+not rotate the dealer; `NEXT_HAND` does.
+
+### Scoring and settlement
+
+`finishWin` scores the winner with the scoring catalogue (`scoreHand`) and records the
+itemized patterns and total tai in the `GameOutcome`. `rules.settlement` (default
+`taiwaneseSettlement`) turns the tai total into a zero-sum per-seat point transfer: the
+discarder pays the full amount on a discard win, all three losers pay on a self-draw, and
+nobody pays on an exhaustive draw. The engine applies the deltas to each seat's persistent
+`score`. `settlement` is optional so the ruleset stays JSON-serializable for replay; the
+engine falls back to `taiwaneseSettlement` when it is absent.
+
+### Next hand
+
+`NEXT_HAND` starts the next hand once a hand is `FINISHED`. It rotates the dealer with
+`advanceDealer` unless `outcome.dealerRepeats`, advances the prevailing wind after a full
+dealer circuit, sets each seat's wind from the dealer, carries the scores forward, and
+deals a fresh hand. The event log is a single stream that spans hands.
 
 ## Available actions
 

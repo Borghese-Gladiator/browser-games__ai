@@ -13,6 +13,7 @@ export * from './hand/winning-patterns/seven-pairs.ts';
 export * from './hand/winning.ts';
 export * from './hand/waits.ts';
 export * from './scoring/scoring.ts';
+export * from './scoring/settlement.ts';
 export * from './game/index.ts';
 export * from './assertValidGameState.ts';
 export * from './ai/random.ts';

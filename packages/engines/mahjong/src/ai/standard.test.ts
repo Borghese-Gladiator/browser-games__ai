@@ -35,9 +35,9 @@ function chooseActingSeat(state: GameState): PlayerId | null {
 }
 
 function claimState(hand: Tile[], melds: Meld[], discard: Tile, seat: PlayerId): GameState {
-  const empty: PlayerState = { hand: [], melds: [], flowers: [], discards: [] };
+  const empty: PlayerState = { hand: [], melds: [], flowers: [], discards: [], score: 0 };
   const players: PlayerState[] = [empty, empty, empty, empty];
-  players[seat] = { hand, melds, flowers: [], discards: [] };
+  players[seat] = { hand, melds, flowers: [], discards: [], score: 0 };
   return {
     rules: DEFAULT_TAIWANESE_RULES,
     players,
@@ -146,9 +146,9 @@ describe('shouldClaimPong', () => {
 });
 
 function discardState(hand: Tile[], melds: Meld[], seat: PlayerId): GameState {
-  const empty: PlayerState = { hand: [], melds: [], flowers: [], discards: [] };
+  const empty: PlayerState = { hand: [], melds: [], flowers: [], discards: [], score: 0 };
   const players: PlayerState[] = [empty, empty, empty, empty];
-  players[seat] = { hand, melds, flowers: [], discards: [] };
+  players[seat] = { hand, melds, flowers: [], discards: [], score: 0 };
   return {
     rules: DEFAULT_TAIWANESE_RULES,
     players,

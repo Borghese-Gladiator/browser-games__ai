@@ -7,5 +7,7 @@ export * from './result.ts';
 export * from './validate.ts';
 export * from './deal.ts';
 export * from './claim.ts';
+export * from './outcome.ts';
+export * from './nextHand.ts';
 export * from './getAvailableActions.ts';
 export * from './reducer.ts';

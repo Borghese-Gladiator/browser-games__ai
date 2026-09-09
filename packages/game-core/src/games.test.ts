@@ -22,7 +22,7 @@ function honor(kind: NonNullable<Tile['honor']>, copy: number): Tile {
 }
 
 function player(partial: Partial<PlayerState> = {}): PlayerState {
-  return { hand: [], melds: [], flowers: [], discards: [], ...partial };
+  return { hand: [], melds: [], flowers: [], discards: [], score: 0, ...partial };
 }
 
 function makeGame(overrides: Partial<MahjongGameState> = {}): MahjongGameState {

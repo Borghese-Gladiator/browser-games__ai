@@ -9,7 +9,6 @@ import type {
   ClaimOption,
   ClaimWindow,
   DiscardRef,
-  GameOutcome,
   GameState,
   PlayerId,
 } from './state.ts';
@@ -17,8 +16,9 @@ import { getPlayer, withPlayer } from './state.ts';
 import type { ApplyResult } from './result.ts';
 import type { GameEventDraft } from './events.ts';
 import { recordEvent } from './events.ts';
-import { advanceDealer, dealerContinues, nextTurn } from './turn.ts';
+import { dealerContinues, nextTurn } from './turn.ts';
 import { drawReplacement, finishAsDraw, replaceFlowers } from './deal.ts';
+import { buildOutcome, scoreWinner } from './outcome.ts';
 
 function nonFlowerKind(tile: Tile): string | null {
   return tile.suit === 'flower' ? null : tileToKind(tile);
@@ -244,22 +244,45 @@ export function finishWin(
   winner: PlayerId,
   selfDraw: boolean,
   discardedBy: PlayerId | null,
+  winningTile: Tile | null,
 ): ApplyResult {
-  const dealerRepeats = dealerContinues(state, { kind: 'WIN', winner, dealerRepeats: false });
-  const outcome: GameOutcome = { kind: 'WIN', winner, dealerRepeats };
-  let current: GameState = { ...state, phase: 'FINISHED', outcome, pendingClaim: null };
-  const won = recordEvent(current, { type: 'HAND_WON', player: winner, selfDraw, discardedBy });
-  current = won.state;
-  const events = [won.event];
-  if (!dealerRepeats) {
-    const previousDealer = state.dealer;
-    const dealer = advanceDealer(state.rules, previousDealer);
-    current = { ...current, dealer };
-    const changed = recordEvent(current, { type: 'DEALER_CHANGED', previousDealer, dealer });
-    current = changed.state;
-    events.push(changed.event);
-  }
-  return { ok: true, state: current, events };
+  const scoring = scoreWinner(state, winner, selfDraw);
+  const dealerRepeats = dealerContinues(state, {
+    kind: 'WIN',
+    winner,
+    dealerRepeats: false,
+    dealtInSeat: discardedBy,
+    winningTile,
+    selfDraw,
+    patterns: scoring.patterns,
+    totalTai: scoring.totalTai,
+    seats: [],
+  });
+  const built = buildOutcome(state, {
+    kind: 'WIN',
+    winner,
+    dealerRepeats,
+    dealtInSeat: discardedBy,
+    winningTile,
+    selfDraw,
+    patterns: scoring.patterns,
+    totalTai: scoring.totalTai,
+  });
+  const current: GameState = {
+    ...state,
+    players: built.players,
+    phase: 'FINISHED',
+    outcome: built.outcome,
+    pendingClaim: null,
+  };
+  const won = recordEvent(current, {
+    type: 'HAND_WON',
+    player: winner,
+    selfDraw,
+    discardedBy,
+    deltas: built.deltas,
+  });
+  return { ok: true, state: won.state, events: [won.event] };
 }
 
 function applyClaimedMeld(
@@ -318,7 +341,7 @@ function applyClaimedWin(state: GameState, seat: PlayerId): ApplyResult {
   const taken = takeClaimedDiscard(state);
   const held = getPlayer(taken.state, seat);
   const withDiscard = withPlayer(taken.state, seat, { ...held, hand: [...held.hand, discardTile] });
-  return finishWin(withDiscard, seat, false, discarder);
+  return finishWin(withDiscard, seat, false, discarder, discardTile);
 }
 
 export function applyConcealedKong(state: GameState, player: PlayerId, tile: Tile): ApplyResult {

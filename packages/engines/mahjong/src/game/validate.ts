@@ -58,6 +58,12 @@ function eligibleForKind(state: GameState, player: PlayerId, kind: ClaimType): b
 }
 
 export function validateAction(state: GameState, action: GameAction): GameError | null {
+  if (action.type === 'NEXT_HAND') {
+    if (state.phase !== 'FINISHED' || !state.outcome) {
+      return gameError('WRONG_PHASE', action, 'NEXT_HAND is only valid after a finished hand');
+    }
+    return null;
+  }
   if (state.phase === 'FINISHED') {
     return gameError('GAME_OVER', action, 'the hand has finished');
   }
