@@ -1,0 +1,11 @@
+export { completionDistance } from './completion/distance.ts';
+export type { DiscardPosition } from './completion/distance.ts';
+export { improvingTiles } from './acceptance/improving-tiles.ts';
+export type { ImprovingTiles } from './acceptance/improving-tiles.ts';
+export { analyzeDiscardOptions } from './discard/analyze-discard.ts';
+export type { DiscardAnalysis } from './discard/analyze-discard.ts';
+export { rankDiscards } from './discard/rank-discards.ts';
+export type { RankedDiscard } from './discard/rank-discards.ts';
+export type { ShapeKind, IdentifiedShape } from './shapes/identify-shapes.ts';
+export type { ShapeMetrics } from './shapes/shape-quality.ts';
+export type { DiscardReasonCode, DiscardReason } from './explanations/reasons.ts';
