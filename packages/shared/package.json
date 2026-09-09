@@ -10,6 +10,8 @@
     "./rateLimit": "./src/rateLimit.ts",
     "./registry": "./src/registry.ts",
     "./theme.css": "./src/theme.css",
+    "./tiles": "./src/tiles/index.ts",
+    "./tiles.css": "./src/tiles/tiles.css",
     "./identity": "./src/identity.ts",
     "./sanitize": "./src/sanitize.ts",
     "./leaderboard": "./src/leaderboard.ts",

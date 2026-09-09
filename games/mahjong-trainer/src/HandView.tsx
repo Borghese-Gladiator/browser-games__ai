@@ -1,5 +1,6 @@
 import type { Tile } from "@browser-games/engine-mahjong";
-import { tileGlyph, tileLabel } from "./tiles.ts";
+import { TileFace } from "@portal/shared/tiles";
+import { tileLabel, tileToId } from "./tiles.ts";
 
 export function HandView({
   hand,
@@ -23,7 +24,7 @@ export function HandView({
               disabled={disabled}
               onClick={() => onDiscard(tile)}
             >
-              {tileGlyph(tile)}
+              <TileFace tile={tileToId(tile)} size="lg" decorative />
             </button>
           </li>
         ))}
