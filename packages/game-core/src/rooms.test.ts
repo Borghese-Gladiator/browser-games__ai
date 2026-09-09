@@ -1,9 +1,10 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { RoomManager, Room, ROOM_GRACE_MS, reapRoom } from './rooms.js';
 import { createFileEventStore } from './eventStore.ts';
+import type { EventStore } from './eventStore.ts';
 import type { Adapter, EngineState, GameEngine, RoomSnapshot } from './types.ts';
 
 // A tiny fake engine so room/manager behavior is tested without real game logic.
@@ -409,30 +410,30 @@ describe('RoomManager quick-match & GC', () => {
     expect(() => mgr().createRoom('test', { stakes: 'nope' })).toThrow(/invalid option stakes/);
   });
 
-  it('GCs a bot-only room only after the grace window lapses', () => {
+  it('GCs a bot-only room only after the grace window lapses', async () => {
     const m = mgr();
     const room = m.createRoom('test');
     room.addPlayer('h', 'Host', noClient);
     room.fillWithBots();
     room.removePlayer('h'); // only bots remain -> reap-empty
     // Within the grace window the bot table survives a blip.
-    expect(m.reapEmptyRooms(1000)).toEqual([]);
+    expect(await m.reapEmptyRooms(1000)).toEqual([]);
     expect(m.rooms.size).toBe(1);
     // Past the grace window it is collected.
-    expect(m.reapEmptyRooms(1000 + ROOM_GRACE_MS)).toEqual([room.code]);
+    expect(await m.reapEmptyRooms(1000 + ROOM_GRACE_MS)).toEqual([room.code]);
     expect(m.rooms.size).toBe(0);
   });
 
-  it('a reconnecting human clears emptySince so the room is not reaped', () => {
+  it('a reconnecting human clears emptySince so the room is not reaped', async () => {
     const m = mgr();
     const room = m.createRoom('test');
     room.addPlayer('h', 'Host', noClient);
     room.fillWithBots();
     room.removePlayer('h');
-    expect(m.reapEmptyRooms(0)).toEqual([]); // marks emptySince = 0
+    expect(await m.reapEmptyRooms(0)).toEqual([]); // marks emptySince = 0
     room.addPlayer('h2', 'Human', noClient); // human returns
     // Even well past the window, a room with a live human is never reaped.
-    expect(m.reapEmptyRooms(ROOM_GRACE_MS * 2)).toEqual([]);
+    expect(await m.reapEmptyRooms(ROOM_GRACE_MS * 2)).toEqual([]);
     expect(room.emptySince).toBeNull();
   });
 });
@@ -586,14 +587,49 @@ describe('reapRoom event flush', () => {
     const room = m.createRoom('test');
     room.applyMessage('h', { move: 1 });
 
-    m.reapEmptyRooms(0);
-    expect(m.reapEmptyRooms(ROOM_GRACE_MS * 2)).toEqual([room.code]);
+    await m.reapEmptyRooms(0);
+    expect(await m.reapEmptyRooms(ROOM_GRACE_MS * 2)).toEqual([room.code]);
 
-    // The flush is fire-and-forget; allow the microtask queue to drain.
-    await new Promise((resolve) => setTimeout(resolve, 20));
     const log = await eventStore.readLog(room.code);
     expect(log).toHaveLength(1);
     expect(log[0].payload).toMatchObject({ msg: { move: 1 } });
+  });
+
+  it('does not silently reap a room when the event store flush fails', async () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const failingStore: EventStore = {
+      append: () => Promise.reject(new Error('disk full')),
+      readLog: () => Promise.resolve([]),
+    };
+    const m = new RoomManager({ test: makeAdapter() }, { eventStore: failingStore });
+    const room = m.createRoom('test');
+    room.applyMessage('h', { move: 1 });
+
+    await m.reapEmptyRooms(0);
+    const removed = await m.reapEmptyRooms(ROOM_GRACE_MS * 2);
+
+    expect(removed).toEqual([]);
+    expect(m.rooms.has(room.code)).toBe(true);
+    expect(room.eventLog).toHaveLength(1);
+    expect(errors).toHaveBeenCalled();
+    errors.mockRestore();
+  });
+
+  it('_persistStartEvent durably writes the create event before a replay', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'reap-'));
+    const eventStore = createFileEventStore(dir);
+    const startAdapter = makeAdapter({
+      replayStartEvent: () => ({ type: 'create', payload: { seed: 1 }, stateHash: 'h0' }),
+    });
+    const m = new RoomManager({ test: startAdapter }, { eventStore });
+    const room = m.createRoom('test');
+
+    await m._persistStartEvent(room);
+
+    const log = await eventStore.readLog(room.code);
+    expect(log).toHaveLength(1);
+    expect(log[0].type).toBe('create');
+    expect(log[0].payload).toMatchObject({ seed: 1 });
   });
 
   // qa: two-rooms-same-type-separate-logs
