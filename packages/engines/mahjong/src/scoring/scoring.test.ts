@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
+import { TAI_VALUES as CATALOGUE } from '@browser-games/engine-mahjong-analysis';
 import type { Tile, FlowerKind } from '../tiles/tile.ts';
 import type { Wind } from '../game/state.ts';
 import { tiles, meld } from '../hand/test-helpers.ts';
 import type { ScoreContext } from './scoring.ts';
-import { scoreHand, TAI_VALUES } from './scoring.ts';
+import { scoreHand } from './scoring.ts';
 
 function flower(kind: FlowerKind, copy = 1): Tile {
   return { id: `${kind}-${copy}`, suit: 'flower', flower: kind };
@@ -28,24 +29,24 @@ describe('scoreHand', () => {
     expect(result).toBeNull();
   });
 
-  it.each<{ name: string; ctx: ScoreContext; expected: number; patterns: string[] }>([
+  it.each<{ name: string; ctx: ScoreContext; expected: number; ids: string[] }>([
     {
       name: 'plain hand, discard, non-dealer scores zero',
       ctx: context({ hand: { concealed: tiles(BASE_HAND), exposedMelds: [] } }),
       expected: 0,
-      patterns: [],
+      ids: [],
     },
     {
       name: 'self-draw adds self-draw tai',
       ctx: context({ hand: { concealed: tiles(BASE_HAND), exposedMelds: [] }, selfDraw: true }),
-      expected: TAI_VALUES.selfDraw,
-      patterns: ['SELF_DRAW'],
+      expected: CATALOGUE.self_draw.tai,
+      ids: ['self_draw'],
     },
     {
       name: 'dealer adds dealer tai',
       ctx: context({ hand: { concealed: tiles(BASE_HAND), exposedMelds: [] }, isDealer: true }),
-      expected: TAI_VALUES.dealer,
-      patterns: ['DEALER'],
+      expected: CATALOGUE.dealer.tai,
+      ids: ['dealer'],
     },
     {
       name: 'self-draw and dealer stack',
@@ -54,8 +55,8 @@ describe('scoreHand', () => {
         selfDraw: true,
         isDealer: true,
       }),
-      expected: TAI_VALUES.selfDraw + TAI_VALUES.dealer,
-      patterns: ['SELF_DRAW', 'DEALER'],
+      expected: CATALOGUE.self_draw.tai + CATALOGUE.dealer.tai,
+      ids: ['self_draw', 'dealer'],
     },
     {
       name: 'all-triplets scores all-triplets tai',
@@ -65,19 +66,19 @@ describe('scoreHand', () => {
           exposedMelds: [],
         },
       }),
-      expected: TAI_VALUES.allTriplets,
-      patterns: ['ALL_TRIPLETS'],
+      expected: CATALOGUE.all_triplets.tai,
+      ids: ['all_triplets'],
     },
     {
-      name: 'all-one-suit scores full flush tai',
+      name: 'full-flush scores full flush tai',
       ctx: context({
         hand: {
           concealed: tiles('1m 2m 3m 4m 5m 6m 7m 8m 9m 1m 2m 3m 4m 5m 6m 7m 7m'),
           exposedMelds: [],
         },
       }),
-      expected: TAI_VALUES.allOneSuit,
-      patterns: ['ALL_ONE_SUIT'],
+      expected: CATALOGUE.full_flush.tai,
+      ids: ['full_flush'],
     },
     {
       name: 'half-flush scores half flush tai',
@@ -87,8 +88,8 @@ describe('scoreHand', () => {
           exposedMelds: [],
         },
       }),
-      expected: TAI_VALUES.halfFlush,
-      patterns: ['HALF_FLUSH'],
+      expected: CATALOGUE.half_flush.tai,
+      ids: ['half_flush'],
     },
     {
       name: 'seven-pairs scores seven pairs tai',
@@ -98,8 +99,8 @@ describe('scoreHand', () => {
           exposedMelds: [],
         },
       }),
-      expected: TAI_VALUES.sevenPairs,
-      patterns: ['SEVEN_PAIRS'],
+      expected: CATALOGUE.seven_pairs.tai,
+      ids: ['seven_pairs'],
     },
     {
       name: 'flowers add flower tai and seat-matching flower tai',
@@ -108,8 +109,8 @@ describe('scoreHand', () => {
         seatWind: 'E',
         flowers: [flower('spring'), flower('summer')],
       }),
-      expected: TAI_VALUES.flower * 2 + TAI_VALUES.seatFlower,
-      patterns: ['FLOWER', 'SEAT_FLOWER'],
+      expected: CATALOGUE.flower.tai * 2 + CATALOGUE.seat_flower.tai,
+      ids: ['flower', 'seat_flower'],
     },
     {
       name: 'exposed meld all-triplets scores all-triplets tai',
@@ -119,14 +120,33 @@ describe('scoreHand', () => {
           exposedMelds: [meld('pong', '5p 5p 5p')],
         },
       }),
-      expected: TAI_VALUES.allTriplets,
-      patterns: ['ALL_TRIPLETS'],
+      expected: CATALOGUE.all_triplets.tai,
+      ids: ['all_triplets'],
     },
-  ])('$name', ({ ctx, expected, patterns }) => {
+  ])('$name', ({ ctx, expected, ids }) => {
     const result = scoreHand(ctx);
     expect(result).not.toBeNull();
     expect(result?.totalTai).toBe(expected);
-    expect(result?.patterns.map((one) => one.name).sort()).toEqual([...patterns].sort());
+    expect(result?.patterns.map((one) => one.id).sort()).toEqual([...ids].sort());
+  });
+
+  it('carries english, chinese, and tai straight from the analysis catalogue', () => {
+    const result = scoreHand(
+      context({
+        hand: {
+          concealed: tiles('1m 2m 3m 4m 5m 6m 7m 8m 9m 1m 2m 3m 4m 5m 6m 7m 7m'),
+          exposedMelds: [],
+        },
+      }),
+    );
+    expect(result).not.toBeNull();
+    const fullFlush = result?.patterns.find((one) => one.id === 'full_flush');
+    expect(fullFlush).toEqual({
+      id: 'full_flush',
+      english: CATALOGUE.full_flush.english,
+      chinese: CATALOGUE.full_flush.chinese,
+      tai: CATALOGUE.full_flush.tai,
+    });
   });
 
   it('picks the branch with the highest total tai for a multi-decomposition hand', () => {
@@ -138,8 +158,8 @@ describe('scoreHand', () => {
         },
       }),
     );
-    expect(result?.totalTai).toBe(TAI_VALUES.allTriplets);
-    expect(result?.patterns.map((one) => one.name)).toContain('ALL_TRIPLETS');
+    expect(result?.totalTai).toBe(CATALOGUE.all_triplets.tai);
+    expect(result?.patterns.map((one) => one.id)).toContain('all_triplets');
     expect(result?.decomposition.melds.every((one) => one.kind === 'pong' || one.kind === 'kong')).toBe(true);
   });
 
@@ -152,7 +172,7 @@ describe('scoreHand', () => {
         },
       }),
     );
-    expect(result?.totalTai).toBe(TAI_VALUES.allOneSuit + TAI_VALUES.allTriplets);
-    expect(result?.patterns.map((one) => one.name).sort()).toEqual(['ALL_ONE_SUIT', 'ALL_TRIPLETS']);
+    expect(result?.totalTai).toBe(CATALOGUE.full_flush.tai + CATALOGUE.all_triplets.tai);
+    expect(result?.patterns.map((one) => one.id).sort()).toEqual(['all_triplets', 'full_flush']);
   });
 });

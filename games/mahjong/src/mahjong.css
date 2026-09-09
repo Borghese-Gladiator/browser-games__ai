@@ -907,6 +907,17 @@
   gap: 0.5rem;
   font-size: 0.85rem;
 }
+.mj-tai-line-name {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.mj-tai-line-en {
+  font-weight: 700;
+}
+.mj-tai-line-zh {
+  color: var(--muted);
+}
 .mj-tai-line-tai {
   font-variant-numeric: tabular-nums;
   font-weight: 700;

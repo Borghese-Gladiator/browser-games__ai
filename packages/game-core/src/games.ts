@@ -580,7 +580,7 @@ interface MahjongSettlement {
   dealtInSeat: number | null;
   winningTile: string | null;
   selfDraw: boolean;
-  patterns: { name: string; tai: number }[];
+  patterns: { id: string; english: string; chinese: string; tai: number }[];
   totalTai: number;
   seats: { seat: number; delta: number; score: number }[];
 }
@@ -599,7 +599,12 @@ function mahjongSettlement(state: MahjongState): MahjongSettlement | null {
     dealtInSeat: o.dealtInSeat,
     winningTile: o.winningTile ? o.winningTile.id : null,
     selfDraw: o.selfDraw,
-    patterns: o.patterns.map((p) => ({ name: p.name, tai: p.tai })),
+    patterns: o.patterns.map((p) => ({
+      id: p.id,
+      english: p.english,
+      chinese: p.chinese,
+      tai: p.tai,
+    })),
     totalTai: o.totalTai,
     seats: o.seats.map((s) => ({ seat: s.seat, delta: s.delta, score: s.score })),
   };
