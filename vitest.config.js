@@ -55,6 +55,8 @@ export default defineConfig({
       "@portal/shared/leaderboard": resolve(__dirname, "packages/shared/src/leaderboard.ts"),
       "@portal/shared/identity": resolve(__dirname, "packages/shared/src/identity.ts"),
       "@portal/shared/metrics": resolve(__dirname, "packages/shared/src/metrics.ts"),
+      "@portal/shared/severity": resolve(__dirname, "packages/shared/src/severity.ts"),
+      "@portal/shared/registry": resolve(__dirname, "packages/shared/src/registry.ts"),
       "@portal/shared": resolve(__dirname, "packages/shared/src/registry.ts"),
     },
   },

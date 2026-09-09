@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@browser-games/engine-mahjong": "*",
+    "@browser-games/engine-mahjong-analysis": "*",
     "@browser-games/engine-poker": "*",
     "@browser-games/engine-president": "*",
     "@browser-games/engine-reversi": "*",

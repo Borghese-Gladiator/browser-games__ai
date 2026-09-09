@@ -11,6 +11,12 @@ import { computeBoard, matchHistory, headToHead } from '@portal/shared/leaderboa
 import type { LeaderboardWindow } from '@portal/shared/leaderboard';
 import type { RoomManager } from './rooms.ts';
 import type { OutcomeStore } from './store.ts';
+import type { EventStore } from './eventStore.ts';
+import { reviewGame } from './review.ts';
+
+// Only games with a replay driver can be reviewed. Keep this list beside the
+// driver map in review.ts.
+const REVIEWABLE_GAMES = new Set(['mahjong']);
 
 export interface Metrics {
   msgCount: number;
@@ -28,6 +34,9 @@ export interface HttpDeps {
   metrics: Metrics;
   funnel: Record<string, Funnel>;
   startedAt: number;
+  // Optional: when present, enables the post-game review endpoints. Absent in
+  // lightweight test harnesses that only exercise health/stats.
+  eventStore?: EventStore;
 }
 
 export interface HealthResponse {
@@ -149,6 +158,32 @@ export function registerHttpRoutes(app: FastifyInstance, deps: HttpDeps): void {
   app.get('/api/h2h', async (req) => {
     const q = req.query as Record<string, string | undefined>;
     return headToHead(deps.outcomeStore.all(), q.playerA ?? '', q.playerB ?? '');
+  });
+
+  // List finished games that can be reviewed (those whose game type has a replay
+  // driver). Derived from the outcome log; roomCode is the review key.
+  app.get('/api/reviews', async () => {
+    const games = deps.outcomeStore
+      .all()
+      .filter((r) => REVIEWABLE_GAMES.has(r.gameId))
+      .map((r) => ({ gameType: r.gameId, roomCode: r.roomCode, ts: r.ts }))
+      .sort((a, b) => b.ts - a.ts);
+    return { games };
+  });
+
+  // Replay one finished game and return the graded per-discard review.
+  app.get('/api/review/:gameId', async (req, reply) => {
+    if (!deps.eventStore) {
+      reply.code(503);
+      return { error: 'review store unavailable' };
+    }
+    const { gameId } = req.params as { gameId: string };
+    try {
+      return await reviewGame(gameId, 'mahjong', deps.eventStore);
+    } catch (e) {
+      reply.code(404);
+      return { error: (e as Error).message };
+    }
   });
 }
 

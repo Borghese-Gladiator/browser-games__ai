@@ -1,15 +1,13 @@
 import type { Tile } from '@browser-games/engine-mahjong';
 import { tileToKind } from '@browser-games/engine-mahjong';
 import type { RankedDiscard } from '@browser-games/engine-mahjong-analysis';
+import { type MistakeSeverity, SEVERITY_THRESHOLDS, severityForDelta } from '@portal/shared/severity';
 import type { DiscardTrainerPuzzle } from './puzzle.ts';
 
-export type MistakeSeverity = 'optimal' | 'minor' | 'moderate' | 'severe';
-
-export const SEVERITY_THRESHOLDS: Readonly<{ minor: number; moderate: number; severe: number }> = {
-  minor: 1,
-  moderate: 20,
-  severe: 1000,
-};
+// Severity classification now lives in @portal/shared so the trainer and the
+// post-game review grade discards identically. Re-export it so existing trainer
+// imports keep working.
+export { type MistakeSeverity, SEVERITY_THRESHOLDS, severityForDelta };
 
 export interface PlayerChoiceResult {
   readonly choice: Tile;
@@ -17,19 +15,6 @@ export interface PlayerChoiceResult {
   readonly best: RankedDiscard;
   readonly deltaScore: number;
   readonly severity: MistakeSeverity;
-}
-
-export function severityForDelta(deltaScore: number): MistakeSeverity {
-  if (deltaScore < SEVERITY_THRESHOLDS.minor) {
-    return 'optimal';
-  }
-  if (deltaScore < SEVERITY_THRESHOLDS.moderate) {
-    return 'minor';
-  }
-  if (deltaScore < SEVERITY_THRESHOLDS.severe) {
-    return 'moderate';
-  }
-  return 'severe';
 }
 
 export function scoreChoice(puzzle: DiscardTrainerPuzzle, choice: Tile): PlayerChoiceResult {

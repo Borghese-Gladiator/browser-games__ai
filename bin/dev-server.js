@@ -19,6 +19,7 @@ const { shutdown } = createGateway({
   outcomesPath: process.env.OUTCOMES_PATH,
   achievementsPath: process.env.ACHIEVEMENTS_PATH,
   snapshotsPath: process.env.SNAPSHOTS_PATH,
+  eventsPath: process.env.EVENTS_PATH,
 });
 
 // On a deploy signal, drain gracefully (snapshot rooms, warn clients) before exit.

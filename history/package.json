@@ -1,0 +1,14 @@
+{
+  "name": "@portal/history",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ../tsconfig.json"
+  },
+  "dependencies": {
+    "@portal/shared": "*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
