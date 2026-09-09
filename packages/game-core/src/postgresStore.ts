@@ -92,9 +92,11 @@ export function createPostgresEventStore(pool: Pool): EventStore {
 export function createPostgresOutcomeStore(pool: Pool): OutcomeStore {
   return {
     async recordOutcome(outcome: GameOutcome): Promise<void> {
-      await pool.query(`INSERT INTO games (game_id) VALUES ($1) ON CONFLICT (game_id) DO NOTHING`, [
-        outcome.gameId,
-      ]);
+      await pool.query(
+        `INSERT INTO games (id, status, completed_at) VALUES ($1, 'completed', $2)
+         ON CONFLICT (id) DO UPDATE SET status = 'completed', completed_at = EXCLUDED.completed_at`,
+        [outcome.gameId, Date.now()],
+      );
       for (const p of outcome.players) {
         await pool.query(
           `INSERT INTO game_players (game_id, player_id, win, score) VALUES ($1, $2, $3, $4)`,

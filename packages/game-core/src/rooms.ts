@@ -533,7 +533,7 @@ export class Room<TState extends EngineState> {
 // never truncated, so this preserves every event.
 export async function reapRoom(room: Room<EngineState>, eventStore: EventStore): Promise<void> {
   for (const entry of room.eventLog) {
-    await eventStore.append(room.gameId, {
+    await eventStore.append(room.code, {
       type: 'action',
       payload: { seq: entry.seq, playerId: entry.playerId, msg: entry.msg },
       stateHash: entry.stateHash,
@@ -571,12 +571,21 @@ export class RoomManager {
     const cb = this._onGameEnd
       ? (outcome: Outcome) => this._onGameEnd!(outcome, { gameId, roomCode: code })
       : undefined;
-    const startCb = this._onGameStart
-      ? () => this._onGameStart!({ gameId, roomCode: code })
-      : undefined;
-    const room = new Room(code, gameId, adapter, cb, options, startCb);
+    let room: Room<EngineState>;
+    const startCb = () => {
+      this._persistStartEvent(room);
+      if (this._onGameStart) this._onGameStart({ gameId, roomCode: code });
+    };
+    room = new Room(code, gameId, adapter, cb, options, startCb);
     this.rooms.set(code, room);
     return room;
+  }
+
+  _persistStartEvent(room: Room<EngineState>): void {
+    if (!this.eventStore) return;
+    const start = room.adapter.replayStartEvent?.(room.state);
+    if (!start) return;
+    void this.eventStore.append(room.code, start).catch(() => {});
   }
 
   getRoom(code: string): Room<EngineState> {
