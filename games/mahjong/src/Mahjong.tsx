@@ -20,6 +20,8 @@ import { VisibleCopiesPanel } from "./board/VisibleCopiesPanel.tsx";
 import { TaiIndicator } from "./board/TaiIndicator.tsx";
 import { TurnTimerBar, useTurnClock } from "./board/TurnTimerBar.tsx";
 import { computeVisibleCopies } from "./board/visibleCopies.ts";
+import { HandEndScreen } from "./HandEndScreen.tsx";
+import type { HandEndResult, RevealSeat } from "./HandEndScreen.tsx";
 
 interface MahjongMeld {
   kind: string;
@@ -56,7 +58,9 @@ interface MahjongView extends GameState {
   myDiscards: string[];
   opponents: MahjongOpponent[];
   availableActions: MahjongAction[];
-  result: { kind: string; winner: number | null } | null;
+  scores: number[];
+  result: HandEndResult | null;
+  reveal: RevealSeat[] | null;
 }
 
 const RULESET = "台灣 16-tile";
@@ -562,10 +566,16 @@ export function Mahjong() {
         )}
       </div>
 
-      {view.result && (
-        <button className="btn mj-restart" type="button" onClick={restart}>
-          New Hand
-        </button>
+      {view.reveal && view.result && (
+        <HandEndScreen
+          result={view.result}
+          reveal={view.reveal}
+          scores={view.scores}
+          players={view.players}
+          autoAdvanceMs={TURN_MS}
+          onNextRound={restart}
+          onEndGame={leaveRoom}
+        />
       )}
 
       {paused && (

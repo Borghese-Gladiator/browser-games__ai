@@ -171,6 +171,115 @@ test("reload mid-hand resumes the same seat with the same hand and no opponent t
   await Promise.all([ctxHost.close(), ctxGuest.close()]);
 });
 
+// Drive both human seats until any page shows a terminal status (a win or a
+// draw). The bots play server-side, so the two human pages only need to keep
+// acting until the hand resolves.
+async function playToHandEnd(pages) {
+  const flags = { sawClaimWindow: false };
+  for (let round = 0; round < 8000; round += 1) {
+    const results = await Promise.all(pages.map((p) => act(p, flags)));
+    if (results.some(Boolean)) return;
+    await pages[0].waitForTimeout(30);
+  }
+  throw new Error("hand did not reach an end");
+}
+
+// Read the hand-end score table into { name, delta, score } rows, in seat order.
+async function readScoreTable(dialog) {
+  const rows = dialog.locator(".mj-score-table tbody tr");
+  const count = await rows.count();
+  const out = [];
+  for (let i = 0; i < count; i += 1) {
+    const cells = rows.nth(i).locator("th, td");
+    const name = ((await cells.nth(0).textContent()) ?? "").trim();
+    const delta = Number(((await cells.nth(1).textContent()) ?? "").replace("+", "").trim());
+    const score = Number(((await cells.nth(2).textContent()) ?? "").trim());
+    out.push({ name, delta, score });
+  }
+  return out;
+}
+
+// QA scenario play-to-hand-end-shows-winner-and-score-table-then-next-round-
+// carries-scores-forward: two humans plus AI fill play to the end of a hand. The
+// hand-end screen shows a winner header and the per-seat score table, then Next
+// round starts a fresh hand whose starting scores equal the previous running
+// scores (carried forward, not reset).
+test("plays to a hand end, shows the winner and score table, and Next round carries scores forward", async ({
+  browser,
+}) => {
+  test.setTimeout(240_000);
+  const artifactDir = path.resolve("e2e/artifacts");
+  const [ctxHost, ctxGuest] = await Promise.all([
+    browser.newContext({ recordVideo: { dir: artifactDir } }),
+    browser.newContext({ recordVideo: { dir: artifactDir } }),
+  ]);
+  const [host, guest] = await Promise.all([ctxHost.newPage(), ctxGuest.newPage()]);
+  await Promise.all([host.goto(URL), guest.goto(URL)]);
+
+  const code = await createRoomAs(host, "Winner1");
+  await joinRoomByCode(guest, code, "Guest2");
+  await guest.getByText(/^Room: /).waitFor({ timeout: 5000 });
+
+  await host.getByRole("button", { name: "Start with bots" }).click();
+  const pages = [host, guest];
+  await Promise.all(
+    pages.map((p) => p.getByRole("region", { name: "Your hand" }).waitFor({ timeout: 15_000 })),
+  );
+
+  // Play hands until one ends in a win, so the winner header is asserted. A draw
+  // advances with Next round and the next hand is played.
+  let winnerName = "";
+  for (let hand = 0; hand < 6 && !winnerName; hand += 1) {
+    await playToHandEnd(pages);
+    const dialog = host.getByRole("dialog");
+    await expect(dialog).toBeVisible({ timeout: 10_000 });
+    const heading = ((await dialog.getByRole("heading").first().textContent()) ?? "").trim();
+    if (/ wins$/.test(heading)) {
+      winnerName = heading.replace(/ wins$/, "");
+      break;
+    }
+    // An exhaustive draw: advance to the next hand and try again.
+    const next = host.getByRole("button", { name: "Next round" });
+    if (await next.isVisible().catch(() => false)) await next.click();
+    await Promise.all(
+      pages.map((p) => p.getByRole("region", { name: "Your hand" }).waitFor({ timeout: 15_000 })),
+    );
+  }
+  expect(winnerName.length).toBeGreaterThan(0);
+
+  // The hand-end screen shows the winner header and the per-seat score table.
+  const dialogA = host.getByRole("dialog");
+  await expect(dialogA.getByRole("heading", { name: `${winnerName} wins` })).toBeVisible();
+  await expect(dialogA.getByRole("table")).toBeVisible();
+  const scoresA = await readScoreTable(dialogA);
+  expect(scoresA).toHaveLength(4);
+  expect(scoresA.reduce((sum, row) => sum + row.delta, 0)).toBe(0);
+
+  // Next round starts a fresh hand: the dialog closes and hands are dealt again.
+  await host.getByRole("button", { name: "Next round" }).click();
+  await expect(host.getByRole("dialog")).toBeHidden({ timeout: 10_000 });
+  await Promise.all(
+    pages.map((p) => p.getByRole("region", { name: "Your hand" }).waitFor({ timeout: 15_000 })),
+  );
+
+  // Play the fresh hand to its end and read its score table. The new hand starts
+  // from the carried scores, so each seat's new running score minus its new delta
+  // equals its previous running score.
+  await playToHandEnd(pages);
+  const dialogB = host.getByRole("dialog");
+  await expect(dialogB).toBeVisible({ timeout: 10_000 });
+  const scoresB = await readScoreTable(dialogB);
+  expect(scoresB).toHaveLength(4);
+
+  for (const rowB of scoresB) {
+    const rowA = scoresA.find((row) => row.name === rowB.name);
+    expect(rowA, `missing seat ${rowB.name} in the first score table`).toBeTruthy();
+    expect(rowB.score - rowB.delta).toBe(rowA.score);
+  }
+
+  await Promise.all([ctxHost.close(), ctxGuest.close()]);
+});
+
 // QA scenario qa-fan-pattern-guide-open-filter-close: a seated player opens the
 // fan and pattern guide from the tai pill, sees the three tier summaries and the
 // pattern list with Chinese names, filters down to Guaranteed, and closes with
