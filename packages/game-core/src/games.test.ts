@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { DEFAULT_TAIWANESE_RULES } from '@browser-games/engine-mahjong';
+import { DEFAULT_TAIWANESE_RULES, replayScores } from '@browser-games/engine-mahjong';
 import type {
   GameState as MahjongGameState,
+  GameOutcome,
   PlayerState,
   ClaimWindow,
   Tile,
@@ -224,6 +225,229 @@ describe('mahjong AI seat fill', () => {
     for (const seatPlayer of (state.game as MahjongGameState).players) {
       expect(seatPlayer.hand.length).toBeGreaterThan(0);
     }
+  });
+});
+
+interface OutcomeMeta {
+  kind: string;
+  winner: number | null;
+  delta: number;
+  totalTai: number;
+  dealtInSeat: number | null;
+  selfDraw: boolean;
+}
+
+interface RevealEntry {
+  seat: number;
+  hand: string[];
+  melds: unknown[];
+  flowers: string[];
+}
+
+interface FullView extends PublicView {
+  scores: number[];
+  result: unknown;
+  reveal: RevealEntry[] | null;
+}
+
+// Seed a four-seat table and deal the first hand through the adapter with a
+// fixed seed so a playthrough is deterministic and replayable.
+function seedTable(seed: number): MahjongState {
+  let state = mahjongAdapter.engine.createGame() as MahjongState;
+  for (let i = 0; i < 4; i += 1) {
+    state = mahjongAdapter.engine.addPlayer(state, { id: `p${i}`, name: `P${i}` }) as MahjongState;
+  }
+  state = { ...state, seed };
+  return mahjongAdapter.autoStart!(state) as MahjongState;
+}
+
+// One deterministic step: pass every open claim, else draw or discard the just
+// drawn tile. Every move flows back through onMessage, so nothing bypasses the
+// engine. timeoutAction never declares a claim, so a hand ends by self-draw win
+// or wall exhaustion from the seed alone.
+function autoStep(state: MahjongState): MahjongState {
+  const game = state.game as MahjongGameState;
+  if (game.pendingClaim) {
+    let next = state;
+    for (const seat of [...game.pendingClaim.pending]) {
+      const current = next.game as MahjongGameState;
+      if (!current.pendingClaim || !current.pendingClaim.pending.includes(seat)) continue;
+      next = mahjongAdapter.onMessage(next, `p${seat}`, { pass: true });
+    }
+    const after = next.game as MahjongGameState;
+    return after.pendingClaim ? (mahjongAdapter.resolveWindow!(next) as MahjongState) : next;
+  }
+  const active = game.turn.player;
+  const msg = mahjongAdapter.timeoutAction!(state, active);
+  if (!msg) throw new Error(`no deterministic move for seat ${active}`);
+  return mahjongAdapter.onMessage(state, `p${active}`, msg);
+}
+
+function playHand(state: MahjongState): MahjongState {
+  let current = state;
+  for (let i = 0; i < 8000; i += 1) {
+    if ((current.game as MahjongGameState).phase === 'FINISHED') return current;
+    current = autoStep(current);
+  }
+  throw new Error('hand did not finish');
+}
+
+function scoresOf(state: MahjongState): number[] {
+  return (state.game as MahjongGameState).players.map((p) => p.score);
+}
+
+describe('mahjong adapter reveal projection and getOutcome', () => {
+  it('hides every hand mid-hand and reveals all hands only once FINISHED', () => {
+    const playing = wrap(
+      makeGame({
+        players: [
+          player({ hand: [tile('dots', 1, 1), tile('dots', 2, 1)] }),
+          player({ hand: [tile('bamboo', 5, 1), tile('bamboo', 5, 2)] }),
+          player({ hand: [honor('red', 1)] }),
+          player({ hand: [tile('dots', 7, 1)] }),
+        ],
+      }),
+    );
+    const midView = mahjongAdapter.engine.publicState(playing, 0) as FullView;
+    expect(midView.reveal).toBeNull();
+    expect(mahjongAdapter.getOutcome?.(playing)).toBeNull();
+    // No concealed opponent tile leaks while the hand is in progress.
+    expect(JSON.stringify(midView.opponents)).not.toContain('bamboo-5');
+
+    const outcome: GameOutcome = {
+      kind: 'WIN',
+      winner: 1,
+      dealerRepeats: false,
+      dealtInSeat: 2,
+      winningTile: tile('bamboo', 5, 3),
+      selfDraw: false,
+      patterns: [],
+      totalTai: 4,
+      seats: [
+        { seat: 0, delta: 0, score: 500 },
+        { seat: 1, delta: 8, score: 508 },
+        { seat: 2, delta: -8, score: 492 },
+        { seat: 3, delta: 0, score: 500 },
+      ],
+    };
+    const finished = wrap(
+      makeGame({
+        players: [
+          player({ hand: [tile('dots', 1, 1)], score: 500 }),
+          player({ hand: [tile('bamboo', 5, 1), tile('bamboo', 5, 2)], score: 508 }),
+          player({ hand: [honor('red', 1)], score: 492 }),
+          player({ hand: [tile('dots', 7, 1)], score: 500 }),
+        ],
+        phase: 'FINISHED',
+        outcome,
+      }),
+    );
+
+    const finishedView = mahjongAdapter.engine.publicState(finished, 0) as FullView;
+    const reveal = finishedView.reveal as RevealEntry[];
+    expect(reveal).toHaveLength(4);
+    expect(reveal.map((r) => r.seat)).toEqual([0, 1, 2, 3]);
+    expect(reveal[1].hand).toEqual(['bamboo-5-1', 'bamboo-5-2']);
+    expect(reveal[2].hand).toEqual(['honor-red-1']);
+
+    const result = mahjongAdapter.getOutcome?.(finished);
+    expect(result).not.toBeNull();
+    const winner = result!.outcomes.find((o) => o.playerId === 'p1')!;
+    const loser = result!.outcomes.find((o) => o.playerId === 'p2')!;
+    expect(winner.rank).toBe(1);
+    expect(winner.score).toBe(508);
+    expect((winner.meta as unknown as OutcomeMeta).delta).toBe(8);
+    expect(loser.rank).toBe(2);
+    expect(loser.score).toBe(492);
+    expect((loser.meta as unknown as OutcomeMeta).delta).toBe(-8);
+  });
+});
+
+describe('mahjong adapter next hand carries scores and rotates the dealer', () => {
+  it('drives NEXT_HAND on a non-dealer win, rotating the dealer and carrying scores', () => {
+    const outcome: GameOutcome = {
+      kind: 'WIN',
+      winner: 1,
+      dealerRepeats: false,
+      dealtInSeat: 2,
+      winningTile: tile('bamboo', 5, 3),
+      selfDraw: false,
+      patterns: [],
+      totalTai: 4,
+      seats: [
+        { seat: 0, delta: 0, score: 500 },
+        { seat: 1, delta: 8, score: 508 },
+        { seat: 2, delta: -8, score: 492 },
+        { seat: 3, delta: 0, score: 500 },
+      ],
+    };
+    const finished = wrap(
+      makeGame({
+        players: [
+          player({ hand: [tile('dots', 1, 1)], score: 500 }),
+          player({ hand: [tile('bamboo', 5, 1)], score: 508 }),
+          player({ hand: [honor('red', 1)], score: 492 }),
+          player({ hand: [tile('dots', 7, 1)], score: 500 }),
+        ],
+        dealer: 0,
+        phase: 'FINISHED',
+        outcome,
+      }),
+    );
+
+    const next = mahjongAdapter.onMessage(finished, 'p0', { restart: true });
+    const game = next.game as MahjongGameState;
+    // The dealer rotated off seat 0 because the non-dealer won.
+    expect(game.dealer).toBe(1);
+    expect(game.phase).toBe('PLAYING');
+    // Every seat carried its settled score into the new hand.
+    expect(game.players.map((p) => p.score)).toEqual([500, 508, 492, 500]);
+    // A single event log spans hands: a NEXT_HAND event was appended.
+    expect(game.events.some((e) => e.type === 'NEXT_HAND')).toBe(true);
+    // The new hand hides every hand again.
+    const view = mahjongAdapter.engine.publicState(next, 0) as FullView;
+    expect(view.reveal).toBeNull();
+  });
+});
+
+describe('mahjong adapter multi-hand playthrough', () => {
+  it('plays two hands end to end, carries scores, and a replay reproduces them', () => {
+    const first = seedTable(20260908);
+
+    // Mid-hand: no reveal, no leaked opponent tile.
+    const opening = mahjongAdapter.engine.publicState(first, 0) as FullView;
+    expect(opening.reveal).toBeNull();
+    expect(opening.scores).toEqual([500, 500, 500, 500]);
+    expect((first.game as MahjongGameState).phase).toBe('PLAYING');
+
+    const handOne = playHand(first);
+    expect((handOne.game as MahjongGameState).phase).toBe('FINISHED');
+    // FINISHED: every seat's final hand is revealed and getOutcome is populated.
+    const revealed = mahjongAdapter.engine.publicState(handOne, 0) as FullView;
+    expect(revealed.reveal).not.toBeNull();
+    expect((revealed.reveal as RevealEntry[])).toHaveLength(4);
+    expect(mahjongAdapter.getOutcome?.(handOne)).not.toBeNull();
+    const scoresAfterOne = scoresOf(handOne);
+
+    // The next hand starts with the carried scores and hides the hands again.
+    const secondStart = mahjongAdapter.onMessage(handOne, 'p0', { restart: true });
+    expect(scoresOf(secondStart)).toEqual(scoresAfterOne);
+    expect((secondStart.game as MahjongGameState).phase).toBe('PLAYING');
+    const secondView = mahjongAdapter.engine.publicState(secondStart, 0) as FullView;
+    expect(secondView.reveal).toBeNull();
+    // One event log spans both hands.
+    const secondGame = secondStart.game as MahjongGameState;
+    expect(secondGame.events.some((e) => e.type === 'NEXT_HAND')).toBe(true);
+    expect(secondGame.events.filter((e) => e.type === 'HAND_DEALT').length).toBe(2);
+
+    const handTwo = playHand(secondStart);
+    const finalScores = scoresOf(handTwo);
+    // The single event log alone reproduces the final scores.
+    expect(replayScores((handTwo.game as MahjongGameState).events, 500, 4)).toEqual(finalScores);
+
+    // A fresh deterministic playthrough from the same seed reproduces the scores.
+    const replayFinal = playHand(mahjongAdapter.onMessage(playHand(seedTable(20260908)), 'p0', { restart: true }));
+    expect(scoresOf(replayFinal)).toEqual(finalScores);
   });
 });
 

@@ -44,3 +44,33 @@ log across hands. Do not change `dealerRepeatsOnWin` or `dealerContinues`.
 ### Manual
 - `npx vitest run packages/engines/mahjong` (all green).
 - `npx tsc --noEmit` at repo root (typecheck).
+
+## Adapter (packages/game-core/src/games.ts)
+
+### Brief
+Wire the mahjong adapter to the new engine capability. Seed and carry player
+scores. Drive the next hand through the restart message. Surface per-seat deltas
+and resulting scores through getOutcome. Add a reveal projection field that is
+null during play and shows every final hand once the outcome is FINISHED.
+
+### Changes
+- `mahjongNextHand` (new): drive the engine NEXT_HAND action. The engine carries
+  scores and the single event log forward.
+- `mahjongOnMessage`: on a restart message, drive the next hand when the current
+  hand is FINISHED. Else deal a fresh hand as before. This preserves scores and
+  the event log across hands.
+- `mahjongGetOutcome`: surface each seat's delta and resulting score. The score
+  field becomes the carried score. The meta object carries delta, totalTai,
+  dealtInSeat and selfDraw.
+- `mahjongPublicState`: add a `reveal` field. It is null during play. It exposes
+  every seat's final hand, melds and flowers once the outcome is FINISHED. Add a
+  public `scores` array. The per-seat opponent projection is unchanged.
+
+### Tests (packages/game-core/src/games.test.ts)
+- Unit: reveal is null mid-hand; reveal exposes all hands when FINISHED;
+  getOutcome surfaces delta and resulting score; getOutcome is null while playing.
+- QA multi-hand: a real deterministic playthrough runs two hands end to end.
+  Reveal is null mid-hand and populated at FINISHED. Scores carry. The event log
+  spans hands. A replay reproduces the same final scores.
+- QA settlement/rotation: a crafted non-dealer win rotates the dealer, carries
+  scores, surfaces deltas, and reveals all hands.
