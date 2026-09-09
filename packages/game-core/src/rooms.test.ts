@@ -360,6 +360,20 @@ describe('Room.tick (heartbeat-driven)', () => {
     const { botMsgs } = room.tick({ now: 0, ...tickOpts });
     expect(botMsgs).toEqual([{ seat: 1, msg: { bot: 1 } }]);
   });
+
+  // An adapter that exposes pendingSeats only for a multi-seat window (empty on a
+  // normal turn, like mahjong outside a claim window) still falls back to the
+  // single active seat, so a bot on that seat is driven and the turn never stalls.
+  it('drives the active seat when pendingSeats is empty on a normal turn', () => {
+    const adapter = turnAdapter({ pendingSeats: () => [] });
+    const room = asRoom<TurnState>(new RoomManager({ test: adapter }).createRoom('test'));
+    room.addPlayer('h', 'Host', noClient, { now: 0 });
+    room.fillWithBots();
+    room.state.turn = 1;
+    room.recordPong('h', { now: 0 });
+    const { botMsgs } = room.tick({ now: 0, ...tickOpts });
+    expect(botMsgs).toEqual([{ seat: 1, msg: { bot: 1 } }]);
+  });
 });
 
 describe('RoomManager quick-match & GC', () => {

@@ -353,10 +353,14 @@ export class Room<TState extends EngineState> {
 
   // The seats that owe a decision right now. A game with a multi-seat window
   // supplies pendingSeats; otherwise the window is the single active seat (empty
-  // when no seat is active). This is what the turn clock and timers key on.
+  // when no seat is active). This is what the turn clock and timers key on. An
+  // adapter that exposes pendingSeats only for its multi-seat window (empty during
+  // a normal turn) still falls back to the single active seat, so bots and turn
+  // timeouts drive an ordinary turn.
   _pendingSeats(state: TState): Set<number> {
     if (this.adapter.pendingSeats) {
-      return new Set(this.adapter.pendingSeats(state).filter((s) => s >= 0));
+      const seats = this.adapter.pendingSeats(state).filter((s) => s >= 0);
+      if (seats.length > 0) return new Set(seats);
     }
     const seat = this.adapter.activeSeat?.(state);
     return seat != null && seat >= 0 ? new Set([seat]) : new Set();

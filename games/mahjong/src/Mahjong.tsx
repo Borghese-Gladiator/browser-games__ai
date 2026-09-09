@@ -190,6 +190,7 @@ export function Mahjong() {
     spectate,
     startEarly,
     lockRoom,
+    leaveRoom,
     send,
     restart,
     needsRefresh,
@@ -232,13 +233,16 @@ export function Mahjong() {
   };
 
   return (
-    <main className="mj">
+    <main className="mj" data-my-seat={view.mySeat}>
       <RefreshBanner needsRefresh={needsRefresh} />
       <p className="mj-back">
         <a href="/">← All games</a>
       </p>
       <h1>Mahjong (台灣麻將)</h1>
       <p className="mj-room">Room: {room.code}</p>
+      <button className="btn mj-leave" type="button" onClick={leaveRoom}>
+        Leave
+      </button>
 
       {isHost && view.phase !== "PLAYING" && (
         <section aria-label="Host controls" className="mj-host">

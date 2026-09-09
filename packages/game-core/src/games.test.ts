@@ -7,6 +7,8 @@ import type {
   Tile,
 } from '@browser-games/engine-mahjong';
 import { mahjongAdapter, type MahjongState } from './games.ts';
+import { RoomManager } from './rooms.ts';
+import type { Adapter, EngineState } from './types.ts';
 
 // Craft engine states directly so the adapter's seat-aware wrappers can be
 // exercised without playing a full hand.
@@ -196,5 +198,60 @@ describe('mahjong adapter onMessage', () => {
     const resolved = next.game as MahjongGameState;
     expect(resolved.players[0].hand.map((t) => t.id)).not.toContain('dots-1-1');
     expect(resolved.players[0].discards.map((t) => t.id)).toContain('dots-1-1');
+  });
+});
+
+describe('mahjong AI seat fill', () => {
+  it('fills the empty seats with bots and deals when the host starts early', () => {
+    const manager = new RoomManager({
+      mahjong: mahjongAdapter as unknown as Adapter<EngineState>,
+    });
+    const room = manager.createRoom('mahjong');
+    room.addPlayer('h0', 'Alice', null);
+    room.addPlayer('h1', 'Bob', null);
+    expect(room.playerCount).toBe(2);
+
+    // The shared AI-seat-fill control: the host starts with two humans and the
+    // remaining seats fill with bots. minPlayers is 2, so this is allowed.
+    room.startEarly('h0');
+
+    expect(room.isFull).toBe(true);
+    expect(room.botSeats.size).toBe(2);
+    const state = room.state as unknown as MahjongState;
+    expect(state.game).not.toBeNull();
+    expect(state.phase).toBe('PLAYING');
+    // Every seat drew a full concealed hand: the deal really ran.
+    for (const seatPlayer of (state.game as MahjongGameState).players) {
+      expect(seatPlayer.hand.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('mahjong claim window is not blocked by bots or passers', () => {
+  it('auto-passes a pending seat on a timeout and always answers for a bot', () => {
+    const discard = tile('bamboo', 5, 3);
+    const window: ClaimWindow = {
+      discard: { player: 0, tile: discard },
+      eligible: [{ seat: 1, kinds: ['PONG'] }],
+      declarations: [],
+      pending: [1],
+    };
+    const game = makeGame({
+      players: [
+        player({ discards: [discard] }),
+        player({ hand: [tile('bamboo', 5, 1), tile('bamboo', 5, 2)] }),
+        player(),
+        player(),
+      ],
+      lastDiscard: { player: 0, tile: discard },
+      pendingClaim: window,
+      turn: { phase: 'CLAIM_RESOLUTION', player: 0, drawnTile: null },
+    });
+    const state = wrap(game);
+
+    // A dark or idle seat is auto-passed at the deadline, so it cannot stall.
+    expect(mahjongAdapter.timeoutAction?.(state, 1)).toEqual({ pass: true });
+    // A bot always answers the window (a pass or a claim), never leaving it open.
+    expect(mahjongAdapter.botMove?.(state, 1)).not.toBeNull();
   });
 });
