@@ -6,41 +6,16 @@ import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.ts';
 import type { HandDecomposition } from '../hand/decomposition.ts';
 import type { HandInput } from '../hand/winning.ts';
 import { findWinningDecompositions } from '../hand/winning.ts';
+import { TAI_VALUES as PATTERN_CATALOGUE } from '@browser-games/engine-mahjong-analysis';
 
-export interface TaiValues {
-  readonly selfDraw: number;
-  readonly allTriplets: number;
-  readonly allOneSuit: number;
-  readonly halfFlush: number;
-  readonly sevenPairs: number;
-  readonly dealer: number;
-  readonly flower: number;
-  readonly seatFlower: number;
-}
-
-export const TAI_VALUES: TaiValues = {
-  selfDraw: 1,
-  allTriplets: 4,
-  allOneSuit: 8,
-  halfFlush: 4,
-  sevenPairs: 4,
-  dealer: 1,
-  flower: 1,
-  seatFlower: 1,
-};
-
-export type PatternName =
-  | 'SELF_DRAW'
-  | 'DEALER'
-  | 'ALL_TRIPLETS'
-  | 'ALL_ONE_SUIT'
-  | 'HALF_FLUSH'
-  | 'SEVEN_PAIRS'
-  | 'FLOWER'
-  | 'SEAT_FLOWER';
-
+// A pattern the scorer matched, carrying its identity straight from the
+// mahjong-analysis catalogue. The catalogue is the single source of the id, the
+// English and Chinese names, and the base tai. Only flowers scale the tai by
+// count, so the tai field can differ from the catalogue base for those.
 export interface MatchedPattern {
-  readonly name: PatternName;
+  readonly id: string;
+  readonly english: string;
+  readonly chinese: string;
   readonly tai: number;
 }
 
@@ -57,7 +32,6 @@ export interface ScoreContext {
   readonly seatWind: Wind;
   readonly flowers?: readonly Tile[];
   readonly rules?: TaiwaneseRules;
-  readonly taiValues?: TaiValues;
 }
 
 const NUMBER_SUFFIXES = new Set(['m', 's', 'p']);
@@ -72,6 +46,11 @@ const FLOWER_WIND: Record<FlowerKind, Wind> = {
   bamboo: 'N',
   winter: 'N',
 };
+
+function matched(id: string, tai?: number): MatchedPattern {
+  const def = PATTERN_CATALOGUE[id];
+  return { id: def.id, english: def.english, chinese: def.chinese, tai: tai ?? def.tai };
+}
 
 function decompositionKinds(decomposition: HandDecomposition): TileKind[] {
   const kinds: TileKind[] = [];
@@ -111,28 +90,27 @@ function flushKind(decomposition: HandDecomposition): 'FULL' | 'HALF' | null {
 function scoreDecomposition(
   decomposition: HandDecomposition,
   context: ScoreContext,
-  taiValues: TaiValues,
 ): ScoreResult {
   const patterns: MatchedPattern[] = [];
 
   if (context.selfDraw) {
-    patterns.push({ name: 'SELF_DRAW', tai: taiValues.selfDraw });
+    patterns.push(matched('self_draw'));
   }
   if (context.isDealer) {
-    patterns.push({ name: 'DEALER', tai: taiValues.dealer });
+    patterns.push(matched('dealer'));
   }
 
   if (decomposition.pattern === 'SEVEN_PAIRS') {
-    patterns.push({ name: 'SEVEN_PAIRS', tai: taiValues.sevenPairs });
+    patterns.push(matched('seven_pairs'));
   } else if (isAllTriplets(decomposition)) {
-    patterns.push({ name: 'ALL_TRIPLETS', tai: taiValues.allTriplets });
+    patterns.push(matched('all_triplets'));
   }
 
   const flush = flushKind(decomposition);
   if (flush === 'FULL') {
-    patterns.push({ name: 'ALL_ONE_SUIT', tai: taiValues.allOneSuit });
+    patterns.push(matched('full_flush'));
   } else if (flush === 'HALF') {
-    patterns.push({ name: 'HALF_FLUSH', tai: taiValues.halfFlush });
+    patterns.push(matched('half_flush'));
   }
 
   const flowers = context.flowers ?? [];
@@ -148,10 +126,10 @@ function scoreDecomposition(
     }
   }
   if (flowerCount > 0) {
-    patterns.push({ name: 'FLOWER', tai: flowerCount * taiValues.flower });
+    patterns.push(matched('flower', flowerCount * PATTERN_CATALOGUE.flower.tai));
   }
   if (seatFlowerCount > 0) {
-    patterns.push({ name: 'SEAT_FLOWER', tai: seatFlowerCount * taiValues.seatFlower });
+    patterns.push(matched('seat_flower', seatFlowerCount * PATTERN_CATALOGUE.seat_flower.tai));
   }
 
   const totalTai = patterns.reduce((sum, pattern) => sum + pattern.tai, 0);
@@ -160,14 +138,13 @@ function scoreDecomposition(
 
 export function scoreHand(context: ScoreContext): ScoreResult | null {
   const rules = context.rules ?? DEFAULT_TAIWANESE_RULES;
-  const taiValues = context.taiValues ?? TAI_VALUES;
   const decompositions = findWinningDecompositions(context.hand, rules);
   if (decompositions.length === 0) {
     return null;
   }
   let best: ScoreResult | null = null;
   for (const decomposition of decompositions) {
-    const result = scoreDecomposition(decomposition, context, taiValues);
+    const result = scoreDecomposition(decomposition, context);
     if (best === null || result.totalTai > best.totalTai) {
       best = result;
     }

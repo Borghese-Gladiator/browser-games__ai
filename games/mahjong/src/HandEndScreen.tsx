@@ -2,8 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { sortTiles } from "./tiles.ts";
 import { TileFace } from "./TileFace.tsx";
 
+// Pattern identity comes straight off the wire, which forwards the
+// mahjong-analysis catalogue fields. The screen renders these as-is; it holds no
+// local name table, so the fan guide and this screen always agree.
 export interface TaiPattern {
-  name: string;
+  id: string;
+  english: string;
+  chinese: string;
   tai: number;
 }
 
@@ -48,23 +53,6 @@ export interface HandEndScreenProps {
 }
 
 type DeltaTone = "positive" | "negative" | "zero";
-
-// Display labels for the engine's scoring pattern names. The tai value beside
-// each line is read straight from result.patterns; only the name is prettified.
-const PATTERN_LABEL: Record<string, string> = {
-  SELF_DRAW: "Self-draw",
-  DEALER: "Dealer",
-  ALL_TRIPLETS: "All triplets",
-  ALL_ONE_SUIT: "All one suit",
-  HALF_FLUSH: "Half flush",
-  SEVEN_PAIRS: "Seven pairs",
-  FLOWER: "Flower",
-  SEAT_FLOWER: "Seat flower",
-};
-
-function patternLabel(name: string): string {
-  return PATTERN_LABEL[name] ?? name;
-}
 
 function nameForSeat(players: { seat: number; name: string }[], seat: number): string {
   return players.find((p) => p.seat === seat)?.name ?? `Seat ${seat}`;
@@ -236,11 +224,16 @@ function TaiBreakdown({ patterns, totalTai }: { patterns: TaiPattern[]; totalTai
         ) : (
           patterns.map((pattern, i) => (
             <li
-              key={`${pattern.name}-${i}`}
+              key={`${pattern.id}-${i}`}
               className="mj-tai-line"
-              aria-label={`${patternLabel(pattern.name)}: ${pattern.tai} tai`}
+              aria-label={`${pattern.english} ${pattern.chinese}: ${pattern.tai} tai`}
             >
-              <span className="mj-tai-line-name">{patternLabel(pattern.name)}</span>
+              <span className="mj-tai-line-name">
+                <span className="mj-tai-line-en">{pattern.english}</span>
+                <span className="mj-tai-line-zh" lang="zh">
+                  {pattern.chinese}
+                </span>
+              </span>
               <span className="mj-tai-line-tai">{pattern.tai}</span>
             </li>
           ))
