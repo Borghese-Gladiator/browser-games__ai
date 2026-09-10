@@ -4,8 +4,15 @@ import { Lobby } from "@browser-games/game-client/Lobby";
 import { RefreshBanner } from "@browser-games/game-client/RefreshBanner";
 import type { GameState } from "@browser-games/game-client/protocol";
 import type { Wind } from "@browser-games/engine-mahjong";
+import {
+  estimateTai,
+  RULESET as TAI_RULESET,
+  type Meld as AnalysisMeld,
+  type Position as TaiPosition,
+  type Wind as AnalysisWind,
+} from "@browser-games/engine-mahjong-analysis";
 import type { SeatPosition } from "./tiles.ts";
-import { tileLabel, sortTiles } from "./tiles.ts";
+import { tileLabel, sortTiles, tileKind } from "./tiles.ts";
 import { TileFace, TileBack } from "./TileFace.tsx";
 import { NamePlate } from "./board/NamePlate.tsx";
 import { Hud } from "./board/Hud.tsx";
@@ -13,7 +20,6 @@ import { VisibleCopiesPanel } from "./board/VisibleCopiesPanel.tsx";
 import { TaiIndicator } from "./board/TaiIndicator.tsx";
 import { TurnTimerBar, useTurnClock } from "./board/TurnTimerBar.tsx";
 import { computeVisibleCopies } from "./board/visibleCopies.ts";
-import { computeTai } from "./board/tai.ts";
 
 interface MahjongMeld {
   kind: string;
@@ -64,6 +70,32 @@ const PRIMARY_ACTION = new Set(["win", "draw"]);
 
 function seatWind(seat: number): Wind {
   return WIND_CODE[((seat % 4) + 4) % 4];
+}
+
+const ANALYSIS_WIND: Record<Wind, AnalysisWind> = {
+  E: "east",
+  S: "south",
+  W: "west",
+  N: "north",
+};
+
+// Map the local seat's public view onto the analysis Position. The fixed
+// Taiwanese config runs an East round with the dealer at seat 0, so the round
+// wind is always East. Tile ids become analysis kinds through tileKind.
+function buildTaiPosition(view: MahjongView): TaiPosition {
+  return {
+    concealedTiles: view.myHand.map(tileKind),
+    exposedMelds: view.myMelds.map((meld) => ({
+      tiles: meld.tiles.map(tileKind),
+      type: meld.kind as AnalysisMeld["type"],
+      concealed: false,
+    })),
+    flowers: view.myFlowers.map(tileKind),
+    seatWind: ANALYSIS_WIND[seatWind(view.mySeat)],
+    roundWind: "east",
+    isDealer: view.mySeat === 0,
+    ruleset: TAI_RULESET,
+  };
 }
 
 function isBotName(name: string): boolean {
@@ -441,13 +473,8 @@ export function Mahjong() {
     visibleFlowers: [...view.opponents.flatMap((o) => o.flowers), ...view.myFlowers],
   });
 
-  const taiState = computeTai({
-    hand: view.myHand,
-    melds: view.myMelds,
-    flowers: view.myFlowers,
-    seatWind: seatWind(view.mySeat),
-    isDealer: view.mySeat === 0,
-  });
+  // Compute the tai estimate once per render and pass it down to the pill.
+  const taiEstimate = estimateTai(buildTaiPosition(view));
 
   const toggleFullscreen = () => {
     if (typeof document === "undefined") return;
@@ -529,7 +556,7 @@ export function Mahjong() {
 
         {showPanels && (
           <aside className="mj-aside" aria-label="Board insight">
-            <TaiIndicator state={taiState} />
+            <TaiIndicator estimate={taiEstimate} />
             <VisibleCopiesPanel entries={visibleEntries} />
           </aside>
         )}

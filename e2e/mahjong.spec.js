@@ -170,3 +170,67 @@ test("reload mid-hand resumes the same seat with the same hand and no opponent t
 
   await Promise.all([ctxHost.close(), ctxGuest.close()]);
 });
+
+// QA scenario qa-fan-pattern-guide-open-filter-close: a seated player opens the
+// fan and pattern guide from the tai pill, sees the three tier summaries and the
+// pattern list with Chinese names, filters down to Guaranteed, and closes with
+// Escape. Focus returns to the pill and the pill's accessible name states the
+// guaranteed and potential numbers.
+test("opens the fan and pattern guide from the pill, filters, and closes with Escape", async ({
+  browser,
+}) => {
+  const artifactDir = path.resolve("e2e/artifacts");
+  const [ctxHost, ctxGuest] = await Promise.all([
+    browser.newContext({ recordVideo: { dir: artifactDir } }),
+    browser.newContext({ recordVideo: { dir: artifactDir } }),
+  ]);
+  const [host, guest] = await Promise.all([ctxHost.newPage(), ctxGuest.newPage()]);
+  await Promise.all([host.goto(URL), guest.goto(URL)]);
+
+  const code = await createRoomAs(host, "Player1");
+  await joinRoomByCode(guest, code, "Player2");
+  await guest.getByText(/^Room: /).waitFor({ timeout: 5000 });
+
+  await host.getByRole("button", { name: "Start with bots" }).click();
+  await host.getByRole("region", { name: "Your hand" }).waitFor({ timeout: 15_000 });
+
+  // The tai pill states the guaranteed and potential numbers in its name.
+  const pill = host.getByRole("button", { name: /Open the guide/ });
+  await expect(pill).toBeVisible();
+  await expect(pill).toHaveAccessibleName(/\d+ tai guaranteed, up to \d+ tai/);
+
+  await pill.click();
+
+  const dialog = host.getByRole("dialog", { name: "Fan and pattern guide" });
+  await expect(dialog).toBeVisible();
+
+  // The three tier summary headings.
+  await expect(dialog.getByText("GUARANTEED", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("ON TRACK", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("POTENTIAL", { exact: true })).toBeVisible();
+
+  // At least one pattern with its Chinese name beside the English name.
+  const chineseNames = dialog.locator(".mj-guide-list .mj-guide-zh");
+  await expect(chineseNames.first()).toBeVisible();
+  expect((await chineseNames.first().textContent())?.trim().length).toBeGreaterThan(0);
+
+  // Filter to Guaranteed: turn off the other two chips.
+  await dialog.getByRole("button", { name: "On track", exact: true }).click();
+  await dialog.getByRole("button", { name: "Potential", exact: true }).click();
+  await expect(
+    dialog.getByRole("button", { name: "Guaranteed", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    dialog.getByRole("button", { name: "On track", exact: true }),
+  ).toHaveAttribute("aria-pressed", "false");
+  await expect(
+    dialog.getByRole("button", { name: "Potential", exact: true }),
+  ).toHaveAttribute("aria-pressed", "false");
+
+  // Escape closes the dialog and returns focus to the pill.
+  await host.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(pill).toBeFocused();
+
+  await Promise.all([ctxHost.close(), ctxGuest.close()]);
+});

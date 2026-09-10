@@ -6,6 +6,7 @@
   "dependencies": {
     "@portal/shared": "*",
     "@browser-games/game-client": "*",
-    "@browser-games/engine-mahjong": "*"
+    "@browser-games/engine-mahjong": "*",
+    "@browser-games/engine-mahjong-analysis": "*"
   }
 }
