@@ -574,6 +574,37 @@ function mahjongReveal(state: MahjongState): MahjongReveal[] | null {
   }));
 }
 
+interface MahjongSettlement {
+  kind: 'WIN' | 'DRAW';
+  winner: number | null;
+  dealtInSeat: number | null;
+  winningTile: string | null;
+  selfDraw: boolean;
+  patterns: { name: string; tai: number }[];
+  totalTai: number;
+  seats: { seat: number; delta: number; score: number }[];
+}
+
+// The finished-hand settlement, projected to plain wire values for the board's
+// hand-end screen. The engine already computes every field on game.outcome; this
+// only forwards it (winningTile as a tile id, patterns and seats as plain rows).
+// No scoring or settlement logic is recomputed here.
+function mahjongSettlement(state: MahjongState): MahjongSettlement | null {
+  const game = state.game;
+  if (!game || game.phase !== 'FINISHED' || !game.outcome) return null;
+  const o = game.outcome;
+  return {
+    kind: o.kind,
+    winner: o.winner,
+    dealtInSeat: o.dealtInSeat,
+    winningTile: o.winningTile ? o.winningTile.id : null,
+    selfDraw: o.selfDraw,
+    patterns: o.patterns.map((p) => ({ name: p.name, tai: p.tai })),
+    totalTai: o.totalTai,
+    seats: o.seats.map((s) => ({ seat: s.seat, delta: s.delta, score: s.score })),
+  };
+}
+
 // Per-seat public view: reveal only the requesting seat's concealed hand.
 // Opponents expose count, melds, flowers, and discards only.
 function mahjongPublicState(state: MahjongState, seat: number): unknown {
@@ -629,7 +660,7 @@ function mahjongPublicState(state: MahjongState, seat: number): unknown {
     myDiscards: me ? me.discards.map((t) => t.id) : [],
     opponents,
     availableActions: me ? mahjongAvailableActions(game, seat) : [],
-    result: mahjongGetOutcome(state),
+    result: mahjongSettlement(state),
     reveal: mahjongReveal(state),
   };
 }

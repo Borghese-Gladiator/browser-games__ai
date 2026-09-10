@@ -350,6 +350,28 @@ describe('mahjong adapter reveal projection and getOutcome', () => {
     expect(reveal[1].hand).toEqual(['bamboo-5-1', 'bamboo-5-2']);
     expect(reveal[2].hand).toEqual(['honor-red-1']);
 
+    // The per-seat result forwards the engine settlement so the board's hand-end
+    // screen renders it without recomputing scoring: winner, the winning tile as
+    // an id, the tai total and every seat delta and running score.
+    const settlement = finishedView.result as {
+      kind: string;
+      winner: number | null;
+      dealtInSeat: number | null;
+      winningTile: string | null;
+      selfDraw: boolean;
+      totalTai: number;
+      seats: { seat: number; delta: number; score: number }[];
+    };
+    expect(settlement.kind).toBe('WIN');
+    expect(settlement.winner).toBe(1);
+    expect(settlement.dealtInSeat).toBe(2);
+    expect(settlement.winningTile).toBe('bamboo-5-3');
+    expect(settlement.selfDraw).toBe(false);
+    expect(settlement.totalTai).toBe(4);
+    expect(settlement.seats).toHaveLength(4);
+    expect(settlement.seats[1]).toEqual({ seat: 1, delta: 8, score: 508 });
+    expect(settlement.seats.reduce((sum, s) => sum + s.delta, 0)).toBe(0);
+
     const result = mahjongAdapter.getOutcome?.(finished);
     expect(result).not.toBeNull();
     const winner = result!.outcomes.find((o) => o.playerId === 'p1')!;

@@ -802,6 +802,206 @@
   align-self: center;
 }
 
+/* Hand-end screen. It reuses the fan-guide modal overlay (.mj-guide-backdrop)
+   and the panel, badge, button and turn-timer visual language. */
+.mj-handend {
+  --mj-good: #4ade80;
+  --mj-bad: #f87171;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  width: min(900px, 100%);
+  max-height: min(92vh, 760px);
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+}
+.mj-handend-header {
+  text-align: center;
+}
+.mj-handend-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.mj-handend-sub {
+  margin: 0.25rem 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Win line: the winning tile face beside the source of the win. */
+.mj-handend-winline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.mj-handend-winline-text {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* Responsive 2x2 grid of the four final hands. */
+.mj-handend-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.mj-handend-hand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 2px solid var(--line);
+}
+.mj-handend-hand--winner {
+  border-color: var(--mj-amber);
+  box-shadow: 0 0 0 1px var(--mj-amber);
+}
+.mj-handend-hand--dealtin {
+  border-color: var(--mj-bad);
+  box-shadow: 0 0 0 1px var(--mj-bad);
+}
+.mj-handend-hand-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.mj-handend-hand-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.mj-badge--winner {
+  background: color-mix(in srgb, var(--mj-amber) 20%, transparent);
+  color: var(--mj-amber-2);
+}
+.mj-badge--dealtin {
+  background: color-mix(in srgb, var(--mj-bad) 22%, transparent);
+  color: var(--mj-bad);
+}
+
+/* Bottom row: tai breakdown on the left, score-delta table on the right. */
+.mj-handend-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.875rem;
+  align-items: start;
+}
+.mj-tai-list {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.mj-tai-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+.mj-tai-line-tai {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.mj-tai-total {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.mj-score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.mj-score-table th,
+.mj-score-table td {
+  padding: 0.3rem 0.4rem;
+}
+.mj-score-table thead th {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 600;
+  text-align: right;
+}
+.mj-score-table thead th:first-child {
+  text-align: left;
+}
+.mj-score-name {
+  text-align: left;
+  font-weight: 600;
+}
+.mj-score-table td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.mj-delta {
+  font-weight: 700;
+}
+.mj-delta--positive {
+  color: var(--mj-good);
+}
+.mj-delta--negative {
+  color: var(--mj-bad);
+}
+.mj-delta--zero {
+  color: var(--muted);
+}
+
+/* Controls: primary amber Next round with a thin auto-advance bar, plus a
+   secondary End game. The bar reuses the turn-timer fill. */
+.mj-handend-controls {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+.mj-handend-next-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.mj-handend-progress {
+  width: 100%;
+  max-width: none;
+  height: 3px;
+}
+.mj-handend-end {
+  background: var(--cell);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+.mj-handend-end:hover {
+  background: var(--cell-hover);
+}
+
+@media (max-width: 640px) {
+  .mj-handend-grid {
+    grid-template-columns: 1fr;
+  }
+  .mj-handend-cols {
+    grid-template-columns: 1fr;
+  }
+  .mj-handend-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 /* Paused overlay. */
 .mj-paused {
   position: fixed;
