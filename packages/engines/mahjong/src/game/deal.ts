@@ -4,13 +4,14 @@ import type { TaiwaneseRules } from '../rules/taiwanese.ts';
 import { createSeededRandom } from '../random/rng.ts';
 import { createTaiwaneseTileSet } from '../tiles/tile-set.ts';
 import { shuffleTiles } from '../tiles/shuffle.ts';
-import type { GameConfig, GameOutcome, GameState, PlayerId, PlayerState, Wall } from './state.ts';
+import type { GameConfig, GameState, PlayerId, PlayerState, Wall } from './state.ts';
 import { getPlayer, withPlayer } from './state.ts';
 import type { ApplyResult } from './result.ts';
 import type { GameError } from './errors.ts';
 import type { GameEvent } from './events.ts';
 import { recordEvent } from './events.ts';
 import { dealerContinues, initialTurn } from './turn.ts';
+import { buildOutcome } from './outcome.ts';
 
 export type ReplaceFlowersResult =
   | {
@@ -43,6 +44,7 @@ export function createGame(config: GameConfig): GameState {
     melds: [],
     flowers: [],
     discards: [],
+    score: rules.startingScore,
   }));
   return {
     config,
@@ -85,12 +87,33 @@ export function drawReplacement(
 }
 
 export function finishAsDraw(state: GameState): ApplyResult {
-  const outcome: GameOutcome = {
+  const dealerRepeats = dealerContinues(state, {
     kind: 'DRAW',
     winner: null,
-    dealerRepeats: dealerContinues(state, { kind: 'DRAW', winner: null, dealerRepeats: false }),
+    dealerRepeats: false,
+    dealtInSeat: null,
+    winningTile: null,
+    selfDraw: false,
+    patterns: [],
+    totalTai: 0,
+    seats: [],
+  });
+  const built = buildOutcome(state, {
+    kind: 'DRAW',
+    winner: null,
+    dealerRepeats,
+    dealtInSeat: null,
+    winningTile: null,
+    selfDraw: false,
+    patterns: [],
+    totalTai: 0,
+  });
+  const finished: GameState = {
+    ...state,
+    players: built.players,
+    phase: 'FINISHED',
+    outcome: built.outcome,
   };
-  const finished: GameState = { ...state, phase: 'FINISHED', outcome };
   const recorded = recordEvent(finished, { type: 'WALL_EXHAUSTED' });
   return { ok: true, state: recorded.state, events: [recorded.event] };
 }

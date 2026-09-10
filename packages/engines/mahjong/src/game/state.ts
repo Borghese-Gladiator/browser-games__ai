@@ -2,6 +2,7 @@ import type { Tile } from '../tiles/tile.ts';
 import type { Meld } from '../tiles/meld.ts';
 import type { TaiwaneseRules } from '../rules/taiwanese.ts';
 import type { ClaimType } from '../rules/claims.ts';
+import type { MatchedPattern } from '../scoring/scoring.ts';
 import type { TurnState } from './turn.ts';
 import type { GameEvent } from './events.ts';
 
@@ -16,6 +17,7 @@ export interface PlayerState {
   readonly melds: readonly Meld[];
   readonly flowers: readonly Tile[];
   readonly discards: readonly Tile[];
+  readonly score: number;
 }
 
 export interface Wall {
@@ -36,10 +38,22 @@ export interface GameConfig {
   readonly roundWind: Wind;
 }
 
+export interface SeatOutcome {
+  readonly seat: PlayerId;
+  readonly delta: number;
+  readonly score: number;
+}
+
 export interface GameOutcome {
   readonly kind: 'WIN' | 'DRAW';
   readonly winner: PlayerId | null;
   readonly dealerRepeats: boolean;
+  readonly dealtInSeat: PlayerId | null;
+  readonly winningTile: Tile | null;
+  readonly selfDraw: boolean;
+  readonly patterns: readonly MatchedPattern[];
+  readonly totalTai: number;
+  readonly seats: readonly SeatOutcome[];
 }
 
 export interface ClaimOption {

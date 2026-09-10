@@ -309,6 +309,16 @@ function mahjongDeal(state: MahjongState): MahjongState {
   return wrapMahjong(state, dealt.state);
 }
 
+function mahjongNextHand(state: MahjongState): MahjongState {
+  const game = state.game;
+  if (!game || game.phase !== 'FINISHED') {
+    throw new Error('mahjong next hand needs a finished hand');
+  }
+  const result = mahjong.applyAction(game, { type: 'NEXT_HAND' });
+  if (!result.ok) throw new Error(`mahjong next hand failed: ${result.error.code}`);
+  return wrapMahjong(state, result.state);
+}
+
 function mahjongActiveSeat(state: MahjongState): number {
   const game = state.game;
   if (!game || game.phase !== 'PLAYING') return -1;
@@ -419,7 +429,10 @@ function mahjongMessageToAction(
 
 function mahjongOnMessage(state: MahjongState, playerId: string, msg: GameMessage): MahjongState {
   const seat = mahjongSeatOf(state, playerId) as MahjongPlayerId;
-  if (msg.restart) return mahjongDeal({ ...state, seed: state.seed + 1 });
+  if (msg.restart) {
+    const finished = state.game !== null && state.game.phase === 'FINISHED';
+    return finished ? mahjongNextHand(state) : mahjongDeal({ ...state, seed: state.seed + 1 });
+  }
   const game = state.game;
   if (!game) throw new Error('mahjong hand not started');
   const action = mahjongMessageToAction(game, seat, msg);
@@ -471,11 +484,21 @@ function mahjongGetOutcome(state: MahjongState): Outcome | null {
     outcomes: state.players.map((p) => {
       const isWinner = outcome.kind === 'WIN' && outcome.winner === p.seat;
       const rank = outcome.kind === 'DRAW' ? 1 : isWinner ? 1 : 2;
+      const seatOutcome = outcome.seats.find((s) => s.seat === p.seat);
+      const delta = seatOutcome ? seatOutcome.delta : 0;
+      const score = seatOutcome ? seatOutcome.score : game.players[p.seat].score;
       return {
         playerId: p.id,
         rank,
-        score: isWinner ? 1 : 0,
-        meta: { kind: outcome.kind, winner: outcome.winner },
+        score,
+        meta: {
+          kind: outcome.kind,
+          winner: outcome.winner,
+          delta,
+          totalTai: outcome.totalTai,
+          dealtInSeat: outcome.dealtInSeat,
+          selfDraw: outcome.selfDraw,
+        },
       };
     }),
   };
@@ -531,6 +554,26 @@ function mahjongAvailableActions(game: MahjongGameState, seat: number): MahjongA
   return out;
 }
 
+interface MahjongReveal {
+  seat: number;
+  name: string;
+  hand: string[];
+  melds: ReturnType<typeof mahjongCloneMeld>[];
+  flowers: string[];
+}
+
+function mahjongReveal(state: MahjongState): MahjongReveal[] | null {
+  const game = state.game;
+  if (!game || game.phase !== 'FINISHED' || !game.outcome) return null;
+  return game.players.map((p, i) => ({
+    seat: i,
+    name: state.players[i]?.name ?? '',
+    hand: p.hand.map((t) => t.id),
+    melds: p.melds.map(mahjongCloneMeld),
+    flowers: p.flowers.map((t) => t.id),
+  }));
+}
+
 // Per-seat public view: reveal only the requesting seat's concealed hand.
 // Opponents expose count, melds, flowers, and discards only.
 function mahjongPublicState(state: MahjongState, seat: number): unknown {
@@ -544,6 +587,7 @@ function mahjongPublicState(state: MahjongState, seat: number): unknown {
       wallCount: 0,
       lastDiscard: null,
       players,
+      scores: [],
       mySeat: seat,
       myHand: [],
       myMelds: [],
@@ -552,6 +596,7 @@ function mahjongPublicState(state: MahjongState, seat: number): unknown {
       opponents: [],
       availableActions: [],
       result: null,
+      reveal: null,
     };
   }
   const me = seat >= 0 && seat < game.players.length ? game.players[seat] : null;
@@ -576,6 +621,7 @@ function mahjongPublicState(state: MahjongState, seat: number): unknown {
     wallCount: mahjong.liveWallCount(game.wall),
     lastDiscard,
     players,
+    scores: game.players.map((p) => p.score),
     mySeat: seat,
     myHand: me ? me.hand.map((t) => t.id) : [],
     myMelds: me ? me.melds.map(mahjongCloneMeld) : [],
@@ -584,6 +630,7 @@ function mahjongPublicState(state: MahjongState, seat: number): unknown {
     opponents,
     availableActions: me ? mahjongAvailableActions(game, seat) : [],
     result: mahjongGetOutcome(state),
+    reveal: mahjongReveal(state),
   };
 }
 

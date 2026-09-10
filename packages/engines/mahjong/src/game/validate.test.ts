@@ -56,6 +56,7 @@ describe('validateAction', () => {
       melds: [],
       flowers: [],
       discards: [],
+      score: 0,
     };
     const seeded = withPlayer(state, 0, winning);
     const won = applyAction(seeded, { type: 'DECLARE_WIN', player: 0 });

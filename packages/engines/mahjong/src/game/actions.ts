@@ -44,6 +44,10 @@ export interface PassClaimAction {
   readonly player: PlayerId;
 }
 
+export interface NextHandAction {
+  readonly type: 'NEXT_HAND';
+}
+
 export type GameAction =
   | DealAction
   | DrawAction
@@ -52,4 +56,5 @@ export type GameAction =
   | ClaimChowAction
   | ClaimPongAction
   | ClaimKongAction
-  | PassClaimAction;
+  | PassClaimAction
+  | NextHandAction;
