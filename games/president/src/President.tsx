@@ -5,6 +5,7 @@ import { ConnectionBanner } from "@browser-games/game-client/ConnectionBanner";
 import { RefreshBanner } from "@browser-games/game-client/RefreshBanner";
 import { PlayerList } from "@browser-games/game-client/PlayerList";
 import { RoomCode } from "@browser-games/game-client/RoomCode";
+import { LockRoomButton } from "@browser-games/game-client/LockRoomButton";
 import { Chat } from "@browser-games/game-client/Chat";
 import { SpectatorView } from "@browser-games/game-client/SpectatorView";
 import { useYourTurn } from "@browser-games/game-client/useYourTurn";
@@ -136,12 +137,7 @@ export function President() {
           <button className="btn" type="button" onClick={startEarly}>
             Start with bots
           </button>
-          <button className="btn" type="button" onClick={() => lockRoom(true)}>
-            Lock room
-          </button>
-          <button className="btn" type="button" onClick={() => lockRoom(false)}>
-            Unlock room
-          </button>
+          <LockRoomButton locked={gameState.locked} onToggle={lockRoom} />
         </section>
       )}
 

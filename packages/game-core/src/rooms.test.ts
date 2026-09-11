@@ -267,6 +267,9 @@ describe('Room host controls', () => {
     room.addPlayer('g', 'Guest', noClient);
     expect(() => room.lock('g', true)).toThrow(/host only/);
     expect(() => room.kick('g', 'h')).toThrow(/host only/);
+    // Host check runs before the bot fill, so a non-host cannot pack the table.
+    expect(() => room.startEarly('g')).toThrow(/host only/);
+    expect(room.botSeats.size).toBe(0);
   });
 
   it('kicks a member but never the host, freeing the engine seat', () => {
@@ -291,8 +294,43 @@ describe('Room host controls', () => {
     expect(room.state.started).toBe(true);
   });
 
-  it('start-early requires minPlayers', () => {
-    const room = mgr().createRoom('test');
+  // "Start with bots" exists precisely for the host who is alone, so the seat
+  // count must be asserted after the bots land, not before. This previously
+  // threw 'not enough players to start' for every game, since every adapter
+  // has minPlayers >= 2.
+  it('start-early lets a lone host start, filling every other seat with bots', () => {
+    const m = new RoomManager({
+      test: turnAdapter({ autoStart: (state) => ({ ...state, started: true }) }),
+    });
+    const room = asRoom<TurnState & { started?: boolean }>(m.createRoom('test'));
+    room.addPlayer('h', 'Host', noClient);
+    room.startEarly('h');
+    expect(room.isFull).toBe(true);
+    expect(room.botSeats.size).toBe(3);
+    expect(room.state.started).toBe(true);
+  });
+
+  // Reversi's shape: one human, one bot, and a button labelled "Start with bot".
+  it('start-early fills a two-seat table from a lone host', () => {
+    const m = new RoomManager({
+      test: turnAdapter({
+        minPlayers: 2,
+        maxPlayers: 2,
+        autoStart: (state) => (state.players.length === 2 ? { ...state, started: true } : null),
+      }),
+    });
+    const room = asRoom<TurnState & { started?: boolean }>(m.createRoom('test'));
+    room.addPlayer('h', 'Host', noClient);
+    room.startEarly('h');
+    expect(room.botSeats.size).toBe(1);
+    expect(room.state.started).toBe(true);
+  });
+
+  it('start-early still refuses when even a full table is below minPlayers', () => {
+    // A misconfigured adapter (maxPlayers < minPlayers) must fail loudly rather
+    // than start an under-filled game.
+    const m = new RoomManager({ test: turnAdapter({ minPlayers: 3, maxPlayers: 2 }) });
+    const room = m.createRoom('test');
     room.addPlayer('h', 'Host', noClient);
     expect(() => room.startEarly('h')).toThrow(/not enough players/);
   });

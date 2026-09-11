@@ -1,11 +1,13 @@
-node_modules
+**/node_modules
 dist
 .git
 .github
+.claude
+.state
+.playwright-mcp
 e2e
 *.log
 .DS_Store
-.playwright-mcp
 outcomes.json
 achievements.json
 snapshots

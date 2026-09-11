@@ -1,17 +1,12 @@
 # syntax=docker/dockerfile:1
 
 # Build stage: install all deps (incl. dev) and produce the static client in dist/.
+# Copy the whole context (minus .dockerignore) so a new workspace needs no edit here.
 FROM node:22-slim AS build
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-COPY packages ./packages
-COPY portal ./portal
-COPY games ./games
+COPY . .
 RUN npm ci
-
-COPY index.html vite.config.js ./
-COPY public ./public
 RUN npm run build
 
 # Runtime stage: keep only production deps and the source the gateway imports.
@@ -20,13 +15,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8080
 
-COPY package.json package-lock.json ./
-COPY packages ./packages
-COPY portal ./portal
-COPY games ./games
+COPY . .
 RUN npm ci --omit=dev
 
-COPY bin ./bin
 COPY --from=build /app/dist ./dist
 
 EXPOSE 8080
