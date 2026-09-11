@@ -28,7 +28,9 @@ declare global {
   }
 }
 
-const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://localhost:3001';
+const GATEWAY_URL =
+  import.meta.env.VITE_GATEWAY_URL ||
+  (import.meta.env.DEV ? 'http://localhost:3001' : window.location.origin);
 
 // Server -> client frames the hook reacts to, delivered as named Socket.IO events.
 const SERVER_EVENTS = ['hello', 'rooms', 'joined', 'state', 'left', 'chat', 'ping', 'error'] as const;

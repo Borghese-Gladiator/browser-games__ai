@@ -42,8 +42,9 @@ export interface ReviewListEntry {
 
 function base(): string {
   const gw = import.meta.env?.VITE_GATEWAY_URL;
-  if (!gw) return "http://localhost:3001";
-  return gw.replace(/^ws/, "http");
+  if (gw) return gw.replace(/^ws/, "http");
+  if (import.meta.env?.DEV) return "http://localhost:3001";
+  return window.location.origin;
 }
 
 export async function fetchReviews(): Promise<ReviewListEntry[]> {
