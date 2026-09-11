@@ -122,6 +122,7 @@ export function broadcastRoom(room: Room<EngineState>): void {
       ...(room.viewFor(id) as object),
       presence: room.presence(),
       isHost: id === room.host,
+      locked: room.locked,
     });
   }
   for (const { client } of room.spectators.values()) {
@@ -131,6 +132,7 @@ export function broadcastRoom(room: Room<EngineState>): void {
       ...(room.adapter.engine.publicState(room.state, -1) as object),
       presence: room.presence() as Presence[],
       isHost: false,
+      locked: room.locked,
     });
   }
 }

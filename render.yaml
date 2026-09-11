@@ -6,7 +6,10 @@ services:
     region: oregon
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /api/leaderboard
+    # /healthz is purpose-built and side-effect free. /api/leaderboard runs
+    # outcomeStore.all() plus a full computeBoard() on every probe, and that
+    # cost grows with match history.
+    healthCheckPath: /healthz
     autoDeploy: true
     envVars:
       - key: NODE_ENV

@@ -4,6 +4,7 @@ import { ConnectionBanner } from "@browser-games/game-client/ConnectionBanner";
 import { RefreshBanner } from "@browser-games/game-client/RefreshBanner";
 import { PlayerList } from "@browser-games/game-client/PlayerList";
 import { RoomCode } from "@browser-games/game-client/RoomCode";
+import { LockRoomButton } from "@browser-games/game-client/LockRoomButton";
 import { Chat } from "@browser-games/game-client/Chat";
 import { SpectatorView } from "@browser-games/game-client/SpectatorView";
 import { useYourTurn } from "@browser-games/game-client/useYourTurn";
@@ -82,7 +83,7 @@ export function Reversi() {
       {(gameState.isHost ?? room.isHost) && gameState.phase === "waiting" && (
         <section aria-label="Host controls" className="reversi-host">
           <button className="btn" type="button" onClick={startEarly}>Start with bot</button>
-          <button className="btn" type="button" onClick={() => lockRoom(true)}>Lock room</button>
+          <LockRoomButton locked={gameState.locked} onToggle={lockRoom} />
         </section>
       )}
 

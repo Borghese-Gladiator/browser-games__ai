@@ -24,6 +24,9 @@ export interface GameState {
   phase?: string;
   isHost?: boolean;
   activeSeat?: number;
+  // Room is closed to new joiners. Broadcast with state so a host's board can
+  // render the current lock state instead of a one-way button.
+  locked?: boolean;
   presence: Presence[];
   [k: string]: unknown;
 }

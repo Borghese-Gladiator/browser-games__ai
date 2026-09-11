@@ -274,14 +274,15 @@ export class Room<TState extends EngineState> {
     this.locked = !!locked;
   }
 
-  // Host starts before the table is full. Requires the adapter's minPlayers of
-  // real members (humans + bots); fills the rest with bots, then starts.
+  // Host starts before the table is full: bots take every empty seat, then the
+  // game starts. The seat count is asserted *after* the fill, because the whole
+  // point is to start when the humans alone are below minPlayers.
   startEarly(requesterId: string): void {
     this._assertHost(requesterId);
+    this.fillWithBots();
     if (this.playerCount < this.adapter.minPlayers) {
       throw new Error('not enough players to start');
     }
-    this.fillWithBots();
     this._maybeAutoStart();
   }
 

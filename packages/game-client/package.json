@@ -23,6 +23,7 @@
     "./PlayerList": "./src/PlayerList.tsx",
     "./PlayerName": "./src/PlayerName.tsx",
     "./RoomCode": "./src/RoomCode.tsx",
+    "./LockRoomButton": "./src/LockRoomButton.tsx",
     "./Leaderboard": "./src/Leaderboard.tsx",
     "./Chat": "./src/Chat.tsx",
     "./SpectatorView": "./src/SpectatorView.tsx"

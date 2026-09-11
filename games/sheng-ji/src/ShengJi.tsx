@@ -1,6 +1,7 @@
 import { useGameSocket } from "@browser-games/game-client/useGameSocket";
 import { Lobby } from "@browser-games/game-client/Lobby";
 import { RefreshBanner } from "@browser-games/game-client/RefreshBanner";
+import { LockRoomButton } from "@browser-games/game-client/LockRoomButton";
 import type { GameState } from "@browser-games/game-client/protocol";
 
 interface ShengJiPlayer {
@@ -137,9 +138,7 @@ export function ShengJi() {
           <button className="btn" type="button" onClick={startEarly}>
             Start with bots
           </button>
-          <button className="btn" type="button" onClick={() => lockRoom(true)}>
-            Lock room
-          </button>
+          <LockRoomButton locked={gameState.locked} onToggle={lockRoom} />
         </section>
       )}
 
