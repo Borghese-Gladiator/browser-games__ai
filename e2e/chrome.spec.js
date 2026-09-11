@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
+import { createRoomAs, joinRoomByCode } from "./helpers/transport.js";
 
 // Proves the shared client framework works end-to-end against poker:
 //  - <ConnectionBanner> reacts to a drop and a reconnect
@@ -21,34 +22,14 @@ test("shared chrome: reconnect banner, presence/avatars, and chat delivery", asy
   );
 
   const [host, guest] = await Promise.all(contexts.map((ctx) => ctx.newPage()));
-  // Track the live gateway socket so the reconnect assertion below can drop it
-  // for real. context.setOffline does not sever an already-open loopback
-  // WebSocket, so we close the socket ourselves to exercise the client's
-  // drop/reconnect path the way a genuine network blip would.
-  await host.addInitScript(() => {
-    const Native = window.WebSocket;
-    window.WebSocket = class extends Native {
-      constructor(...args) {
-        super(...args);
-        window.__lastWs = this;
-      }
-    };
-  });
   await Promise.all([
     host.goto("http://localhost:5173/games/poker/"),
     guest.goto("http://localhost:5173/games/poker/"),
   ]);
 
   // Host creates a room; guest joins by code.
-  await host.getByLabel("Your name").fill("Host");
-  await host.getByRole("button", { name: "Create room" }).click();
-
-  const roomText = await host.getByText(/^Room: /).textContent();
-  const code = roomText.replace("Room:", "").replace(/Copy.*/i, "").trim();
-
-  await guest.getByLabel("Your name").fill("Guest");
-  await guest.getByLabel("Room code").fill(code);
-  await guest.getByRole("button", { name: "Join by code" }).click();
+  const code = await createRoomAs(host, "Host");
+  await joinRoomByCode(guest, code, "Guest");
 
   // Host fills the table with bots so the hand goes live.
   await host.getByRole("button", { name: "Start with bots" }).click();
@@ -70,9 +51,13 @@ test("shared chrome: reconnect banner, presence/avatars, and chat delivery", asy
   // No banner while connected.
   await expect(host.getByRole("alert")).toHaveCount(0);
   // Go offline first so the client's reconnect attempts can't immediately
-  // succeed, then drop the live socket → reconnecting banner appears and stays.
+  // succeed, then drop the live gateway socket through the Socket.IO client's own
+  // disconnect(). That fires the hook's disconnect handler synchronously (no
+  // dependence on a raw-WebSocket close handshake that offline can stall), so the
+  // reconnecting banner appears and stays.
   await host.context().setOffline(true);
-  await host.evaluate(() => window.__lastWs?.close());
+  await host.waitForFunction(() => Boolean(window.__gameSocket));
+  await host.evaluate(() => window.__gameSocket.disconnect());
   await expect(host.getByRole("alert")).toBeVisible({ timeout: 10_000 });
   await expect(host.getByRole("alert")).toContainText(/reconnecting/i);
   // Restore connectivity → banner clears once the socket re-opens.

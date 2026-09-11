@@ -32,9 +32,17 @@ export default defineConfig({
         __dirname,
         "packages/engines/president/src/engine.ts",
       ),
+      "@browser-games/engine-mahjong-analysis": resolve(
+        __dirname,
+        "packages/engines/mahjong-analysis/src/index.ts",
+      ),
+      "@browser-games/engine-mahjong": resolve(
+        __dirname,
+        "packages/engines/mahjong/src/index.ts",
+      ),
       "@browser-games/game-core": resolve(
         __dirname,
-        "packages/game-core/src/gateway.js",
+        "packages/game-core/src/gateway.ts",
       ),
       "@browser-games/game-client": resolve(
         __dirname,
@@ -47,6 +55,9 @@ export default defineConfig({
       "@portal/shared/leaderboard": resolve(__dirname, "packages/shared/src/leaderboard.ts"),
       "@portal/shared/identity": resolve(__dirname, "packages/shared/src/identity.ts"),
       "@portal/shared/metrics": resolve(__dirname, "packages/shared/src/metrics.ts"),
+      "@portal/shared/severity": resolve(__dirname, "packages/shared/src/severity.ts"),
+      "@portal/shared/tiles": resolve(__dirname, "packages/shared/src/tiles/index.ts"),
+      "@portal/shared/registry": resolve(__dirname, "packages/shared/src/registry.ts"),
       "@portal/shared": resolve(__dirname, "packages/shared/src/registry.ts"),
     },
   },

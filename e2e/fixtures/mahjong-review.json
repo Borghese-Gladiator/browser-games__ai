@@ -1,0 +1,2229 @@
+[
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 0,
+    "type": "create",
+    "payload": {
+      "rules": {
+        "playerCount": 4,
+        "concealedHandSize": 16,
+        "flowersEnabled": true,
+        "minimumTai": 0,
+        "dealerRepeatsOnWin": true,
+        "sevenPairsEnabled": true
+      },
+      "seed": "e2e-review-hand",
+      "dealer": 0,
+      "roundWind": "E"
+    },
+    "timestamp": 1700000000000,
+    "stateHash": "c12737a998a41f8d"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 1,
+    "type": "DEAL",
+    "payload": {
+      "type": "DEAL"
+    },
+    "timestamp": 1700000000001,
+    "stateHash": "4e095daad596db4a"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 2,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "dots-9-3",
+        "suit": "dots",
+        "rank": 9
+      }
+    },
+    "timestamp": 1700000000002,
+    "stateHash": "d889b3cbbd397f9e"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 3,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000003,
+    "stateHash": "3b44cf09a0e0f0b0"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 4,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "dots-1-2",
+        "suit": "dots",
+        "rank": 1
+      }
+    },
+    "timestamp": 1700000000004,
+    "stateHash": "e522d4b6a3e05f64"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 5,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 3
+    },
+    "timestamp": 1700000000005,
+    "stateHash": "39ee18ff6c9dbfd7"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 6,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000006,
+    "stateHash": "d2414a2aa4f54312"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 7,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "bamboo-4-2",
+        "suit": "bamboo",
+        "rank": 4
+      }
+    },
+    "timestamp": 1700000000007,
+    "stateHash": "2b5ee11df8a46d2e"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 8,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000008,
+    "stateHash": "0d135089f7d1e0c5"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 9,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "characters-1-2",
+        "suit": "characters",
+        "rank": 1
+      }
+    },
+    "timestamp": 1700000000009,
+    "stateHash": "c316a174403bdd90"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 10,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000010,
+    "stateHash": "bcfc9a5f1908dcb1"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 11,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "bamboo-5-4",
+        "suit": "bamboo",
+        "rank": 5
+      }
+    },
+    "timestamp": 1700000000011,
+    "stateHash": "1cc14ecec1ca6429"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 12,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 1
+    },
+    "timestamp": 1700000000012,
+    "stateHash": "265970cbe5c210ed"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 13,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000013,
+    "stateHash": "f1a723875090f2d7"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 14,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "bamboo-6-1",
+        "suit": "bamboo",
+        "rank": 6
+      }
+    },
+    "timestamp": 1700000000014,
+    "stateHash": "40cf3f1a33ae9823"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 15,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 2
+    },
+    "timestamp": 1700000000015,
+    "stateHash": "6c27c4df227e22bd"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 16,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000016,
+    "stateHash": "e2b57758e0487239"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 17,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "honor-red-2",
+        "suit": "honor",
+        "honor": "red"
+      }
+    },
+    "timestamp": 1700000000017,
+    "stateHash": "4bc5cd21b7bb09c0"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 18,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000018,
+    "stateHash": "749d714bf4d26ae5"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 19,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "characters-4-2",
+        "suit": "characters",
+        "rank": 4
+      }
+    },
+    "timestamp": 1700000000019,
+    "stateHash": "54311932dea4668f"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 20,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000020,
+    "stateHash": "156965af8b44988a"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 21,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "dots-3-2",
+        "suit": "dots",
+        "rank": 3
+      }
+    },
+    "timestamp": 1700000000021,
+    "stateHash": "e4658a10e5609670"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 22,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000022,
+    "stateHash": "a963c7c18ad1b523"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 23,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "dots-3-3",
+        "suit": "dots",
+        "rank": 3
+      }
+    },
+    "timestamp": 1700000000023,
+    "stateHash": "546ea6f1ea7b5a10"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 24,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000024,
+    "stateHash": "0caa02f4cb42937b"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 25,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "characters-6-2",
+        "suit": "characters",
+        "rank": 6
+      }
+    },
+    "timestamp": 1700000000025,
+    "stateHash": "e6e6e2c534f52df6"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 26,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 3
+    },
+    "timestamp": 1700000000026,
+    "stateHash": "082682fc6eeba54a"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 27,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000027,
+    "stateHash": "f63c4557b086d0ba"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 28,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "bamboo-4-1",
+        "suit": "bamboo",
+        "rank": 4
+      }
+    },
+    "timestamp": 1700000000028,
+    "stateHash": "ef643308fc9d5169"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 29,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000029,
+    "stateHash": "dcc1871b9635f2c8"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 30,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "bamboo-4-3",
+        "suit": "bamboo",
+        "rank": 4
+      }
+    },
+    "timestamp": 1700000000030,
+    "stateHash": "17c79f4f549d581a"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 31,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000031,
+    "stateHash": "e3dab032a332b09a"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 32,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "bamboo-1-4",
+        "suit": "bamboo",
+        "rank": 1
+      }
+    },
+    "timestamp": 1700000000032,
+    "stateHash": "de3d5fc6d56c5dcc"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 33,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000033,
+    "stateHash": "bbdf991fbbb4b87b"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 34,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "bamboo-4-4",
+        "suit": "bamboo",
+        "rank": 4
+      }
+    },
+    "timestamp": 1700000000034,
+    "stateHash": "0859adc4ec24cec6"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 35,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000035,
+    "stateHash": "7fd85d3f63334ae8"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 36,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "bamboo-8-3",
+        "suit": "bamboo",
+        "rank": 8
+      }
+    },
+    "timestamp": 1700000000036,
+    "stateHash": "594fc7166dcb3d9c"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 37,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 0
+    },
+    "timestamp": 1700000000037,
+    "stateHash": "f0af36044cc69090"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 38,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000038,
+    "stateHash": "05a13dc0626ccf5e"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 39,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "bamboo-9-1",
+        "suit": "bamboo",
+        "rank": 9
+      }
+    },
+    "timestamp": 1700000000039,
+    "stateHash": "1c89e101cff27041"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 40,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000040,
+    "stateHash": "872d863b3de0a3da"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 41,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "characters-6-4",
+        "suit": "characters",
+        "rank": 6
+      }
+    },
+    "timestamp": 1700000000041,
+    "stateHash": "e806eb41b61a36c3"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 42,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000042,
+    "stateHash": "17ad0846afe279d5"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 43,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "bamboo-2-4",
+        "suit": "bamboo",
+        "rank": 2
+      }
+    },
+    "timestamp": 1700000000043,
+    "stateHash": "c23e92263975ac5b"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 44,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000044,
+    "stateHash": "40e1aeee29fbde9b"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 45,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "bamboo-6-3",
+        "suit": "bamboo",
+        "rank": 6
+      }
+    },
+    "timestamp": 1700000000045,
+    "stateHash": "5fad169bf62362ac"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 46,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 0
+    },
+    "timestamp": 1700000000046,
+    "stateHash": "07a6fe4768020ffa"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 47,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000047,
+    "stateHash": "08b3e20efa8712f0"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 48,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "dots-5-4",
+        "suit": "dots",
+        "rank": 5
+      }
+    },
+    "timestamp": 1700000000048,
+    "stateHash": "9b540bf03c7bac13"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 49,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000049,
+    "stateHash": "3baa09f3027a0565"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 50,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "bamboo-9-3",
+        "suit": "bamboo",
+        "rank": 9
+      }
+    },
+    "timestamp": 1700000000050,
+    "stateHash": "1c97756fa0cdbe75"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 51,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 2
+    },
+    "timestamp": 1700000000051,
+    "stateHash": "e35422cf2d729ba6"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 52,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000052,
+    "stateHash": "11b730e316f43ee9"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 53,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "bamboo-2-3",
+        "suit": "bamboo",
+        "rank": 2
+      }
+    },
+    "timestamp": 1700000000053,
+    "stateHash": "7a1f82803b695aca"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 54,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000054,
+    "stateHash": "50acd87b8ce5577e"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 55,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "characters-9-2",
+        "suit": "characters",
+        "rank": 9
+      }
+    },
+    "timestamp": 1700000000055,
+    "stateHash": "3008b4cd300e5039"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 56,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000056,
+    "stateHash": "bfa50447346647a8"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 57,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "honor-east-4",
+        "suit": "honor",
+        "honor": "east"
+      }
+    },
+    "timestamp": 1700000000057,
+    "stateHash": "3a0caeee23356aeb"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 58,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000058,
+    "stateHash": "eee90ce7a95f24f3"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 59,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "bamboo-9-4",
+        "suit": "bamboo",
+        "rank": 9
+      }
+    },
+    "timestamp": 1700000000059,
+    "stateHash": "5c2de7201cbf3cab"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 60,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 2
+    },
+    "timestamp": 1700000000060,
+    "stateHash": "56152207e4e1071b"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 61,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000061,
+    "stateHash": "f4eeb42bd2e9ef5b"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 62,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "dots-5-3",
+        "suit": "dots",
+        "rank": 5
+      }
+    },
+    "timestamp": 1700000000062,
+    "stateHash": "38a1c70343bb11da"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 63,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000063,
+    "stateHash": "8b5bcfc358a3f58f"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 64,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "honor-green-2",
+        "suit": "honor",
+        "honor": "green"
+      }
+    },
+    "timestamp": 1700000000064,
+    "stateHash": "8c15541c62a1703d"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 65,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 2
+    },
+    "timestamp": 1700000000065,
+    "stateHash": "647f39e2cda181f2"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 66,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000066,
+    "stateHash": "50106e827e29380a"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 67,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "characters-5-2",
+        "suit": "characters",
+        "rank": 5
+      }
+    },
+    "timestamp": 1700000000067,
+    "stateHash": "e95e006340fe2f61"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 68,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000068,
+    "stateHash": "4d77db16e89e6de2"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 69,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "characters-3-1",
+        "suit": "characters",
+        "rank": 3
+      }
+    },
+    "timestamp": 1700000000069,
+    "stateHash": "72735bc01cf79f16"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 70,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 2
+    },
+    "timestamp": 1700000000070,
+    "stateHash": "c7ff51738994ca10"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 71,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000071,
+    "stateHash": "763bfed7046cbfa9"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 72,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "honor-south-3",
+        "suit": "honor",
+        "honor": "south"
+      }
+    },
+    "timestamp": 1700000000072,
+    "stateHash": "10dcadcf2655960d"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 73,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 3
+    },
+    "timestamp": 1700000000073,
+    "stateHash": "cbbb2386d3c26997"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 74,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000074,
+    "stateHash": "cafea7678dc57285"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 75,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "honor-red-1",
+        "suit": "honor",
+        "honor": "red"
+      }
+    },
+    "timestamp": 1700000000075,
+    "stateHash": "4383d0a30704cb05"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 76,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000076,
+    "stateHash": "60c8506be5043e42"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 77,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "characters-5-4",
+        "suit": "characters",
+        "rank": 5
+      }
+    },
+    "timestamp": 1700000000077,
+    "stateHash": "f8ad68106bc829f6"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 78,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000078,
+    "stateHash": "a6f6c9c860828ab4"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 79,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "characters-6-3",
+        "suit": "characters",
+        "rank": 6
+      }
+    },
+    "timestamp": 1700000000079,
+    "stateHash": "ac7aa35a76c50659"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 80,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000080,
+    "stateHash": "4d34308f001b7dca"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 81,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "honor-white-2",
+        "suit": "honor",
+        "honor": "white"
+      }
+    },
+    "timestamp": 1700000000081,
+    "stateHash": "cc4316dbccfdc9f2"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 82,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000082,
+    "stateHash": "1821fd2d1ef4d0c2"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 83,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "dots-6-2",
+        "suit": "dots",
+        "rank": 6
+      }
+    },
+    "timestamp": 1700000000083,
+    "stateHash": "252581f5ecbe6f2a"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 84,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 1
+    },
+    "timestamp": 1700000000084,
+    "stateHash": "d2a9f63ffb16dbe0"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 85,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000085,
+    "stateHash": "69890dda8690f15c"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 86,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "dots-1-4",
+        "suit": "dots",
+        "rank": 1
+      }
+    },
+    "timestamp": 1700000000086,
+    "stateHash": "aa9ee4aee911c0bc"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 87,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 1
+    },
+    "timestamp": 1700000000087,
+    "stateHash": "ad8b37975054aab2"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 88,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 3
+    },
+    "timestamp": 1700000000088,
+    "stateHash": "777acdb7ad2d4eaf"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 89,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000089,
+    "stateHash": "22d59ccbd3e806f3"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 90,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "honor-west-3",
+        "suit": "honor",
+        "honor": "west"
+      }
+    },
+    "timestamp": 1700000000090,
+    "stateHash": "f9b79ca60004b81c"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 91,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 0
+    },
+    "timestamp": 1700000000091,
+    "stateHash": "72892ea46033a3e5"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 92,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000092,
+    "stateHash": "57dc400700a84292"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 93,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "bamboo-2-1",
+        "suit": "bamboo",
+        "rank": 2
+      }
+    },
+    "timestamp": 1700000000093,
+    "stateHash": "ab9e84f2408c49e4"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 94,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000094,
+    "stateHash": "0a0c0fb009b408cf"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 95,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "bamboo-5-2",
+        "suit": "bamboo",
+        "rank": 5
+      }
+    },
+    "timestamp": 1700000000095,
+    "stateHash": "317851f3e6f1d2d2"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 96,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 0
+    },
+    "timestamp": 1700000000096,
+    "stateHash": "f2c1de1cf6e56e99"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 97,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 1
+    },
+    "timestamp": 1700000000097,
+    "stateHash": "23585850ac36ebef"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 98,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000098,
+    "stateHash": "c79e8792ea883eef"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 99,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "honor-west-2",
+        "suit": "honor",
+        "honor": "west"
+      }
+    },
+    "timestamp": 1700000000099,
+    "stateHash": "04b08e74279c304e"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 100,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000100,
+    "stateHash": "11ce4cb4543099d8"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 101,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "bamboo-3-3",
+        "suit": "bamboo",
+        "rank": 3
+      }
+    },
+    "timestamp": 1700000000101,
+    "stateHash": "a49aa15c08a6a184"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 102,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000102,
+    "stateHash": "14f4560d4153b28a"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 103,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "honor-north-3",
+        "suit": "honor",
+        "honor": "north"
+      }
+    },
+    "timestamp": 1700000000103,
+    "stateHash": "d8012dc180460daf"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 104,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000104,
+    "stateHash": "8d3f127b797bd747"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 105,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "characters-7-3",
+        "suit": "characters",
+        "rank": 7
+      }
+    },
+    "timestamp": 1700000000105,
+    "stateHash": "eeb56f74136f5377"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 106,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000106,
+    "stateHash": "c7bfa3cb2796a34c"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 107,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "honor-white-4",
+        "suit": "honor",
+        "honor": "white"
+      }
+    },
+    "timestamp": 1700000000107,
+    "stateHash": "2f95d742353a41bd"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 108,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000108,
+    "stateHash": "44cc1846d074a139"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 109,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "honor-white-1",
+        "suit": "honor",
+        "honor": "white"
+      }
+    },
+    "timestamp": 1700000000109,
+    "stateHash": "745812f6fd964650"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 110,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000110,
+    "stateHash": "b261fd3fe891ee6c"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 111,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "dots-3-4",
+        "suit": "dots",
+        "rank": 3
+      }
+    },
+    "timestamp": 1700000000111,
+    "stateHash": "2bf48c608021fab7"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 112,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 3
+    },
+    "timestamp": 1700000000112,
+    "stateHash": "ec0aa649a5934f8d"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 113,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000113,
+    "stateHash": "6379835dc08c8e7a"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 114,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "honor-red-3",
+        "suit": "honor",
+        "honor": "red"
+      }
+    },
+    "timestamp": 1700000000114,
+    "stateHash": "c8160f9c81421150"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 115,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000115,
+    "stateHash": "36a2016a2feccd20"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 116,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "characters-8-2",
+        "suit": "characters",
+        "rank": 8
+      }
+    },
+    "timestamp": 1700000000116,
+    "stateHash": "ece57e46f8574309"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 117,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000117,
+    "stateHash": "b37b57695e53ba0a"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 118,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "bamboo-3-1",
+        "suit": "bamboo",
+        "rank": 3
+      }
+    },
+    "timestamp": 1700000000118,
+    "stateHash": "ce04541cf4ef0391"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 119,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000119,
+    "stateHash": "573dac3a3b33f98b"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 120,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "bamboo-6-2",
+        "suit": "bamboo",
+        "rank": 6
+      }
+    },
+    "timestamp": 1700000000120,
+    "stateHash": "5c7ddb2be77317a0"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 121,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000121,
+    "stateHash": "831be0ca1c3826f6"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 122,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "dots-4-2",
+        "suit": "dots",
+        "rank": 4
+      }
+    },
+    "timestamp": 1700000000122,
+    "stateHash": "175e963a3ad1be6c"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 123,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000123,
+    "stateHash": "0863d6acba7d18be"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 124,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "characters-8-1",
+        "suit": "characters",
+        "rank": 8
+      }
+    },
+    "timestamp": 1700000000124,
+    "stateHash": "fa7868a8b4132fa4"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 125,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000125,
+    "stateHash": "c8fb194f85e17a75"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 126,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "characters-3-4",
+        "suit": "characters",
+        "rank": 3
+      }
+    },
+    "timestamp": 1700000000126,
+    "stateHash": "da3c8d4b78cbaee6"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 127,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 2
+    },
+    "timestamp": 1700000000127,
+    "stateHash": "e8bd8d062816c292"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 128,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000128,
+    "stateHash": "3be597b0807e0b2c"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 129,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "bamboo-7-3",
+        "suit": "bamboo",
+        "rank": 7
+      }
+    },
+    "timestamp": 1700000000129,
+    "stateHash": "057c8c9c126a4698"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 130,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000130,
+    "stateHash": "b378750203f2fd5e"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 131,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "bamboo-1-1",
+        "suit": "bamboo",
+        "rank": 1
+      }
+    },
+    "timestamp": 1700000000131,
+    "stateHash": "4feb4e5a774d6199"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 132,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000132,
+    "stateHash": "988cade2a2be86ce"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 133,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "bamboo-9-2",
+        "suit": "bamboo",
+        "rank": 9
+      }
+    },
+    "timestamp": 1700000000133,
+    "stateHash": "773f21313be43773"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 134,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000134,
+    "stateHash": "97c83bd17abb1274"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 135,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "dots-9-1",
+        "suit": "dots",
+        "rank": 9
+      }
+    },
+    "timestamp": 1700000000135,
+    "stateHash": "bd98dc75b8a711bc"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 136,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000136,
+    "stateHash": "e82770b11e4b5c46"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 137,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "characters-4-3",
+        "suit": "characters",
+        "rank": 4
+      }
+    },
+    "timestamp": 1700000000137,
+    "stateHash": "dc63b32a18355368"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 138,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000138,
+    "stateHash": "0ca9276ddf9470b9"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 139,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "characters-9-1",
+        "suit": "characters",
+        "rank": 9
+      }
+    },
+    "timestamp": 1700000000139,
+    "stateHash": "d6d4e01fb28707b5"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 140,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000140,
+    "stateHash": "587c07249f2a3f15"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 141,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "characters-3-2",
+        "suit": "characters",
+        "rank": 3
+      }
+    },
+    "timestamp": 1700000000141,
+    "stateHash": "27e900d6cdbe2b88"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 142,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000142,
+    "stateHash": "07c900f55a87bb77"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 143,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "honor-north-4",
+        "suit": "honor",
+        "honor": "north"
+      }
+    },
+    "timestamp": 1700000000143,
+    "stateHash": "697ca91714941962"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 144,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000144,
+    "stateHash": "e69875754bf67fa3"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 145,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "characters-2-2",
+        "suit": "characters",
+        "rank": 2
+      }
+    },
+    "timestamp": 1700000000145,
+    "stateHash": "6d7a6bc626f51ee1"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 146,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000146,
+    "stateHash": "fbd12d2e77377ec6"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 147,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "characters-2-1",
+        "suit": "characters",
+        "rank": 2
+      }
+    },
+    "timestamp": 1700000000147,
+    "stateHash": "43985f185bd14932"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 148,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000148,
+    "stateHash": "719c1393763275fe"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 149,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "characters-1-1",
+        "suit": "characters",
+        "rank": 1
+      }
+    },
+    "timestamp": 1700000000149,
+    "stateHash": "68a8c60c79e59116"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 150,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000150,
+    "stateHash": "0d8a73d7668435f7"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 151,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "dots-8-3",
+        "suit": "dots",
+        "rank": 8
+      }
+    },
+    "timestamp": 1700000000151,
+    "stateHash": "ba02cd04e27cdf30"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 152,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 2
+    },
+    "timestamp": 1700000000152,
+    "stateHash": "491ae2ade96d783e"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 153,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 3
+    },
+    "timestamp": 1700000000153,
+    "stateHash": "efb16e2c4cef421f"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 154,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000154,
+    "stateHash": "2572517e7ac7edcb"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 155,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "characters-4-4",
+        "suit": "characters",
+        "rank": 4
+      }
+    },
+    "timestamp": 1700000000155,
+    "stateHash": "0730a4e95a623feb"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 156,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000156,
+    "stateHash": "276d676932f1abdf"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 157,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "dots-7-1",
+        "suit": "dots",
+        "rank": 7
+      }
+    },
+    "timestamp": 1700000000157,
+    "stateHash": "5573aeb40d9bb819"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 158,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 2
+    },
+    "timestamp": 1700000000158,
+    "stateHash": "3c049a39b4c2d694"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 159,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000159,
+    "stateHash": "1b4dfc22b872aa01"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 160,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 0,
+      "tile": {
+        "id": "bamboo-1-2",
+        "suit": "bamboo",
+        "rank": 1
+      }
+    },
+    "timestamp": 1700000000160,
+    "stateHash": "b596b842b9469299"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 161,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 1
+    },
+    "timestamp": 1700000000161,
+    "stateHash": "b200beb103795035"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 162,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 1,
+      "tile": {
+        "id": "honor-north-1",
+        "suit": "honor",
+        "honor": "north"
+      }
+    },
+    "timestamp": 1700000000162,
+    "stateHash": "cfc05030240c8edb"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 163,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 2
+    },
+    "timestamp": 1700000000163,
+    "stateHash": "861410fb9ec98c70"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 164,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 2,
+      "tile": {
+        "id": "dots-2-2",
+        "suit": "dots",
+        "rank": 2
+      }
+    },
+    "timestamp": 1700000000164,
+    "stateHash": "30aa99bcb11071ec"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 165,
+    "type": "PASS_CLAIM",
+    "payload": {
+      "type": "PASS_CLAIM",
+      "player": 1
+    },
+    "timestamp": 1700000000165,
+    "stateHash": "a8e063ad1b9c8880"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 166,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 3
+    },
+    "timestamp": 1700000000166,
+    "stateHash": "ae79daab8506dea7"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 167,
+    "type": "DISCARD",
+    "payload": {
+      "type": "DISCARD",
+      "player": 3,
+      "tile": {
+        "id": "dots-4-1",
+        "suit": "dots",
+        "rank": 4
+      }
+    },
+    "timestamp": 1700000000167,
+    "stateHash": "e9c5977334373575"
+  },
+  {
+    "gameId": "E2EREVIEW",
+    "sequence": 168,
+    "type": "DRAW",
+    "payload": {
+      "type": "DRAW",
+      "player": 0
+    },
+    "timestamp": 1700000000168,
+    "stateHash": "816f8dd4e78a4bd6"
+  }
+]

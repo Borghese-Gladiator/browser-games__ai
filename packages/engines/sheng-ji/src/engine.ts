@@ -196,6 +196,14 @@ export function addPlayer(state: ShengJiState, { id, name }: SeatInit): ShengJiS
   return next;
 }
 
+export function removePlayer(state: ShengJiState, playerId: string): ShengJiState {
+  const next = clone(state);
+  next.players = next.players
+    .filter((p) => p.id !== playerId)
+    .map((p, i) => ({ ...p, seat: i }));
+  return next;
+}
+
 export function startDeal(state: ShengJiState): ShengJiState {
   if (state.players.length !== 4) throw new Error('need 4 players');
   if (state.phase !== 'waiting' && state.phase !== 'deal-over') {

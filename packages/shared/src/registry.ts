@@ -17,6 +17,29 @@ export interface GameMeta {
   enabled: boolean;
 }
 
+// Non-game top-level pages (e.g. the post-game review). Like `games`, this is the
+// single source of truth: the Vite multi-page `input` map and the gateway's
+// static fallback both derive from it. A `dynamic` page serves its one built
+// entry for every sub-path (/history/ and /history/:gameId), so the client reads
+// the sub-path itself.
+export interface PageMeta {
+  id: string;
+  title: string;
+  path: string;
+  entry: string;
+  dynamic: boolean;
+}
+
+export const pages: PageMeta[] = [
+  {
+    id: "history",
+    title: "Game Review",
+    path: "/history/",
+    entry: "history/index.html",
+    dynamic: true,
+  },
+];
+
 export const games: GameMeta[] = [
   {
     id: "tic-tac-toe",
@@ -71,6 +94,24 @@ export const games: GameMeta[] = [
     emoji: "⚫",
     path: "/games/reversi/",
     multiplayer: true,
+    enabled: true,
+  },
+  {
+    id: "mahjong",
+    title: "Mahjong (台灣麻將)",
+    description: "4-player Taiwanese 16-tile mahjong. Draw, discard, and claim to win. Create a room and share the code.",
+    emoji: "🀄",
+    path: "/games/mahjong/",
+    multiplayer: true,
+    enabled: true,
+  },
+  {
+    id: "mahjong-trainer",
+    title: "Discard Trainer",
+    description: "Single-player mahjong drill. Pick a discard, then compare your choice against the ranked analysis.",
+    emoji: "🎯",
+    path: "/games/mahjong-trainer/",
+    multiplayer: false,
     enabled: true,
   },
 ];

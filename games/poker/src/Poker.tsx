@@ -7,14 +7,35 @@ import { RoomCode } from "@browser-games/game-client/RoomCode";
 import { Chat } from "@browser-games/game-client/Chat";
 import { SpectatorView } from "@browser-games/game-client/SpectatorView";
 import { useYourTurn } from "@browser-games/game-client/useYourTurn";
+import type { GameState } from "@browser-games/game-client/protocol";
 import "@browser-games/game-client/chrome.css";
+
+interface PokerPlayer {
+  seat: number;
+  name: string;
+}
+
+interface PokerWinner {
+  name: string;
+  amount: number;
+  handName: string;
+}
+
+interface PokerState extends GameState {
+  players: PokerPlayer[];
+  winner?: PokerWinner;
+  community: string[];
+  pot: number;
+  myHoleCards?: string[];
+  mySeat?: number;
+  legalActions?: string[];
+}
 
 export function Poker() {
   const {
     connectionStatus,
     rooms,
     room,
-    gameState,
     chatMessages,
     sendChat,
     error,
@@ -29,9 +50,13 @@ export function Poker() {
     send,
     restart,
     needsRefresh,
-  }: any = useGameSocket("poker");
+    gameState: rawGameState,
+  } = useGameSocket("poker");
+  // The engine's per-seat public view is game-specific; read it through a
+  // typed local view over the shared GameState.
+  const gameState = rawGameState as PokerState | null;
 
-  useYourTurn(gameState, room?.seat);
+  useYourTurn(rawGameState, room?.seat);
 
   if (!room || !gameState) {
     return (
@@ -52,7 +77,7 @@ export function Poker() {
   }
 
   if (room.seat === -1) {
-    return <SpectatorView gameState={gameState} gameId="poker" />;
+    return <SpectatorView gameState={rawGameState} gameId="poker" />;
   }
 
   const isHost = gameState.isHost ?? room.isHost;
@@ -60,7 +85,7 @@ export function Poker() {
 
   const act = (type: string, extra = {}) => send({ action: { type, ...extra } });
 
-  const activePlayer = gameState.players.find((p: any) => p.seat === gameState.activeSeat);
+  const activePlayer = gameState.players.find((p) => p.seat === gameState.activeSeat);
   const activePlayerName = activePlayer?.name ?? "";
   const legalActions = gameState.legalActions ?? [];
 
@@ -107,7 +132,7 @@ export function Poker() {
           <p>None yet</p>
         ) : (
           <ul className="poker-cards">
-            {gameState.community.map((c: any) => (
+            {gameState.community.map((c) => (
               <li key={c}>{c}</li>
             ))}
           </ul>
@@ -119,7 +144,7 @@ export function Poker() {
         <section aria-label="Your cards">
           <h2>Your cards</h2>
           <ul className="poker-cards poker-hole">
-            {gameState.myHoleCards.map((c: any) => (
+            {gameState.myHoleCards.map((c) => (
               <li key={c}>{c}</li>
             ))}
           </ul>

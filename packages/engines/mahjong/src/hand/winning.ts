@@ -1,0 +1,83 @@
+import type { Tile } from '../tiles/tile.ts';
+import { tileToKind } from '../tiles/tile-kind.ts';
+import type { Meld } from '../tiles/meld.ts';
+import type { TaiwaneseRules } from '../rules/taiwanese.ts';
+import { DEFAULT_TAIWANESE_RULES, winningHandSize } from '../rules/taiwanese.ts';
+import type { TileCounts } from './counts.ts';
+import { toTileCounts } from './counts.ts';
+import type { DecomposedMeld, HandDecomposition, WinningHandResult } from './decomposition.ts';
+import { decomposeStandard } from './winning-patterns/standard.ts';
+import { decomposeSevenPairs } from './winning-patterns/seven-pairs.ts';
+
+const TOTAL_MELDS = 5;
+const TILES_PER_EXPOSED_MELD = 3;
+
+function totalTileCount(counts: TileCounts): number {
+  let total = 0;
+  for (const count of counts.values()) {
+    total += count;
+  }
+  return total;
+}
+
+export interface HandInput {
+  readonly concealed: readonly Tile[];
+  readonly exposedMelds: readonly Meld[];
+}
+
+export function toExposedMelds(melds: readonly Meld[]): DecomposedMeld[] {
+  return melds.map((meld) => ({
+    kind: meld.kind,
+    tiles: meld.tiles.map(tileToKind),
+    concealed: false,
+  }));
+}
+
+export function winningDecompositionsFromCounts(
+  counts: TileCounts,
+  exposed: readonly DecomposedMeld[],
+  rules: TaiwaneseRules,
+): HandDecomposition[] {
+  const decompositions: HandDecomposition[] = [];
+  const target = winningHandSize(rules);
+  const handSize = totalTileCount(counts) + exposed.length * TILES_PER_EXPOSED_MELD;
+  if (handSize !== target) {
+    return decompositions;
+  }
+  const meldsNeeded = TOTAL_MELDS - exposed.length;
+  for (const decomposition of decomposeStandard(counts, meldsNeeded)) {
+    decompositions.push({
+      ...decomposition,
+      melds: [...exposed, ...decomposition.melds],
+    });
+  }
+  if (exposed.length === 0) {
+    decompositions.push(...decomposeSevenPairs(counts, rules));
+  }
+  return decompositions;
+}
+
+export function findWinningDecompositions(
+  input: HandInput,
+  rules: TaiwaneseRules = DEFAULT_TAIWANESE_RULES,
+): HandDecomposition[] {
+  const counts = toTileCounts(input.concealed);
+  const exposed = toExposedMelds(input.exposedMelds);
+  return winningDecompositionsFromCounts(counts, exposed, rules);
+}
+
+export function isWinningHand(
+  input: HandInput,
+  rules: TaiwaneseRules = DEFAULT_TAIWANESE_RULES,
+): WinningHandResult {
+  const decompositions = findWinningDecompositions(input, rules);
+  if (decompositions.length === 0) {
+    return { winning: false, pattern: null, decompositions: [] };
+  }
+  const hasStandard = decompositions.some((decomposition) => decomposition.pattern === 'STANDARD');
+  return {
+    winning: true,
+    pattern: hasStandard ? 'STANDARD' : 'SEVEN_PAIRS',
+    decompositions,
+  };
+}

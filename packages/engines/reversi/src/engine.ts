@@ -114,6 +114,14 @@ export function addPlayer(state: ReversiState, { id, name }: SeatInit): ReversiS
   return next;
 }
 
+export function removePlayer(state: ReversiState, playerId: string): ReversiState {
+  const next = clone(state);
+  next.players = next.players
+    .filter((p) => p.id !== playerId)
+    .map((p, i) => ({ ...p, seat: i, color: i === 0 ? 'B' : 'W' }));
+  return next;
+}
+
 export function startGame(state: ReversiState): ReversiState {
   const next = clone(state);
   next.board = Array(64).fill(null);

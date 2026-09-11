@@ -98,6 +98,14 @@ export function addPlayer(state: PokerState, { id, name }: SeatInit): PokerState
   return next;
 }
 
+export function removePlayer(state: PokerState, playerId: string): PokerState {
+  const next = clone(state);
+  next.players = next.players
+    .filter((p) => p.id !== playerId)
+    .map((p, i) => ({ ...p, seat: i }));
+  return next;
+}
+
 // First non-folded seat clockwise after the dealer.
 function firstToAct(state: PokerState): number {
   return nextActiveSeat(state, state.dealer);

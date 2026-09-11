@@ -4,29 +4,38 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./useGameSocket": "./src/useGameSocket.js",
-    "./Lobby": "./src/Lobby.jsx",
+    "./useGameSocket": "./src/useGameSocket.ts",
+    "./useGameSocket.types": "./src/useGameSocket.types.ts",
+    "./protocol": "./src/protocol.ts",
+    "./Lobby": "./src/Lobby.tsx",
     "./lobby.css": "./src/lobby.css",
     "./chrome.css": "./src/chrome.css",
-    "./useIdentity": "./src/useIdentity.js",
-    "./PlayerCodeModal": "./src/PlayerCodeModal.jsx",
-    "./leaderboard": "./src/leaderboard.js",
-    "./reconnect": "./src/reconnect.js",
-    "./optimistic": "./src/optimistic.js",
-    "./yourTurn": "./src/yourTurn.js",
-    "./useYourTurn": "./src/useYourTurn.js",
-    "./useOptimistic": "./src/useOptimistic.js",
-    "./ConnectionBanner": "./src/ConnectionBanner.jsx",
-    "./RefreshBanner": "./src/RefreshBanner.jsx",
-    "./PlayerList": "./src/PlayerList.jsx",
-    "./PlayerName": "./src/PlayerName.jsx",
-    "./RoomCode": "./src/RoomCode.jsx",
-    "./Leaderboard": "./src/Leaderboard.jsx",
-    "./Chat": "./src/Chat.jsx",
-    "./SpectatorView": "./src/SpectatorView.jsx"
+    "./useIdentity": "./src/useIdentity.ts",
+    "./PlayerCodeModal": "./src/PlayerCodeModal.tsx",
+    "./leaderboard": "./src/leaderboard.ts",
+    "./reconnect": "./src/reconnect.ts",
+    "./optimistic": "./src/optimistic.ts",
+    "./yourTurn": "./src/yourTurn.ts",
+    "./useYourTurn": "./src/useYourTurn.ts",
+    "./useOptimistic": "./src/useOptimistic.ts",
+    "./ConnectionBanner": "./src/ConnectionBanner.tsx",
+    "./RefreshBanner": "./src/RefreshBanner.tsx",
+    "./PlayerList": "./src/PlayerList.tsx",
+    "./PlayerName": "./src/PlayerName.tsx",
+    "./RoomCode": "./src/RoomCode.tsx",
+    "./Leaderboard": "./src/Leaderboard.tsx",
+    "./Chat": "./src/Chat.tsx",
+    "./SpectatorView": "./src/SpectatorView.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@portal/shared": "*"
+    "@portal/shared": "*",
+    "socket.io-client": "^4.8.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
   },
   "peerDependencies": {
     "react": "^18.3.1"

@@ -1,0 +1,128 @@
+import type { Tile } from '../tiles/tile.ts';
+import type { PlayerId, GameState, Wind } from './state.ts';
+import type { TurnPhase } from './turn.ts';
+
+export interface GameEventBase {
+  readonly seq: number;
+}
+
+export interface HandDealtEvent extends GameEventBase {
+  readonly type: 'HAND_DEALT';
+  readonly dealer: PlayerId;
+}
+
+export interface TileDrawnEvent extends GameEventBase {
+  readonly type: 'TILE_DRAWN';
+  readonly player: PlayerId;
+  readonly tile: Tile;
+}
+
+export interface FlowerReplacedEvent extends GameEventBase {
+  readonly type: 'FLOWER_REPLACED';
+  readonly player: PlayerId;
+  readonly flower: Tile;
+  readonly replacement: Tile | null;
+}
+
+export interface TileDiscardedEvent extends GameEventBase {
+  readonly type: 'TILE_DISCARDED';
+  readonly player: PlayerId;
+  readonly tile: Tile;
+}
+
+export interface TurnAdvancedEvent extends GameEventBase {
+  readonly type: 'TURN_ADVANCED';
+  readonly player: PlayerId;
+  readonly phase: TurnPhase;
+}
+
+export interface WallExhaustedEvent extends GameEventBase {
+  readonly type: 'WALL_EXHAUSTED';
+}
+
+export interface HandWonEvent extends GameEventBase {
+  readonly type: 'HAND_WON';
+  readonly player: PlayerId;
+  readonly selfDraw: boolean;
+  readonly discardedBy: PlayerId | null;
+  readonly deltas: readonly number[];
+}
+
+export interface NextHandEvent extends GameEventBase {
+  readonly type: 'NEXT_HAND';
+  readonly dealer: PlayerId;
+  readonly prevailingWind: Wind;
+  readonly seatWinds: readonly Wind[];
+  readonly scores: readonly number[];
+}
+
+export interface ChowDeclaredEvent extends GameEventBase {
+  readonly type: 'CHOW_DECLARED';
+  readonly player: PlayerId;
+  readonly discard: Tile;
+  readonly tiles: readonly Tile[];
+}
+
+export interface PongDeclaredEvent extends GameEventBase {
+  readonly type: 'PONG_DECLARED';
+  readonly player: PlayerId;
+  readonly tile: Tile;
+}
+
+export interface KongDeclaredEvent extends GameEventBase {
+  readonly type: 'KONG_DECLARED';
+  readonly player: PlayerId;
+  readonly tile: Tile;
+  readonly concealed: boolean;
+}
+
+export interface DealerChangedEvent extends GameEventBase {
+  readonly type: 'DEALER_CHANGED';
+  readonly previousDealer: PlayerId;
+  readonly dealer: PlayerId;
+}
+
+export type GameEvent =
+  | HandDealtEvent
+  | TileDrawnEvent
+  | FlowerReplacedEvent
+  | TileDiscardedEvent
+  | TurnAdvancedEvent
+  | WallExhaustedEvent
+  | HandWonEvent
+  | ChowDeclaredEvent
+  | PongDeclaredEvent
+  | KongDeclaredEvent
+  | DealerChangedEvent
+  | NextHandEvent;
+
+export type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
+
+export type GameEventDraft = DistributiveOmit<GameEvent, 'seq'>;
+
+export function recordEvent(
+  state: GameState,
+  draft: GameEventDraft,
+): { readonly state: GameState; readonly event: GameEvent } {
+  const event = { ...draft, seq: state.nextSeq } as GameEvent;
+  const nextState: GameState = {
+    ...state,
+    events: [...state.events, event],
+    nextSeq: state.nextSeq + 1,
+  };
+  return { state: nextState, event };
+}
+
+export function recordEvents(
+  state: GameState,
+  drafts: readonly GameEventDraft[],
+): { readonly state: GameState; readonly events: readonly GameEvent[] } {
+  let current = state;
+  const events: GameEvent[] = [];
+  for (const draft of drafts) {
+    const result = recordEvent(current, draft);
+    current = result.state;
+    events.push(result.event);
+  }
+  return { state: current, events };
+}

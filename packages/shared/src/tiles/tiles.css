@@ -1,0 +1,167 @@
+/* Reusable mahjong tile faces and backs, plus the shared felt/typography tokens
+   that the board and any tile consumer read. Faces are cream/ivory with a
+   suit-coloured corner index and an inline-SVG glyph; backs are mid-green. */
+:root {
+  --mj-felt: #0b3d2e;
+  --mj-felt-2: #0e4a37;
+  --mj-rail: #072a1c;
+  --mj-line: rgba(245, 239, 224, 0.14);
+  --mj-cream: #f6f0e2;
+  --mj-cream-2: #efe6d2;
+  --mj-cream-edge: #cbbf9f;
+  --mj-ink: #2c2823;
+  --mj-char: #b02a20;
+  --mj-dot: #1f5fb0;
+  --mj-bam: #1f7a3d;
+  --mj-honor: #2c2823;
+  --mj-dragon: #b02a20;
+  --mj-dragon-red: #b02a20;
+  --mj-dragon-green: #1f7a3d;
+  --mj-dragon-white: #1f5fb0;
+  --mj-flower: #9c3f97;
+  --mj-back: #2f6f4f;
+  --mj-back-2: #24583e;
+  --mj-back-edge: #163f2c;
+  --mj-amber: #e6a417;
+  --mj-amber-2: #f4b52c;
+}
+
+/* Backs: opponent concealed hands as count backs facing their seat. */
+.mj-backs {
+  display: flex;
+  gap: 2px;
+}
+.mj-backs--top,
+.mj-backs--bottom,
+.mj-backs--left,
+.mj-backs--right {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Tile faces and backs. */
+.mj-tile {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 5 / 7;
+  border-radius: 4px;
+  background: linear-gradient(160deg, var(--mj-cream), var(--mj-cream-2));
+  border: 1px solid var(--mj-cream-edge);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: var(--mj-ink);
+  overflow: hidden;
+}
+.mj-tile--xs {
+  width: 18px;
+}
+.mj-tile--sm {
+  width: 26px;
+}
+.mj-tile--md {
+  width: 34px;
+}
+.mj-tile--lg {
+  width: 46px;
+}
+.mj-tile--hl {
+  border-color: var(--mj-amber);
+  box-shadow: 0 0 0 2px var(--mj-amber), 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+.mj-tile--back {
+  background: linear-gradient(160deg, var(--mj-back), var(--mj-back-2));
+  border-color: var(--mj-back-edge);
+}
+.mj-tile-corner {
+  position: absolute;
+  top: 1px;
+  left: 2px;
+  font-size: 0.55em;
+  font-weight: 800;
+  line-height: 1;
+}
+.mj-tile--xs .mj-tile-corner {
+  display: none;
+}
+.mj-tile-glyph {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+}
+.mj-glyph {
+  width: 100%;
+  height: 100%;
+}
+.mj-back-art {
+  width: 100%;
+  height: 100%;
+}
+.mj-back-frame {
+  fill: none;
+  stroke: rgba(245, 239, 224, 0.35);
+  stroke-width: 1.5;
+}
+.mj-back-mark {
+  fill: rgba(245, 239, 224, 0.22);
+}
+.mj-back-dot {
+  fill: rgba(245, 239, 224, 0.5);
+}
+
+/* Glyph ink. */
+.mj-glyph text {
+  text-anchor: middle;
+  font-family: "Noto Sans TC", "PingFang TC", "Hiragino Sans", "Microsoft JhengHei",
+    system-ui, sans-serif;
+  font-weight: 700;
+}
+.mj-glyph-num {
+  font-size: 18px;
+}
+.mj-glyph-wan {
+  font-size: 20px;
+}
+.mj-glyph-honour {
+  font-size: 30px;
+}
+.mj-ink-char {
+  fill: var(--mj-char);
+}
+.mj-ink-honor {
+  fill: var(--mj-honor);
+}
+.mj-ink-dragon-red {
+  fill: var(--mj-dragon-red);
+}
+.mj-ink-dragon-green {
+  fill: var(--mj-dragon-green);
+}
+.mj-ink-dragon-white {
+  fill: var(--mj-dragon-white);
+}
+.mj-dot {
+  stroke: rgba(0, 0, 0, 0.25);
+  stroke-width: 0.75;
+}
+.mj-dot-a {
+  fill: var(--mj-dot);
+}
+.mj-dot-b {
+  fill: var(--mj-bam);
+}
+.mj-bam-stick rect {
+  fill: var(--mj-bam);
+}
+.mj-bam-stick line {
+  stroke: rgba(0, 0, 0, 0.35);
+  stroke-width: 1;
+}
+.mj-flower ellipse {
+  fill: var(--mj-flower);
+}
+.mj-flower-core {
+  fill: var(--mj-amber-2);
+}

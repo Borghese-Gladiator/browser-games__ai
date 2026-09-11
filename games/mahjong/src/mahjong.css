@@ -1,0 +1,1072 @@
+/* Mahjong felt table, seen from above. The felt colour and tile-ink tokens live
+   in @portal/shared/tiles.css (imported by the page) so the board, the trainer
+   and the history review share one palette. This file owns only the table
+   layout: seats, name plates, HUD, panels and responsive rules. */
+.mj {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem clamp(0.75rem, 2vw, 2rem) 2rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Top bar: back link, title, room, leave. */
+.mj-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.mj-back {
+  margin: 0;
+  font-weight: 600;
+}
+.mj-topbar h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  letter-spacing: 0.03em;
+}
+.mj-topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.mj-room {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.mj-leave {
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
+}
+
+.mj-muted {
+  color: var(--muted);
+  margin: 0;
+}
+.mj-label {
+  margin: 0 0 0.375rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+/* HUD. */
+.mj-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--cell);
+}
+.mj-hud-stats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.mj-hud-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.mj-hud-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.mj-hud-stat-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.mj-hud-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.mj-hud-controls {
+  display: flex;
+  gap: 0.375rem;
+}
+.mj-hud-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+.mj-hud-btn:hover {
+  background: var(--cell-hover);
+  border-color: var(--accent);
+}
+.mj-hud-btn[aria-pressed="true"] {
+  border-color: var(--mj-amber);
+  color: var(--mj-amber-2);
+}
+.mj-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  stroke: currentColor;
+}
+.mj-icon[stroke] {
+  fill: none;
+}
+
+/* Badges. */
+.mj-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  white-space: nowrap;
+}
+.mj-badge--ruleset {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent);
+}
+.mj-badge--dealer {
+  background: rgba(230, 164, 23, 0.18);
+  color: var(--mj-amber-2);
+}
+.mj-badge--bot {
+  background: var(--cell-hover);
+  color: var(--muted);
+}
+.mj-badge--pattern {
+  background: rgba(31, 122, 61, 0.22);
+  color: #7fd8a0;
+}
+
+.mj-status {
+  text-align: center;
+}
+.mj-status [role="status"] {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--accent);
+  min-height: 1.4em;
+}
+
+.mj-host {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* Layout: felt table plus an insight rail. */
+.mj-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 1rem;
+  align-items: start;
+}
+
+/* Felt table. */
+.mj-felt {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) minmax(180px, 1.5fr) minmax(110px, 1fr);
+  grid-template-rows: auto minmax(150px, auto) auto;
+  grid-template-areas:
+    "top top top"
+    "left centre right"
+    "bottom bottom bottom";
+  gap: 0.75rem;
+  padding: clamp(0.75rem, 1.5vw, 1.25rem);
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 45%, var(--mj-felt-2), var(--mj-felt) 70%);
+  border: 1px solid var(--mj-rail);
+  box-shadow: inset 0 0 0 6px var(--mj-rail);
+}
+.mj-seat-top {
+  grid-area: top;
+}
+.mj-seat-left {
+  grid-area: left;
+}
+.mj-seat-right {
+  grid-area: right;
+}
+.mj-seat-centre {
+  grid-area: centre;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mj-seat-bottom {
+  grid-area: bottom;
+}
+
+/* Opponent seat. */
+.mj-opponent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.12);
+  border: 1px solid transparent;
+}
+.mj-opponent[aria-current="true"] {
+  border-color: var(--mj-amber);
+  box-shadow: 0 0 0 1px var(--mj-amber);
+}
+.mj-opponent--left,
+.mj-opponent--right {
+  align-items: center;
+  text-align: center;
+}
+.mj-opponent-meta {
+  font-size: 0.72rem;
+}
+
+/* Name plate. */
+.mj-plate {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--mj-line);
+}
+.mj-plate--turn {
+  border-color: var(--mj-amber);
+  box-shadow: 0 0 0 1px var(--mj-amber), 0 0 12px rgba(230, 164, 23, 0.35);
+}
+.mj-plate-wind {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 6px;
+  background: var(--mj-cream);
+  color: var(--mj-ink);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.mj-plate-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mj-plate-badges {
+  display: flex;
+  gap: 0.25rem;
+}
+.mj-plate-score {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+/* Centre wall. */
+.mj-centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+.mj-wall-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 3px solid var(--mj-line);
+  background: rgba(0, 0, 0, 0.18);
+}
+.mj-wall-count {
+  font-size: 1.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.mj-wall-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.mj-last-discard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Player area. */
+.mj-player {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-top: 0.5rem;
+}
+.mj-player-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.mj-player section {
+  width: 100%;
+}
+
+/* Tile rows (discards, melds, flowers) and the hand. */
+.mj-tile-row,
+.mj-hand,
+.mj-actions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.mj-hand {
+  gap: 0.375rem;
+  align-items: flex-end;
+}
+.mj-discard-row {
+  min-height: 1.75rem;
+}
+.mj-opponent--left .mj-tile-row,
+.mj-opponent--right .mj-tile-row {
+  justify-content: center;
+}
+
+/* Hand buttons. */
+.mj-tile-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: transform 120ms ease;
+}
+.mj-tile-btn:not(:disabled):hover {
+  transform: translateY(-4px);
+}
+.mj-tile-btn:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+.mj-tile-btn:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.mj-hand-drawn {
+  margin-left: 0.75rem;
+}
+
+/* Action bar. */
+.mj-actionbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.mj-actions {
+  gap: 0.5rem;
+}
+.mj-action-btn {
+  font-size: 0.95rem;
+  font-weight: 700;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  color: var(--text);
+  cursor: pointer;
+}
+.mj-action-btn:hover {
+  background: var(--cell-hover);
+}
+.mj-action-btn--primary {
+  background: var(--mj-amber);
+  border-color: var(--mj-amber);
+  color: #22160a;
+}
+.mj-action-btn--primary:hover {
+  background: var(--mj-amber-2);
+}
+
+/* Turn timer. */
+.mj-timer {
+  width: 100%;
+  max-width: 320px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+.mj-timer-fill {
+  height: 100%;
+  background: var(--mj-amber);
+  transition: width 120ms linear;
+}
+
+/* Insight rail. */
+.mj-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.mj-panel {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--cell);
+  padding: 0.75rem 0.875rem;
+}
+.mj-panel-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.mj-copies {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.mj-copies-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+.mj-copies-label {
+  color: var(--muted);
+}
+.mj-copies-count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.mj-copies-count strong {
+  color: var(--text);
+}
+
+/* Tier accent tokens for the tai pill and the fan and pattern guide. */
+:root {
+  --mj-tier-guaranteed: #2dd4bf;
+  --mj-tier-on-track: #60a5fa;
+  --mj-tier-potential: var(--mj-amber-2);
+}
+
+/* Tai pill. It opens the fan and pattern guide. */
+.mj-tai-pill {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+.mj-tai-pill:hover {
+  background: var(--cell-hover);
+  border-color: var(--accent);
+}
+.mj-tai-pill:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.mj-tai-pill-guaranteed {
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--mj-tier-guaranteed);
+}
+.mj-tai-pill-sep {
+  color: var(--muted);
+}
+.mj-tai-pill-potential {
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--mj-tier-potential);
+}
+
+/* Fan and pattern guide dialog. Reuses the modal overlay pattern of .mj-paused
+   and the panel/badge/button visual language. */
+.mj-guide-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(4, 20, 13, 0.72);
+  z-index: 30;
+}
+.mj-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  width: min(880px, 100%);
+  max-height: min(90vh, 720px);
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.mj-guide:focus-visible {
+  outline: none;
+}
+.mj-guide-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mj-guide-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.mj-guide-intro {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+/* Three accented tier summary cards. */
+.mj-guide-summaries {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+.mj-guide-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--mj-tier);
+}
+.mj-guide-summary--guaranteed {
+  --mj-tier: var(--mj-tier-guaranteed);
+}
+.mj-guide-summary--on-track {
+  --mj-tier: var(--mj-tier-on-track);
+}
+.mj-guide-summary--potential {
+  --mj-tier: var(--mj-tier-potential);
+}
+.mj-guide-summary-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--mj-tier);
+}
+.mj-guide-summary-total {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+.mj-guide-summary-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.mj-guide-summary-unit {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.mj-guide-summary-desc {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+/* Filter chips. */
+.mj-guide-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.mj-guide-chip {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+.mj-guide-chip:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.mj-guide-chip--on {
+  color: var(--mj-tier);
+  border-color: var(--mj-tier);
+  background: color-mix(in srgb, var(--mj-tier) 14%, transparent);
+}
+.mj-guide-chip--guaranteed {
+  --mj-tier: var(--mj-tier-guaranteed);
+}
+.mj-guide-chip--on-track {
+  --mj-tier: var(--mj-tier-on-track);
+}
+.mj-guide-chip--potential {
+  --mj-tier: var(--mj-tier-potential);
+}
+
+/* Master list plus detail pane. */
+.mj-guide-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 0.875rem;
+  min-height: 0;
+  flex: 1;
+}
+.mj-guide-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+.mj-guide-empty {
+  font-size: 0.82rem;
+  padding: 0.75rem;
+}
+.mj-guide-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--mj-tier);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+.mj-guide-card:hover {
+  background: var(--cell-hover);
+}
+.mj-guide-card:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.mj-guide-card--selected {
+  border-color: var(--mj-tier);
+  box-shadow: inset 0 0 0 1px var(--mj-tier);
+}
+.mj-guide-card--guaranteed {
+  --mj-tier: var(--mj-tier-guaranteed);
+}
+.mj-guide-card--on-track {
+  --mj-tier: var(--mj-tier-on-track);
+}
+.mj-guide-card--potential {
+  --mj-tier: var(--mj-tier-potential);
+}
+.mj-guide-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.mj-guide-en {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.mj-guide-zh {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.mj-guide-tai {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.mj-guide-rule {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* Tier badges. */
+.mj-tier-badge {
+  align-self: flex-start;
+  color: var(--mj-tier);
+  background: color-mix(in srgb, var(--mj-tier) 16%, transparent);
+}
+.mj-tier-badge--guaranteed {
+  --mj-tier: var(--mj-tier-guaranteed);
+}
+.mj-tier-badge--on-track {
+  --mj-tier: var(--mj-tier-on-track);
+}
+.mj-tier-badge--potential {
+  --mj-tier: var(--mj-tier-potential);
+}
+
+/* Detail pane. */
+.mj-guide-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.875rem;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  overflow-y: auto;
+  min-height: 0;
+}
+.mj-guide-detail-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.mj-guide-detail-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.mj-guide-detail-tai {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+.mj-guide-detail-rule {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.mj-guide-detail-desc {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+/* Footer with a bottom-right Close button. */
+.mj-guide-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .mj-guide-summaries {
+    grid-template-columns: 1fr;
+  }
+  .mj-guide-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mj-restart {
+  align-self: center;
+}
+
+/* Hand-end screen. It reuses the fan-guide modal overlay (.mj-guide-backdrop)
+   and the panel, badge, button and turn-timer visual language. */
+.mj-handend {
+  --mj-good: #4ade80;
+  --mj-bad: #f87171;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  width: min(900px, 100%);
+  max-height: min(92vh, 760px);
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+}
+.mj-handend-header {
+  text-align: center;
+}
+.mj-handend-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.mj-handend-sub {
+  margin: 0.25rem 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Win line: the winning tile face beside the source of the win. */
+.mj-handend-winline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.mj-handend-winline-text {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* Responsive 2x2 grid of the four final hands. */
+.mj-handend-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.mj-handend-hand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 2px solid var(--line);
+}
+.mj-handend-hand--winner {
+  border-color: var(--mj-amber);
+  box-shadow: 0 0 0 1px var(--mj-amber);
+}
+.mj-handend-hand--dealtin {
+  border-color: var(--mj-bad);
+  box-shadow: 0 0 0 1px var(--mj-bad);
+}
+.mj-handend-hand-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.mj-handend-hand-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.mj-badge--winner {
+  background: color-mix(in srgb, var(--mj-amber) 20%, transparent);
+  color: var(--mj-amber-2);
+}
+.mj-badge--dealtin {
+  background: color-mix(in srgb, var(--mj-bad) 22%, transparent);
+  color: var(--mj-bad);
+}
+
+/* Bottom row: tai breakdown on the left, score-delta table on the right. */
+.mj-handend-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.875rem;
+  align-items: start;
+}
+.mj-tai-list {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.mj-tai-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+.mj-tai-line-name {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.mj-tai-line-en {
+  font-weight: 700;
+}
+.mj-tai-line-zh {
+  color: var(--muted);
+}
+.mj-tai-line-tai {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.mj-tai-total {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.mj-score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.mj-score-table th,
+.mj-score-table td {
+  padding: 0.3rem 0.4rem;
+}
+.mj-score-table thead th {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 600;
+  text-align: right;
+}
+.mj-score-table thead th:first-child {
+  text-align: left;
+}
+.mj-score-name {
+  text-align: left;
+  font-weight: 600;
+}
+.mj-score-table td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.mj-delta {
+  font-weight: 700;
+}
+.mj-delta--positive {
+  color: var(--mj-good);
+}
+.mj-delta--negative {
+  color: var(--mj-bad);
+}
+.mj-delta--zero {
+  color: var(--muted);
+}
+
+/* Controls: primary amber Next round with a thin auto-advance bar, plus a
+   secondary End game. The bar reuses the turn-timer fill. */
+.mj-handend-controls {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+.mj-handend-next-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.mj-handend-progress {
+  width: 100%;
+  max-width: none;
+  height: 3px;
+}
+.mj-handend-end {
+  background: var(--cell);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+.mj-handend-end:hover {
+  background: var(--cell-hover);
+}
+
+@media (max-width: 640px) {
+  .mj-handend-grid {
+    grid-template-columns: 1fr;
+  }
+  .mj-handend-cols {
+    grid-template-columns: 1fr;
+  }
+  .mj-handend-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Paused overlay. */
+.mj-paused {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 20, 13, 0.72);
+  z-index: 20;
+}
+.mj-paused-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  background: var(--cell);
+  border: 1px solid var(--line);
+}
+.mj-paused-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Responsive: fold the insight rail under the table, then stack seats. */
+@media (max-width: 900px) {
+  .mj-layout {
+    grid-template-columns: 1fr;
+  }
+  .mj-aside {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .mj-aside > * {
+    flex: 1 1 220px;
+  }
+}
+
+@media (max-width: 560px) {
+  .mj-felt {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "top"
+      "left"
+      "right"
+      "centre"
+      "bottom";
+  }
+  .mj-hud-stats {
+    gap: 1rem;
+  }
+  .mj-topbar h1 {
+    font-size: 1.15rem;
+  }
+}
