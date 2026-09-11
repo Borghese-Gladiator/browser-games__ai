@@ -5,7 +5,7 @@ import type { Meld } from '../tiles/meld.ts';
 import { tileToKind } from '../tiles/tile-kind.ts';
 import { DEFAULT_TAIWANESE_RULES } from '../rules/taiwanese.ts';
 import type { GameAction } from '../game/actions.ts';
-import type { GameState, PlayerId, PlayerState } from '../game/state.ts';
+import type { GameState, PlayerId } from '../game/state.ts';
 import { createGame } from '../game/deal.ts';
 import { applyAction } from '../game/reducer.ts';
 import { getAvailableActions } from '../game/getAvailableActions.ts';
@@ -34,20 +34,29 @@ function chooseActingSeat(state: GameState): PlayerId | null {
   return null;
 }
 
-function claimState(hand: Tile[], melds: Meld[], discard: Tile, seat: PlayerId): GameState {
-  const empty: PlayerState = { hand: [], melds: [], flowers: [], discards: [], score: 0 };
-  const players: PlayerState[] = [empty, empty, empty, empty];
-  players[seat] = { hand, melds, flowers: [], discards: [], score: 0 };
-  return {
+function seatedState(hand: Tile[], melds: Meld[], seat: PlayerId): GameState {
+  const base = createGame({
     rules: DEFAULT_TAIWANESE_RULES,
-    players,
+    seed: 1,
+    dealer: 0,
+    roundWind: 'E',
+  });
+  const players = base.players.slice();
+  players[seat] = { ...players[seat], hand, melds };
+  return { ...base, players };
+}
+
+function claimState(hand: Tile[], melds: Meld[], discard: Tile, seat: PlayerId): GameState {
+  const base = seatedState(hand, melds, seat);
+  return {
+    ...base,
     pendingClaim: {
       discard: { player: 0, tile: discard },
       eligible: [],
       declarations: [],
       pending: [seat],
     },
-  } as unknown as GameState;
+  };
 }
 
 describe('createStandardAi', () => {
@@ -146,14 +155,7 @@ describe('shouldClaimPong', () => {
 });
 
 function discardState(hand: Tile[], melds: Meld[], seat: PlayerId): GameState {
-  const empty: PlayerState = { hand: [], melds: [], flowers: [], discards: [], score: 0 };
-  const players: PlayerState[] = [empty, empty, empty, empty];
-  players[seat] = { hand, melds, flowers: [], discards: [], score: 0 };
-  return {
-    rules: DEFAULT_TAIWANESE_RULES,
-    players,
-    pendingClaim: null,
-  } as unknown as GameState;
+  return seatedState(hand, melds, seat);
 }
 
 describe('createStandardAi discard delegation', () => {
