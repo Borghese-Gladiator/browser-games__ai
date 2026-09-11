@@ -10,14 +10,15 @@
         "flowersEnabled": true,
         "minimumTai": 0,
         "dealerRepeatsOnWin": true,
-        "sevenPairsEnabled": true
+        "sevenPairsEnabled": true,
+        "startingScore": 500
       },
       "seed": "e2e-review-hand",
       "dealer": 0,
       "roundWind": "E"
     },
     "timestamp": 1700000000000,
-    "stateHash": "c12737a998a41f8d"
+    "stateHash": "07f6821e99b4265f"
   },
   {
     "gameId": "E2EREVIEW",
@@ -27,7 +28,7 @@
       "type": "DEAL"
     },
     "timestamp": 1700000000001,
-    "stateHash": "4e095daad596db4a"
+    "stateHash": "3a4f8a4779481f2d"
   },
   {
     "gameId": "E2EREVIEW",
@@ -43,7 +44,7 @@
       }
     },
     "timestamp": 1700000000002,
-    "stateHash": "d889b3cbbd397f9e"
+    "stateHash": "5b88e204b5e66f3a"
   },
   {
     "gameId": "E2EREVIEW",
@@ -54,7 +55,7 @@
       "player": 1
     },
     "timestamp": 1700000000003,
-    "stateHash": "3b44cf09a0e0f0b0"
+    "stateHash": "758e6afe1c3de0e8"
   },
   {
     "gameId": "E2EREVIEW",
@@ -70,7 +71,7 @@
       }
     },
     "timestamp": 1700000000004,
-    "stateHash": "e522d4b6a3e05f64"
+    "stateHash": "481878eeae22ec2c"
   },
   {
     "gameId": "E2EREVIEW",
@@ -81,7 +82,7 @@
       "player": 3
     },
     "timestamp": 1700000000005,
-    "stateHash": "39ee18ff6c9dbfd7"
+    "stateHash": "56b439d899f1fbb7"
   },
   {
     "gameId": "E2EREVIEW",
@@ -92,7 +93,7 @@
       "player": 2
     },
     "timestamp": 1700000000006,
-    "stateHash": "d2414a2aa4f54312"
+    "stateHash": "40e863c9ebd85e2f"
   },
   {
     "gameId": "E2EREVIEW",
@@ -108,7 +109,7 @@
       }
     },
     "timestamp": 1700000000007,
-    "stateHash": "2b5ee11df8a46d2e"
+    "stateHash": "92f7a12623cec481"
   },
   {
     "gameId": "E2EREVIEW",
@@ -119,7 +120,7 @@
       "player": 3
     },
     "timestamp": 1700000000008,
-    "stateHash": "0d135089f7d1e0c5"
+    "stateHash": "c860f2ac05504c34"
   },
   {
     "gameId": "E2EREVIEW",
@@ -135,7 +136,7 @@
       }
     },
     "timestamp": 1700000000009,
-    "stateHash": "c316a174403bdd90"
+    "stateHash": "d6209ddc2da6fac7"
   },
   {
     "gameId": "E2EREVIEW",
@@ -146,7 +147,7 @@
       "player": 0
     },
     "timestamp": 1700000000010,
-    "stateHash": "bcfc9a5f1908dcb1"
+    "stateHash": "7c0afedc8e64a28b"
   },
   {
     "gameId": "E2EREVIEW",
@@ -162,7 +163,7 @@
       }
     },
     "timestamp": 1700000000011,
-    "stateHash": "1cc14ecec1ca6429"
+    "stateHash": "87716878cbd2b78f"
   },
   {
     "gameId": "E2EREVIEW",
@@ -173,7 +174,7 @@
       "player": 1
     },
     "timestamp": 1700000000012,
-    "stateHash": "265970cbe5c210ed"
+    "stateHash": "c1f341bd90a5e89e"
   },
   {
     "gameId": "E2EREVIEW",
@@ -184,7 +185,7 @@
       "player": 1
     },
     "timestamp": 1700000000013,
-    "stateHash": "f1a723875090f2d7"
+    "stateHash": "84a6490fd2b298db"
   },
   {
     "gameId": "E2EREVIEW",
@@ -200,7 +201,7 @@
       }
     },
     "timestamp": 1700000000014,
-    "stateHash": "40cf3f1a33ae9823"
+    "stateHash": "1611061045ad16a2"
   },
   {
     "gameId": "E2EREVIEW",
@@ -211,7 +212,7 @@
       "player": 2
     },
     "timestamp": 1700000000015,
-    "stateHash": "6c27c4df227e22bd"
+    "stateHash": "3ca0933551fe97b4"
   },
   {
     "gameId": "E2EREVIEW",
@@ -222,7 +223,7 @@
       "player": 2
     },
     "timestamp": 1700000000016,
-    "stateHash": "e2b57758e0487239"
+    "stateHash": "be661aee16cd0c24"
   },
   {
     "gameId": "E2EREVIEW",
@@ -238,7 +239,7 @@
       }
     },
     "timestamp": 1700000000017,
-    "stateHash": "4bc5cd21b7bb09c0"
+    "stateHash": "674a1c0f7758ddd7"
   },
   {
     "gameId": "E2EREVIEW",
@@ -249,7 +250,7 @@
       "player": 3
     },
     "timestamp": 1700000000018,
-    "stateHash": "749d714bf4d26ae5"
+    "stateHash": "3253eec6ee048eaf"
   },
   {
     "gameId": "E2EREVIEW",
@@ -265,7 +266,7 @@
       }
     },
     "timestamp": 1700000000019,
-    "stateHash": "54311932dea4668f"
+    "stateHash": "194d299296e88ea5"
   },
   {
     "gameId": "E2EREVIEW",
@@ -276,7 +277,7 @@
       "player": 0
     },
     "timestamp": 1700000000020,
-    "stateHash": "156965af8b44988a"
+    "stateHash": "d7014a60ef8e12c8"
   },
   {
     "gameId": "E2EREVIEW",
@@ -292,7 +293,7 @@
       }
     },
     "timestamp": 1700000000021,
-    "stateHash": "e4658a10e5609670"
+    "stateHash": "8e1308088827c049"
   },
   {
     "gameId": "E2EREVIEW",
@@ -303,7 +304,7 @@
       "player": 1
     },
     "timestamp": 1700000000022,
-    "stateHash": "a963c7c18ad1b523"
+    "stateHash": "43acb99f6d4686be"
   },
   {
     "gameId": "E2EREVIEW",
@@ -319,7 +320,7 @@
       }
     },
     "timestamp": 1700000000023,
-    "stateHash": "546ea6f1ea7b5a10"
+    "stateHash": "40607309dbfabcc1"
   },
   {
     "gameId": "E2EREVIEW",
@@ -330,7 +331,7 @@
       "player": 2
     },
     "timestamp": 1700000000024,
-    "stateHash": "0caa02f4cb42937b"
+    "stateHash": "0bc7760efd9ec2ae"
   },
   {
     "gameId": "E2EREVIEW",
@@ -346,7 +347,7 @@
       }
     },
     "timestamp": 1700000000025,
-    "stateHash": "e6e6e2c534f52df6"
+    "stateHash": "52ce0fad109f62cb"
   },
   {
     "gameId": "E2EREVIEW",
@@ -357,7 +358,7 @@
       "player": 3
     },
     "timestamp": 1700000000026,
-    "stateHash": "082682fc6eeba54a"
+    "stateHash": "0666779f6f3bacea"
   },
   {
     "gameId": "E2EREVIEW",
@@ -368,7 +369,7 @@
       "player": 3
     },
     "timestamp": 1700000000027,
-    "stateHash": "f63c4557b086d0ba"
+    "stateHash": "76f88672aefc0924"
   },
   {
     "gameId": "E2EREVIEW",
@@ -384,7 +385,7 @@
       }
     },
     "timestamp": 1700000000028,
-    "stateHash": "ef643308fc9d5169"
+    "stateHash": "ce8e96fcc19ca7eb"
   },
   {
     "gameId": "E2EREVIEW",
@@ -395,7 +396,7 @@
       "player": 0
     },
     "timestamp": 1700000000029,
-    "stateHash": "dcc1871b9635f2c8"
+    "stateHash": "325719e8f498e9ff"
   },
   {
     "gameId": "E2EREVIEW",
@@ -411,7 +412,7 @@
       }
     },
     "timestamp": 1700000000030,
-    "stateHash": "17c79f4f549d581a"
+    "stateHash": "5f67899c71c8a922"
   },
   {
     "gameId": "E2EREVIEW",
@@ -422,7 +423,7 @@
       "player": 1
     },
     "timestamp": 1700000000031,
-    "stateHash": "e3dab032a332b09a"
+    "stateHash": "ebfd778a1cda7f65"
   },
   {
     "gameId": "E2EREVIEW",
@@ -438,7 +439,7 @@
       }
     },
     "timestamp": 1700000000032,
-    "stateHash": "de3d5fc6d56c5dcc"
+    "stateHash": "38c66b0c7e28f44d"
   },
   {
     "gameId": "E2EREVIEW",
@@ -449,7 +450,7 @@
       "player": 2
     },
     "timestamp": 1700000000033,
-    "stateHash": "bbdf991fbbb4b87b"
+    "stateHash": "33bea8983bb1fddd"
   },
   {
     "gameId": "E2EREVIEW",
@@ -465,7 +466,7 @@
       }
     },
     "timestamp": 1700000000034,
-    "stateHash": "0859adc4ec24cec6"
+    "stateHash": "0ac4c319f0401ee0"
   },
   {
     "gameId": "E2EREVIEW",
@@ -476,7 +477,7 @@
       "player": 3
     },
     "timestamp": 1700000000035,
-    "stateHash": "7fd85d3f63334ae8"
+    "stateHash": "ea06e0e4884bc7a3"
   },
   {
     "gameId": "E2EREVIEW",
@@ -492,7 +493,7 @@
       }
     },
     "timestamp": 1700000000036,
-    "stateHash": "594fc7166dcb3d9c"
+    "stateHash": "eb2340c72eb2e98d"
   },
   {
     "gameId": "E2EREVIEW",
@@ -503,7 +504,7 @@
       "player": 0
     },
     "timestamp": 1700000000037,
-    "stateHash": "f0af36044cc69090"
+    "stateHash": "1a97db82724ad888"
   },
   {
     "gameId": "E2EREVIEW",
@@ -514,7 +515,7 @@
       "player": 0
     },
     "timestamp": 1700000000038,
-    "stateHash": "05a13dc0626ccf5e"
+    "stateHash": "9dc35d3a73055229"
   },
   {
     "gameId": "E2EREVIEW",
@@ -530,7 +531,7 @@
       }
     },
     "timestamp": 1700000000039,
-    "stateHash": "1c89e101cff27041"
+    "stateHash": "1f05a5d7f462810a"
   },
   {
     "gameId": "E2EREVIEW",
@@ -541,7 +542,7 @@
       "player": 1
     },
     "timestamp": 1700000000040,
-    "stateHash": "872d863b3de0a3da"
+    "stateHash": "450423da6c8ce733"
   },
   {
     "gameId": "E2EREVIEW",
@@ -557,7 +558,7 @@
       }
     },
     "timestamp": 1700000000041,
-    "stateHash": "e806eb41b61a36c3"
+    "stateHash": "d25eddbf01324cd6"
   },
   {
     "gameId": "E2EREVIEW",
@@ -568,7 +569,7 @@
       "player": 2
     },
     "timestamp": 1700000000042,
-    "stateHash": "17ad0846afe279d5"
+    "stateHash": "33a50ea78ffab1e4"
   },
   {
     "gameId": "E2EREVIEW",
@@ -584,7 +585,7 @@
       }
     },
     "timestamp": 1700000000043,
-    "stateHash": "c23e92263975ac5b"
+    "stateHash": "327b6ddfff523f9b"
   },
   {
     "gameId": "E2EREVIEW",
@@ -595,7 +596,7 @@
       "player": 3
     },
     "timestamp": 1700000000044,
-    "stateHash": "40e1aeee29fbde9b"
+    "stateHash": "c539535b34e5efa7"
   },
   {
     "gameId": "E2EREVIEW",
@@ -611,7 +612,7 @@
       }
     },
     "timestamp": 1700000000045,
-    "stateHash": "5fad169bf62362ac"
+    "stateHash": "f9b7fb69fb124224"
   },
   {
     "gameId": "E2EREVIEW",
@@ -622,7 +623,7 @@
       "player": 0
     },
     "timestamp": 1700000000046,
-    "stateHash": "07a6fe4768020ffa"
+    "stateHash": "99b5968bb4119370"
   },
   {
     "gameId": "E2EREVIEW",
@@ -633,7 +634,7 @@
       "player": 0
     },
     "timestamp": 1700000000047,
-    "stateHash": "08b3e20efa8712f0"
+    "stateHash": "a69a0e3e13ef20f0"
   },
   {
     "gameId": "E2EREVIEW",
@@ -649,7 +650,7 @@
       }
     },
     "timestamp": 1700000000048,
-    "stateHash": "9b540bf03c7bac13"
+    "stateHash": "2627a2a8f32dbf4b"
   },
   {
     "gameId": "E2EREVIEW",
@@ -660,7 +661,7 @@
       "player": 1
     },
     "timestamp": 1700000000049,
-    "stateHash": "3baa09f3027a0565"
+    "stateHash": "29df62275bdfca97"
   },
   {
     "gameId": "E2EREVIEW",
@@ -676,7 +677,7 @@
       }
     },
     "timestamp": 1700000000050,
-    "stateHash": "1c97756fa0cdbe75"
+    "stateHash": "36598cd8248cb5bf"
   },
   {
     "gameId": "E2EREVIEW",
@@ -687,7 +688,7 @@
       "player": 2
     },
     "timestamp": 1700000000051,
-    "stateHash": "e35422cf2d729ba6"
+    "stateHash": "aed6cd917f7f4d25"
   },
   {
     "gameId": "E2EREVIEW",
@@ -698,7 +699,7 @@
       "player": 2
     },
     "timestamp": 1700000000052,
-    "stateHash": "11b730e316f43ee9"
+    "stateHash": "a60d4b73f136a789"
   },
   {
     "gameId": "E2EREVIEW",
@@ -714,7 +715,7 @@
       }
     },
     "timestamp": 1700000000053,
-    "stateHash": "7a1f82803b695aca"
+    "stateHash": "e483cd3eb76ecbba"
   },
   {
     "gameId": "E2EREVIEW",
@@ -725,7 +726,7 @@
       "player": 3
     },
     "timestamp": 1700000000054,
-    "stateHash": "50acd87b8ce5577e"
+    "stateHash": "feb07a955643d098"
   },
   {
     "gameId": "E2EREVIEW",
@@ -741,7 +742,7 @@
       }
     },
     "timestamp": 1700000000055,
-    "stateHash": "3008b4cd300e5039"
+    "stateHash": "9fccbfa95f0c9a02"
   },
   {
     "gameId": "E2EREVIEW",
@@ -752,7 +753,7 @@
       "player": 0
     },
     "timestamp": 1700000000056,
-    "stateHash": "bfa50447346647a8"
+    "stateHash": "d6d19359da81b116"
   },
   {
     "gameId": "E2EREVIEW",
@@ -768,7 +769,7 @@
       }
     },
     "timestamp": 1700000000057,
-    "stateHash": "3a0caeee23356aeb"
+    "stateHash": "45b56ff857c07f59"
   },
   {
     "gameId": "E2EREVIEW",
@@ -779,7 +780,7 @@
       "player": 1
     },
     "timestamp": 1700000000058,
-    "stateHash": "eee90ce7a95f24f3"
+    "stateHash": "a8f4ca8771f8ed04"
   },
   {
     "gameId": "E2EREVIEW",
@@ -795,7 +796,7 @@
       }
     },
     "timestamp": 1700000000059,
-    "stateHash": "5c2de7201cbf3cab"
+    "stateHash": "b1fada72e780bbbf"
   },
   {
     "gameId": "E2EREVIEW",
@@ -806,7 +807,7 @@
       "player": 2
     },
     "timestamp": 1700000000060,
-    "stateHash": "56152207e4e1071b"
+    "stateHash": "497db4bbac3400d7"
   },
   {
     "gameId": "E2EREVIEW",
@@ -817,7 +818,7 @@
       "player": 2
     },
     "timestamp": 1700000000061,
-    "stateHash": "f4eeb42bd2e9ef5b"
+    "stateHash": "f1cddd92176aa63d"
   },
   {
     "gameId": "E2EREVIEW",
@@ -833,7 +834,7 @@
       }
     },
     "timestamp": 1700000000062,
-    "stateHash": "38a1c70343bb11da"
+    "stateHash": "9083c98a43ff5e7e"
   },
   {
     "gameId": "E2EREVIEW",
@@ -844,7 +845,7 @@
       "player": 3
     },
     "timestamp": 1700000000063,
-    "stateHash": "8b5bcfc358a3f58f"
+    "stateHash": "a2f32455f1bb625e"
   },
   {
     "gameId": "E2EREVIEW",
@@ -860,7 +861,7 @@
       }
     },
     "timestamp": 1700000000064,
-    "stateHash": "8c15541c62a1703d"
+    "stateHash": "1826bab6b8ca39e0"
   },
   {
     "gameId": "E2EREVIEW",
@@ -871,7 +872,7 @@
       "player": 2
     },
     "timestamp": 1700000000065,
-    "stateHash": "647f39e2cda181f2"
+    "stateHash": "b9f880826b8a51b0"
   },
   {
     "gameId": "E2EREVIEW",
@@ -882,7 +883,7 @@
       "player": 0
     },
     "timestamp": 1700000000066,
-    "stateHash": "50106e827e29380a"
+    "stateHash": "1c48dd5751571af6"
   },
   {
     "gameId": "E2EREVIEW",
@@ -898,7 +899,7 @@
       }
     },
     "timestamp": 1700000000067,
-    "stateHash": "e95e006340fe2f61"
+    "stateHash": "11d13818ab13a3dc"
   },
   {
     "gameId": "E2EREVIEW",
@@ -909,7 +910,7 @@
       "player": 1
     },
     "timestamp": 1700000000068,
-    "stateHash": "4d77db16e89e6de2"
+    "stateHash": "94fc9e075955256a"
   },
   {
     "gameId": "E2EREVIEW",
@@ -925,7 +926,7 @@
       }
     },
     "timestamp": 1700000000069,
-    "stateHash": "72735bc01cf79f16"
+    "stateHash": "9a41eef3bb189708"
   },
   {
     "gameId": "E2EREVIEW",
@@ -936,7 +937,7 @@
       "player": 2
     },
     "timestamp": 1700000000070,
-    "stateHash": "c7ff51738994ca10"
+    "stateHash": "1b23a2e0235faa48"
   },
   {
     "gameId": "E2EREVIEW",
@@ -947,7 +948,7 @@
       "player": 2
     },
     "timestamp": 1700000000071,
-    "stateHash": "763bfed7046cbfa9"
+    "stateHash": "0a26f350a8adb531"
   },
   {
     "gameId": "E2EREVIEW",
@@ -963,7 +964,7 @@
       }
     },
     "timestamp": 1700000000072,
-    "stateHash": "10dcadcf2655960d"
+    "stateHash": "f2a258871adc3e04"
   },
   {
     "gameId": "E2EREVIEW",
@@ -974,7 +975,7 @@
       "player": 3
     },
     "timestamp": 1700000000073,
-    "stateHash": "cbbb2386d3c26997"
+    "stateHash": "ecac085949681eee"
   },
   {
     "gameId": "E2EREVIEW",
@@ -985,7 +986,7 @@
       "player": 3
     },
     "timestamp": 1700000000074,
-    "stateHash": "cafea7678dc57285"
+    "stateHash": "b24921fd94c3ad08"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1001,7 +1002,7 @@
       }
     },
     "timestamp": 1700000000075,
-    "stateHash": "4383d0a30704cb05"
+    "stateHash": "999c84e126898756"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1012,7 +1013,7 @@
       "player": 0
     },
     "timestamp": 1700000000076,
-    "stateHash": "60c8506be5043e42"
+    "stateHash": "2e01aed5cbc9acc8"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1028,7 +1029,7 @@
       }
     },
     "timestamp": 1700000000077,
-    "stateHash": "f8ad68106bc829f6"
+    "stateHash": "9e7702ad554b2881"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1039,7 +1040,7 @@
       "player": 1
     },
     "timestamp": 1700000000078,
-    "stateHash": "a6f6c9c860828ab4"
+    "stateHash": "8769ab8cd3f3f5c3"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1055,7 +1056,7 @@
       }
     },
     "timestamp": 1700000000079,
-    "stateHash": "ac7aa35a76c50659"
+    "stateHash": "83fd4ee754635432"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1066,7 +1067,7 @@
       "player": 2
     },
     "timestamp": 1700000000080,
-    "stateHash": "4d34308f001b7dca"
+    "stateHash": "8cf87c7515573772"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1082,7 +1083,7 @@
       }
     },
     "timestamp": 1700000000081,
-    "stateHash": "cc4316dbccfdc9f2"
+    "stateHash": "73bd200d7a8df41d"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1093,7 +1094,7 @@
       "player": 3
     },
     "timestamp": 1700000000082,
-    "stateHash": "1821fd2d1ef4d0c2"
+    "stateHash": "a8b82499a98adfa6"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1109,7 +1110,7 @@
       }
     },
     "timestamp": 1700000000083,
-    "stateHash": "252581f5ecbe6f2a"
+    "stateHash": "b3d55a7edc0ef478"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1120,7 +1121,7 @@
       "player": 1
     },
     "timestamp": 1700000000084,
-    "stateHash": "d2a9f63ffb16dbe0"
+    "stateHash": "f9b2420ac052a024"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1131,7 +1132,7 @@
       "player": 0
     },
     "timestamp": 1700000000085,
-    "stateHash": "69890dda8690f15c"
+    "stateHash": "ceb30d7a852ac18a"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1147,7 +1148,7 @@
       }
     },
     "timestamp": 1700000000086,
-    "stateHash": "aa9ee4aee911c0bc"
+    "stateHash": "bb163038393720b4"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1158,7 +1159,7 @@
       "player": 1
     },
     "timestamp": 1700000000087,
-    "stateHash": "ad8b37975054aab2"
+    "stateHash": "34ef531ac1f5132b"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1169,7 +1170,7 @@
       "player": 3
     },
     "timestamp": 1700000000088,
-    "stateHash": "777acdb7ad2d4eaf"
+    "stateHash": "85bc5a6e26618da7"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1180,7 +1181,7 @@
       "player": 1
     },
     "timestamp": 1700000000089,
-    "stateHash": "22d59ccbd3e806f3"
+    "stateHash": "b0033ef423d7d120"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1196,7 +1197,7 @@
       }
     },
     "timestamp": 1700000000090,
-    "stateHash": "f9b79ca60004b81c"
+    "stateHash": "975773c713e56e86"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1207,7 +1208,7 @@
       "player": 0
     },
     "timestamp": 1700000000091,
-    "stateHash": "72892ea46033a3e5"
+    "stateHash": "80b3a4746d5192e7"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1218,7 +1219,7 @@
       "player": 2
     },
     "timestamp": 1700000000092,
-    "stateHash": "57dc400700a84292"
+    "stateHash": "dffa995ce7366b69"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1234,7 +1235,7 @@
       }
     },
     "timestamp": 1700000000093,
-    "stateHash": "ab9e84f2408c49e4"
+    "stateHash": "fb6f3f1ec0c68bb4"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1245,7 +1246,7 @@
       "player": 3
     },
     "timestamp": 1700000000094,
-    "stateHash": "0a0c0fb009b408cf"
+    "stateHash": "6e65f12f222bce4c"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1261,7 +1262,7 @@
       }
     },
     "timestamp": 1700000000095,
-    "stateHash": "317851f3e6f1d2d2"
+    "stateHash": "d3e87e3405029483"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1272,7 +1273,7 @@
       "player": 0
     },
     "timestamp": 1700000000096,
-    "stateHash": "f2c1de1cf6e56e99"
+    "stateHash": "d862db90a57083d7"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1283,7 +1284,7 @@
       "player": 1
     },
     "timestamp": 1700000000097,
-    "stateHash": "23585850ac36ebef"
+    "stateHash": "caee9fba1e00c780"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1294,7 +1295,7 @@
       "player": 0
     },
     "timestamp": 1700000000098,
-    "stateHash": "c79e8792ea883eef"
+    "stateHash": "19946d95bfb71d86"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1310,7 +1311,7 @@
       }
     },
     "timestamp": 1700000000099,
-    "stateHash": "04b08e74279c304e"
+    "stateHash": "8454d3e268b77c5a"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1321,7 +1322,7 @@
       "player": 1
     },
     "timestamp": 1700000000100,
-    "stateHash": "11ce4cb4543099d8"
+    "stateHash": "bd20fd9df2426df3"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1337,7 +1338,7 @@
       }
     },
     "timestamp": 1700000000101,
-    "stateHash": "a49aa15c08a6a184"
+    "stateHash": "df231f55f2db0a35"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1348,7 +1349,7 @@
       "player": 2
     },
     "timestamp": 1700000000102,
-    "stateHash": "14f4560d4153b28a"
+    "stateHash": "258a845ad2fa04dd"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1364,7 +1365,7 @@
       }
     },
     "timestamp": 1700000000103,
-    "stateHash": "d8012dc180460daf"
+    "stateHash": "69921e92aef3a9b6"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1375,7 +1376,7 @@
       "player": 3
     },
     "timestamp": 1700000000104,
-    "stateHash": "8d3f127b797bd747"
+    "stateHash": "c2858b24d1b99cb9"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1391,7 +1392,7 @@
       }
     },
     "timestamp": 1700000000105,
-    "stateHash": "eeb56f74136f5377"
+    "stateHash": "956c029f0fdaf087"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1402,7 +1403,7 @@
       "player": 0
     },
     "timestamp": 1700000000106,
-    "stateHash": "c7bfa3cb2796a34c"
+    "stateHash": "f19fea0e5bc3ab4a"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1418,7 +1419,7 @@
       }
     },
     "timestamp": 1700000000107,
-    "stateHash": "2f95d742353a41bd"
+    "stateHash": "c4a35bda619fa637"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1429,7 +1430,7 @@
       "player": 1
     },
     "timestamp": 1700000000108,
-    "stateHash": "44cc1846d074a139"
+    "stateHash": "b06d992d3188e8a0"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1445,7 +1446,7 @@
       }
     },
     "timestamp": 1700000000109,
-    "stateHash": "745812f6fd964650"
+    "stateHash": "c6ecd4786d98fd80"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1456,7 +1457,7 @@
       "player": 2
     },
     "timestamp": 1700000000110,
-    "stateHash": "b261fd3fe891ee6c"
+    "stateHash": "c5da4452eefcf6e5"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1472,7 +1473,7 @@
       }
     },
     "timestamp": 1700000000111,
-    "stateHash": "2bf48c608021fab7"
+    "stateHash": "6d6cfcd9b21f90ad"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1483,7 +1484,7 @@
       "player": 3
     },
     "timestamp": 1700000000112,
-    "stateHash": "ec0aa649a5934f8d"
+    "stateHash": "03a0887a3356d22a"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1494,7 +1495,7 @@
       "player": 3
     },
     "timestamp": 1700000000113,
-    "stateHash": "6379835dc08c8e7a"
+    "stateHash": "b407194e54fd4a19"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1510,7 +1511,7 @@
       }
     },
     "timestamp": 1700000000114,
-    "stateHash": "c8160f9c81421150"
+    "stateHash": "a72df54171192b71"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1521,7 +1522,7 @@
       "player": 0
     },
     "timestamp": 1700000000115,
-    "stateHash": "36a2016a2feccd20"
+    "stateHash": "aec354a684d8ae95"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1537,7 +1538,7 @@
       }
     },
     "timestamp": 1700000000116,
-    "stateHash": "ece57e46f8574309"
+    "stateHash": "99feb64d528cac59"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1548,7 +1549,7 @@
       "player": 1
     },
     "timestamp": 1700000000117,
-    "stateHash": "b37b57695e53ba0a"
+    "stateHash": "30c32779c5aafa39"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1564,7 +1565,7 @@
       }
     },
     "timestamp": 1700000000118,
-    "stateHash": "ce04541cf4ef0391"
+    "stateHash": "f9f1bc3dd540f9ab"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1575,7 +1576,7 @@
       "player": 2
     },
     "timestamp": 1700000000119,
-    "stateHash": "573dac3a3b33f98b"
+    "stateHash": "c9f268b51011c0d1"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1591,7 +1592,7 @@
       }
     },
     "timestamp": 1700000000120,
-    "stateHash": "5c7ddb2be77317a0"
+    "stateHash": "3d9af6c5110837f1"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1602,7 +1603,7 @@
       "player": 3
     },
     "timestamp": 1700000000121,
-    "stateHash": "831be0ca1c3826f6"
+    "stateHash": "8da7add20a6d4401"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1618,7 +1619,7 @@
       }
     },
     "timestamp": 1700000000122,
-    "stateHash": "175e963a3ad1be6c"
+    "stateHash": "0622fc1cfd84fbbb"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1629,7 +1630,7 @@
       "player": 0
     },
     "timestamp": 1700000000123,
-    "stateHash": "0863d6acba7d18be"
+    "stateHash": "aafbeab03587ebe3"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1645,7 +1646,7 @@
       }
     },
     "timestamp": 1700000000124,
-    "stateHash": "fa7868a8b4132fa4"
+    "stateHash": "cb30e6af4ca4ef69"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1656,7 +1657,7 @@
       "player": 1
     },
     "timestamp": 1700000000125,
-    "stateHash": "c8fb194f85e17a75"
+    "stateHash": "e23ac9008c0edf0f"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1672,7 +1673,7 @@
       }
     },
     "timestamp": 1700000000126,
-    "stateHash": "da3c8d4b78cbaee6"
+    "stateHash": "ad710c1c76fd6932"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1683,7 +1684,7 @@
       "player": 2
     },
     "timestamp": 1700000000127,
-    "stateHash": "e8bd8d062816c292"
+    "stateHash": "a0933c1e8d60ff1a"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1694,7 +1695,7 @@
       "player": 2
     },
     "timestamp": 1700000000128,
-    "stateHash": "3be597b0807e0b2c"
+    "stateHash": "e6a56f0baabf45e3"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1710,7 +1711,7 @@
       }
     },
     "timestamp": 1700000000129,
-    "stateHash": "057c8c9c126a4698"
+    "stateHash": "2475f0b2ebbed45d"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1721,7 +1722,7 @@
       "player": 3
     },
     "timestamp": 1700000000130,
-    "stateHash": "b378750203f2fd5e"
+    "stateHash": "fd5c853d524c2846"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1737,7 +1738,7 @@
       }
     },
     "timestamp": 1700000000131,
-    "stateHash": "4feb4e5a774d6199"
+    "stateHash": "d2ea099b895ae125"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1748,7 +1749,7 @@
       "player": 0
     },
     "timestamp": 1700000000132,
-    "stateHash": "988cade2a2be86ce"
+    "stateHash": "ddf86fb89475a3ab"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1764,7 +1765,7 @@
       }
     },
     "timestamp": 1700000000133,
-    "stateHash": "773f21313be43773"
+    "stateHash": "89beaa407f573ec7"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1775,7 +1776,7 @@
       "player": 1
     },
     "timestamp": 1700000000134,
-    "stateHash": "97c83bd17abb1274"
+    "stateHash": "87c5983ac06abfa8"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1791,7 +1792,7 @@
       }
     },
     "timestamp": 1700000000135,
-    "stateHash": "bd98dc75b8a711bc"
+    "stateHash": "56619b235517b2c9"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1802,7 +1803,7 @@
       "player": 2
     },
     "timestamp": 1700000000136,
-    "stateHash": "e82770b11e4b5c46"
+    "stateHash": "4437603162cab677"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1818,7 +1819,7 @@
       }
     },
     "timestamp": 1700000000137,
-    "stateHash": "dc63b32a18355368"
+    "stateHash": "25d4018b3256e4bc"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1829,7 +1830,7 @@
       "player": 3
     },
     "timestamp": 1700000000138,
-    "stateHash": "0ca9276ddf9470b9"
+    "stateHash": "6cb29c45e2d552f9"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1845,7 +1846,7 @@
       }
     },
     "timestamp": 1700000000139,
-    "stateHash": "d6d4e01fb28707b5"
+    "stateHash": "1edc692df346ea07"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1856,7 +1857,7 @@
       "player": 0
     },
     "timestamp": 1700000000140,
-    "stateHash": "587c07249f2a3f15"
+    "stateHash": "b842465b3afd4bbf"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1872,7 +1873,7 @@
       }
     },
     "timestamp": 1700000000141,
-    "stateHash": "27e900d6cdbe2b88"
+    "stateHash": "706be2ad48cbce1c"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1883,7 +1884,7 @@
       "player": 1
     },
     "timestamp": 1700000000142,
-    "stateHash": "07c900f55a87bb77"
+    "stateHash": "b303a3b883217d3e"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1899,7 +1900,7 @@
       }
     },
     "timestamp": 1700000000143,
-    "stateHash": "697ca91714941962"
+    "stateHash": "d8fc91872434818f"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1910,7 +1911,7 @@
       "player": 2
     },
     "timestamp": 1700000000144,
-    "stateHash": "e69875754bf67fa3"
+    "stateHash": "64d52b37779f744d"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1926,7 +1927,7 @@
       }
     },
     "timestamp": 1700000000145,
-    "stateHash": "6d7a6bc626f51ee1"
+    "stateHash": "74daa5fae60c5704"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1937,7 +1938,7 @@
       "player": 3
     },
     "timestamp": 1700000000146,
-    "stateHash": "fbd12d2e77377ec6"
+    "stateHash": "5317f3983143b2f4"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1953,7 +1954,7 @@
       }
     },
     "timestamp": 1700000000147,
-    "stateHash": "43985f185bd14932"
+    "stateHash": "e0fc6605ef6b134f"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1964,7 +1965,7 @@
       "player": 0
     },
     "timestamp": 1700000000148,
-    "stateHash": "719c1393763275fe"
+    "stateHash": "532474350bff86db"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1980,7 +1981,7 @@
       }
     },
     "timestamp": 1700000000149,
-    "stateHash": "68a8c60c79e59116"
+    "stateHash": "ba2891013d209002"
   },
   {
     "gameId": "E2EREVIEW",
@@ -1991,7 +1992,7 @@
       "player": 1
     },
     "timestamp": 1700000000150,
-    "stateHash": "0d8a73d7668435f7"
+    "stateHash": "71a2a5ebac66ca0d"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2007,7 +2008,7 @@
       }
     },
     "timestamp": 1700000000151,
-    "stateHash": "ba02cd04e27cdf30"
+    "stateHash": "ef55878b974c09fb"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2018,7 +2019,7 @@
       "player": 2
     },
     "timestamp": 1700000000152,
-    "stateHash": "491ae2ade96d783e"
+    "stateHash": "e83780944eb8ed04"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2029,7 +2030,7 @@
       "player": 3
     },
     "timestamp": 1700000000153,
-    "stateHash": "efb16e2c4cef421f"
+    "stateHash": "e33f2b2d2777fce7"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2040,7 +2041,7 @@
       "player": 2
     },
     "timestamp": 1700000000154,
-    "stateHash": "2572517e7ac7edcb"
+    "stateHash": "8615df6575300fef"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2056,7 +2057,7 @@
       }
     },
     "timestamp": 1700000000155,
-    "stateHash": "0730a4e95a623feb"
+    "stateHash": "a6f63cd92bacc465"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2067,7 +2068,7 @@
       "player": 3
     },
     "timestamp": 1700000000156,
-    "stateHash": "276d676932f1abdf"
+    "stateHash": "809f5a4a28d59173"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2083,7 +2084,7 @@
       }
     },
     "timestamp": 1700000000157,
-    "stateHash": "5573aeb40d9bb819"
+    "stateHash": "12acb31be8089e33"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2094,7 +2095,7 @@
       "player": 2
     },
     "timestamp": 1700000000158,
-    "stateHash": "3c049a39b4c2d694"
+    "stateHash": "90e473d9348708b6"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2105,7 +2106,7 @@
       "player": 0
     },
     "timestamp": 1700000000159,
-    "stateHash": "1b4dfc22b872aa01"
+    "stateHash": "34188e9af4116697"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2121,7 +2122,7 @@
       }
     },
     "timestamp": 1700000000160,
-    "stateHash": "b596b842b9469299"
+    "stateHash": "0b1f1941f4e74302"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2132,7 +2133,7 @@
       "player": 1
     },
     "timestamp": 1700000000161,
-    "stateHash": "b200beb103795035"
+    "stateHash": "08cbc3a31e59f0e1"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2148,7 +2149,7 @@
       }
     },
     "timestamp": 1700000000162,
-    "stateHash": "cfc05030240c8edb"
+    "stateHash": "b7a0e2e92d6d42eb"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2159,7 +2160,7 @@
       "player": 2
     },
     "timestamp": 1700000000163,
-    "stateHash": "861410fb9ec98c70"
+    "stateHash": "cf5d6bec3a892a7d"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2175,7 +2176,7 @@
       }
     },
     "timestamp": 1700000000164,
-    "stateHash": "30aa99bcb11071ec"
+    "stateHash": "95192ebf71cf46e3"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2186,7 +2187,7 @@
       "player": 1
     },
     "timestamp": 1700000000165,
-    "stateHash": "a8e063ad1b9c8880"
+    "stateHash": "2b07dbe34c11587e"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2197,7 +2198,7 @@
       "player": 3
     },
     "timestamp": 1700000000166,
-    "stateHash": "ae79daab8506dea7"
+    "stateHash": "fdf8b996ef889fb8"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2213,7 +2214,7 @@
       }
     },
     "timestamp": 1700000000167,
-    "stateHash": "e9c5977334373575"
+    "stateHash": "3fa0e0d432b922d4"
   },
   {
     "gameId": "E2EREVIEW",
@@ -2224,6 +2225,6 @@
       "player": 0
     },
     "timestamp": 1700000000168,
-    "stateHash": "816f8dd4e78a4bd6"
+    "stateHash": "c943fcae0ca28e3d"
   }
 ]
