@@ -62,6 +62,9 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: ["**/node_modules/**", "**/dist/**", "e2e/**"],
+    // .claude/worktrees holds full checkouts of this repo. Without excluding it
+    // vitest collects a second copy of every suite, which doubles the run and
+    // produces spurious timeouts.
+    exclude: ["**/node_modules/**", "**/dist/**", "e2e/**", "**/.claude/**"],
   },
 });
