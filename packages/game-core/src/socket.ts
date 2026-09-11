@@ -426,7 +426,7 @@ export function registerSocketEvents(io: Server, deps: SocketDeps): void {
     const clientId = isValidUUID(auth.playerId) ? auth.playerId : socket.handshake.query.playerId;
     const playerId = isValidUUID(clientId) ? clientId : crypto.randomUUID();
     const reconnectToken = typeof auth.reconnectToken === 'string' ? auth.reconnectToken : null;
-    const session = new Session(socket as unknown as SocketLike, playerId, reconnectToken);
+    const session = new Session(socket, playerId, reconnectToken);
     const remoteIp = socket.handshake.address ?? '?';
 
     // Version handshake: a client left open across a deploy compares this on

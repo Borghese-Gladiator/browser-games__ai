@@ -6,8 +6,8 @@ import type { HttpDeps, Metrics } from './http.js';
 function deps(metrics: Metrics): HttpDeps {
   return {
     manager: new RoomManager({}),
-    outcomeStore: { all: () => [] } as unknown as HttpDeps['outcomeStore'],
-    io: { engine: { clientsCount: 0 } } as unknown as HttpDeps['io'],
+    outcomeStore: { all: () => [] },
+    io: { engine: { clientsCount: 0 } },
     metrics,
     funnel: {},
     startedAt: 500,

@@ -4,16 +4,30 @@ import type { RankedDiscard } from '@browser-games/engine-mahjong-analysis';
 import type { DiscardTrainerPuzzle } from './puzzle.ts';
 import { type MistakeSeverity, SEVERITY_THRESHOLDS, scoreChoice, severityForDelta } from './severity.ts';
 
-function ranked(kind: TileKind, score: number): RankedDiscard {
-  return { kind, score } as unknown as RankedDiscard;
-}
-
 const honorTile: Tile = { id: 'honor-east-1', suit: 'honor', honor: 'east' };
 const numberTile: Tile = { id: 'characters-3-1', suit: 'characters', rank: 3 };
 
-const puzzle = {
-  ranking: [ranked('east', 100), ranked('3m', 80)],
-} as unknown as DiscardTrainerPuzzle;
+function ranked(kind: TileKind, score: number): RankedDiscard {
+  return {
+    tile: honorTile,
+    kind,
+    score,
+    completionDistance: 0,
+    improvingTileKinds: [],
+    improvementCount: 0,
+    shapeMetrics: { shapeQuality: 0, isolatedTilePenalty: 0, shapes: [] },
+    waitQuality: 0,
+    reasons: [],
+  };
+}
+
+const ranking = [ranked('east', 100), ranked('3m', 80)];
+const puzzle: DiscardTrainerPuzzle = {
+  seed: 1,
+  hand: [honorTile, numberTile],
+  ranking,
+  spread: ranking[0].score - ranking[ranking.length - 1].score,
+};
 
 describe('severityForDelta', () => {
   it.each<[number, MistakeSeverity]>([

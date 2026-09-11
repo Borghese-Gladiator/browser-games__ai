@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { createRoomAs, joinRoomByCode, readSeat, readStoredIdentity } from './helpers/transport.js';
+import { gamePage } from './ports.js';
 
 test('identity persists across reload and reconnect reclaims seat', async ({ browser }) => {
   const artifactDir = path.resolve('e2e/artifacts');
@@ -15,7 +16,7 @@ test('identity persists across reload and reconnect reclaims seat', async ({ bro
   const [page1, page2] = await Promise.all([ctx1.newPage(), ctx2.newPage()]);
 
   // AC1: stable playerId across reload.
-  await page1.goto('http://localhost:5173/games/poker/');
+  await page1.goto(gamePage('poker'));
   const id1 = await page1.evaluate(() => localStorage.getItem('browser-games:playerId'));
   expect(id1).toMatch(/^[0-9a-f-]{36}$/);
   await page1.reload();
@@ -24,8 +25,8 @@ test('identity persists across reload and reconnect reclaims seat', async ({ bro
 
   // AC2: a reload reclaims the same seat via the persisted room code + secret
   // reconnectToken — no raw-frame interception, no manual room-code re-type.
-  await page1.goto('http://localhost:5173/games/poker/');
-  await page2.goto('http://localhost:5173/games/poker/');
+  await page1.goto(gamePage('poker'));
+  await page2.goto(gamePage('poker'));
 
   const code = await createRoomAs(page1, 'Alice');
   const seatBefore = await readSeat(page1);

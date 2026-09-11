@@ -2,13 +2,14 @@ import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { io } from "socket.io-client";
+import { GATEWAY as GATEWAY_URL, GATEWAY_PORT, gamePage } from "./ports.js";
 
 // Cross-cutting infra proofs against the Socket.IO gateway.
 //   AC1 — a malformed game message is rejected by the central validator.
 //   AC2 — a protocolVersion mismatch surfaces the refresh prompt.
 //   AC3 — a feature-flag-disabled game refuses a new room.
 
-const GATEWAY = "http://localhost:3001";
+const GATEWAY = GATEWAY_URL;
 const artifactDir = path.resolve("e2e/artifacts");
 
 // Open a Socket.IO client to the gateway, emit a short sequence of named events,
@@ -65,7 +66,7 @@ test("AC2: a version mismatch surfaces a refresh prompt", async ({ browser }) =>
   // 'hello' event arrives as `42["hello",{...}]` (4 = engine.io MESSAGE, 2 =
   // socket.io EVENT). Intercept the gateway socket and rewrite the protocolVersion
   // inside that frame so the client sees a version it does not recognize.
-  await page.routeWebSocket(/localhost:3001/, (ws) => {
+  await page.routeWebSocket(new RegExp(`localhost:${GATEWAY_PORT}`), (ws) => {
     const server = ws.connectToServer();
     server.onMessage((message) => {
       if (typeof message === "string" && message.startsWith("42")) {
@@ -84,7 +85,7 @@ test("AC2: a version mismatch surfaces a refresh prompt", async ({ browser }) =>
     ws.onMessage((message) => server.send(message));
   });
 
-  await page.goto("http://localhost:5173/games/poker/");
+  await page.goto(gamePage("poker"));
   await expect(page.getByText(/Server updated — please refresh/)).toBeVisible({ timeout: 10_000 });
 
   await ctx.tracing.stop({ path: path.join(artifactDir, "trace-infra-ac2.zip") });

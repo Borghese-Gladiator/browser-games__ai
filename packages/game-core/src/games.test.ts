@@ -9,7 +9,6 @@ import type {
 } from '@browser-games/engine-mahjong';
 import { mahjongAdapter, type MahjongState } from './games.ts';
 import { RoomManager } from './rooms.ts';
-import type { Adapter, EngineState } from './types.ts';
 
 // Craft engine states directly so the adapter's seat-aware wrappers can be
 // exercised without playing a full hand.
@@ -205,7 +204,7 @@ describe('mahjong adapter onMessage', () => {
 describe('mahjong AI seat fill', () => {
   it('fills the empty seats with bots and deals when the host starts early', () => {
     const manager = new RoomManager({
-      mahjong: mahjongAdapter as unknown as Adapter<EngineState>,
+      mahjong: mahjongAdapter,
     });
     const room = manager.createRoom('mahjong');
     room.addPlayer('h0', 'Alice', null);
@@ -218,7 +217,7 @@ describe('mahjong AI seat fill', () => {
 
     expect(room.isFull).toBe(true);
     expect(room.botSeats.size).toBe(2);
-    const state = room.state as unknown as MahjongState;
+    const state = room.state as MahjongState;
     expect(state.game).not.toBeNull();
     expect(state.phase).toBe('PLAYING');
     // Every seat drew a full concealed hand: the deal really ran.
@@ -227,15 +226,6 @@ describe('mahjong AI seat fill', () => {
     }
   });
 });
-
-interface OutcomeMeta {
-  kind: string;
-  winner: number | null;
-  delta: number;
-  totalTai: number;
-  dealtInSeat: number | null;
-  selfDraw: boolean;
-}
 
 interface RevealEntry {
   seat: number;
@@ -378,10 +368,10 @@ describe('mahjong adapter reveal projection and getOutcome', () => {
     const loser = result!.outcomes.find((o) => o.playerId === 'p2')!;
     expect(winner.rank).toBe(1);
     expect(winner.score).toBe(508);
-    expect((winner.meta as unknown as OutcomeMeta).delta).toBe(8);
+    expect(winner.meta.delta).toBe(8);
     expect(loser.rank).toBe(2);
     expect(loser.score).toBe(492);
-    expect((loser.meta as unknown as OutcomeMeta).delta).toBe(-8);
+    expect(loser.meta.delta).toBe(-8);
   });
 });
 

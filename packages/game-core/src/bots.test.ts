@@ -2,8 +2,20 @@ import { describe, it, expect } from 'vitest';
 import { makeBot, botActionFor } from './bots.js';
 import type { Adapter, EngineState } from './types.ts';
 
-const asAdapter = (a: Partial<Adapter<EngineState>>): Adapter<EngineState> =>
-  a as unknown as Adapter<EngineState>;
+const baseAdapter: Adapter<EngineState> = {
+  engine: {
+    createGame: () => ({ players: [] }),
+    addPlayer: (s) => s,
+    publicState: (s) => s,
+  },
+  minPlayers: 2,
+  maxPlayers: 4,
+  onMessage: (s) => s,
+};
+const asAdapter = (a: Partial<Adapter<EngineState>>): Adapter<EngineState> => ({
+  ...baseAdapter,
+  ...a,
+});
 const state: EngineState = { players: [] };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

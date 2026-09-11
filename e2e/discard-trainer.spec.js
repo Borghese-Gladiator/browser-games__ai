@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
+import { BASE as DEFAULT_BASE } from "./ports.js";
 
-const BASE = process.env.TRAINER_BASE_URL ?? "http://localhost:5173";
+const BASE = process.env.TRAINER_BASE_URL ?? DEFAULT_BASE;
 const URL = `${BASE}/games/mahjong-trainer/`;
 const REASON = /improve the hand|steps? from a win|good shapes?|waits on|penalty/;
 

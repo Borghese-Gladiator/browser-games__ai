@@ -2,6 +2,12 @@ import { useEffect, useRef } from 'react';
 import { isYourTurn } from './yourTurn.ts';
 import type { GameState } from './protocol.ts';
 
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
 // Generic "your turn" notifier: beeps and blinks the tab title when the active
 // seat becomes the local player's. Stops as soon as the turn moves on.
 export function useYourTurn(gameState: GameState | null | undefined, mySeat: number | null | undefined): void {
@@ -13,9 +19,8 @@ export function useYourTurn(gameState: GameState | null | undefined, mySeat: num
     const next = gameState?.activeSeat;
     if (isYourTurn(prevActiveSeat.current, next, mySeat)) {
       try {
-        const Ctor =
-          window.AudioContext ??
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const Ctor = window.AudioContext ?? window.webkitAudioContext;
+        if (!Ctor) throw new Error('Web Audio unavailable');
         const ctx = new Ctor();
         const osc = ctx.createOscillator();
         osc.connect(ctx.destination);

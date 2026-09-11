@@ -29,8 +29,8 @@ const fakeEngine: GameEngine<FakeState> = {
   publicState: (state, seat) => ({ players: state.players, started: state.started, mySeat: seat }),
 };
 
-const asAdapter = (a: Adapter<FakeState>): Adapter<EngineState> => a as unknown as Adapter<EngineState>;
-const asRoom = <T extends EngineState>(r: Room<EngineState>): Room<T> => r as unknown as Room<T>;
+const asAdapter = (a: Adapter<FakeState>): Adapter<EngineState> => a;
+const asRoom = <T extends EngineState>(r: Room<EngineState>): Room<T> => r as Room<T>;
 
 function makeAdapter(overrides: Partial<Adapter<FakeState>> = {}): Adapter<EngineState> {
   return asAdapter({
@@ -241,7 +241,7 @@ function turnAdapter(overrides: Partial<Adapter<TurnState>> = {}): Adapter<Engin
     optionsSchema: { stakes: { type: 'enum', values: ['low', 'high'], default: 'low' } },
     ...overrides,
   };
-  return a as unknown as Adapter<EngineState>;
+  return a;
 }
 
 const mgr = () => new RoomManager({ test: turnAdapter() });
@@ -550,7 +550,20 @@ describe('snapshot / restore', () => {
 
   it('restoreRoom skips a disabled game', () => {
     const m = new RoomManager({ off: makeAdapter({ enabled: false }) });
-    const snap = { code: 'AAAA', gameId: 'off', options: {}, state: { players: [] }, members: [] } as unknown as RoomSnapshot;
+    const snap: RoomSnapshot = {
+      code: 'AAAA',
+      gameId: 'off',
+      options: {},
+      state: { players: [] },
+      eventLog: [],
+      _eventSeq: 0,
+      host: null,
+      locked: false,
+      createdAt: 0,
+      phaseEnteredAt: null,
+      _gameStarted: false,
+      members: [],
+    };
     m.restoreRoom(snap);
     expect(m.rooms.has('AAAA')).toBe(false);
   });

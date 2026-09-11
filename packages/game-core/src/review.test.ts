@@ -77,15 +77,11 @@ describe('discardPositionForSeat', () => {
     }
     expect(flipped).toBe(true);
 
-    const state = {
-      rules,
-      players: [
-        { hand: seatHand, melds: [] },
-        { hand: opponent, melds: [] },
-        { hand: [], melds: [] },
-        { hand: [], melds: [] },
-      ],
-    } as unknown as GameState;
+    const base = createGame({ rules, seed: 'seat-view', dealer: 0, roundWind: 'E' });
+    const players = base.players.slice();
+    players[0] = { ...players[0], hand: seatHand, melds: [] };
+    players[1] = { ...players[1], hand: opponent, melds: [] };
+    const state: GameState = { ...base, rules, players };
 
     const position = discardPositionForSeat(state, 0);
     expect(position.concealed).toBe(seatHand);
