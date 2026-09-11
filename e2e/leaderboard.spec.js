@@ -1,13 +1,14 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { createRoomAs, joinRoomByCode } from "./helpers/transport.js";
+import { GATEWAY, gamePage } from "./ports.js";
 
 // Plays a full 4-player poker hand to showdown, then asserts the framework's
 // leaderboard/stats layer recorded the result: the winner tops the per-game
 // board (all-time and daily) and the completed game appears in their history.
 test("completed game reflects in leaderboard scope and match history", async ({ browser }) => {
   const artifactDir = path.resolve("e2e/artifacts");
-  const API = "http://localhost:3001";
+  const API = GATEWAY;
 
   const contexts = await Promise.all(
     Array.from({ length: 4 }, () =>
@@ -21,7 +22,7 @@ test("completed game reflects in leaderboard scope and match history", async ({ 
   );
 
   const pages = await Promise.all(contexts.map((ctx) => ctx.newPage()));
-  await Promise.all(pages.map((p) => p.goto("http://localhost:5173/games/poker/")));
+  await Promise.all(pages.map((p) => p.goto(gamePage("poker"))));
 
   const [host, ...guests] = pages;
   const code = await createRoomAs(host, "Player1");

@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { createRoomAs, joinRoomByCode } from "./helpers/transport.js";
+import { gamePage } from "./ports.js";
 
 // Proves the shared client framework works end-to-end against poker:
 //  - <ConnectionBanner> reacts to a drop and a reconnect
@@ -23,8 +24,8 @@ test("shared chrome: reconnect banner, presence/avatars, and chat delivery", asy
 
   const [host, guest] = await Promise.all(contexts.map((ctx) => ctx.newPage()));
   await Promise.all([
-    host.goto("http://localhost:5173/games/poker/"),
-    guest.goto("http://localhost:5173/games/poker/"),
+    host.goto(gamePage("poker")),
+    guest.goto(gamePage("poker")),
   ]);
 
   // Host creates a room; guest joins by code.

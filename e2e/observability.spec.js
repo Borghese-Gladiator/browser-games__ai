@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { createRoomAs, joinRoomByCode } from "./helpers/transport.js";
+import { GATEWAY, gamePage } from "./ports.js";
 
 // Plays part of a 4-player poker hand, then asserts the observability layer sees
 // it: /stats lists the active room with the right member count and an appended
@@ -8,7 +9,7 @@ import { createRoomAs, joinRoomByCode } from "./helpers/transport.js";
 // room. Video + trace are recorded as proof.
 test("active game is visible via /stats and the admin page with an event-log state hash", async ({ browser }) => {
   const artifactDir = path.resolve("e2e/artifacts");
-  const API = "http://localhost:3001";
+  const API = GATEWAY;
 
   const contexts = await Promise.all(
     Array.from({ length: 4 }, () =>
@@ -22,7 +23,7 @@ test("active game is visible via /stats and the admin page with an event-log sta
   );
 
   const pages = await Promise.all(contexts.map((ctx) => ctx.newPage()));
-  await Promise.all(pages.map((p) => p.goto("http://localhost:5173/games/poker/")));
+  await Promise.all(pages.map((p) => p.goto(gamePage("poker"))));
 
   const [host, ...guests] = pages;
   const code = await createRoomAs(host, "Player1");

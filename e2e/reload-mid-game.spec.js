@@ -7,6 +7,7 @@ import {
   readPrivateState,
   readStoredIdentity,
 } from './helpers/transport.js';
+import { gamePage } from './ports.js';
 
 // QA scenario reload-mid-game-resume-seat-private-state: a player who reloads the
 // tab mid-hand resumes the same seat with the same private hole cards. The reload
@@ -25,8 +26,8 @@ test('reload mid-game resumes the same seat with private state intact', async ({
   ]);
   const [host, guest] = await Promise.all([ctxHost.newPage(), ctxGuest.newPage()]);
   await Promise.all([
-    host.goto('http://localhost:5173/games/poker/'),
-    guest.goto('http://localhost:5173/games/poker/'),
+    host.goto(gamePage('poker')),
+    guest.goto(gamePage('poker')),
   ]);
 
   // Seat two humans (poker's minPlayers) so the host can start the hand; bots

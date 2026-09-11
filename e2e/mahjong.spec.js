@@ -1,8 +1,9 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { createRoomAs, joinRoomByCode } from "./helpers/transport.js";
+import { gamePage } from "./ports.js";
 
-const URL = "http://localhost:5173/games/mahjong/";
+const URL = gamePage("mahjong");
 const HAND = 'section[aria-label="Your hand"]';
 
 // Read the local seat the board resumed. The board tags <main> with data-my-seat

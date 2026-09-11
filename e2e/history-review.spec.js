@@ -3,7 +3,9 @@ import { mkdirSync, copyFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-const BASE = process.env.HISTORY_BASE_URL ?? "http://localhost:5173";
+import { BASE as DEFAULT_BASE } from "./ports.js";
+
+const BASE = process.env.HISTORY_BASE_URL ?? DEFAULT_BASE;
 const GAME_ID = "E2EREVIEW";
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 

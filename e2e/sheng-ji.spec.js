@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { createRoomAs, joinRoomByCode } from "./helpers/transport.js";
+import { gamePage } from "./ports.js";
 
 test("4-player Sheng Ji plays a full deal", async ({ browser }) => {
   const artifactDir = path.resolve("e2e/artifacts");
@@ -17,7 +18,7 @@ test("4-player Sheng Ji plays a full deal", async ({ browser }) => {
   );
 
   const pages = await Promise.all(contexts.map((ctx) => ctx.newPage()));
-  await Promise.all(pages.map((p) => p.goto("http://localhost:5173/games/sheng-ji/")));
+  await Promise.all(pages.map((p) => p.goto(gamePage("sheng-ji"))));
 
   // Player 1 creates a room; the rest join it by its code.
   const [host, ...guests] = pages;
