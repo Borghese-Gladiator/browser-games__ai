@@ -1,196 +1,251 @@
 # TODO — Known remaining work
 
-Each item below was verified against the code (file:line references), not
-speculative.
+Each item is verified against the code with a `file:line` reference, not
+speculative. Items that are done are deleted, not ticked: the git history is the
+record of what shipped.
+
+**Scope note.** The Taiwanese mahjong game (engine, analysis, trainer, review,
+and the platform rewrite onto Fastify + Socket.IO) landed across PRs #16–#43.
+Items that work closed are removed below. Items those PRs *created* are listed
+under "From the mahjong build".
+
+---
+
+## Validation gaps (highest priority)
+
+### V1. The e2e suite has never been run
+
+- **Status:** 12 Playwright specs exist. None has been executed.
+- **Detail:** `vitest.config.js:65` excludes `e2e/**`, so `npm run check` never
+  touches them, and `npm run test:e2e` was not run during the mahjong build.
+  Four specs were written during that work and have never executed at all:
+  `e2e/mahjong.spec.js`, `e2e/discard-trainer.spec.js`,
+  `e2e/history-review.spec.js`, `e2e/reload-mid-game.spec.js`.
+- **Consequence:** no browser-level validation of the mahjong board, the fan
+  guide, the trainer, the review screen, or reconnect. Every claim about those
+  screens currently rests on unit tests and hand-written probes.
+- **Fix:** run `npm run test:e2e` and fix what falls out. Treat the four new
+  specs as unproven until they pass once.
+
+### V2. The e2e suite cannot run alongside another Vite project
+
+- **Status:** blocks V1 on any machine doing other front-end work.
+- **Detail:** the specs hardcode `http://localhost:5173` in 16 places and
+  `http://localhost:3001` in 4, and `playwright.config.js:17,32` set
+  `reuseExistingServer: false`. If any other project holds 5173, the run aborts
+  with "http://localhost:5173 is already used".
+- **Fix:** read the base URL from an env var with the current values as
+  defaults, and thread it through the specs.
+
+### V3. The Postgres path is never exercised
+
+- **Status:** 4 store-contract tests skip unless `DATABASE_URL` is set, and
+  nothing sets it.
+- **Detail:** PR #32/#33 added `packages/game-core/src/postgresStore.ts` and two
+  migrations. Keeping the file stores as the default is right — `npm run check`
+  must not need a database — but it means the SQL path, the migrations, and the
+  SQL leaderboard aggregation have never run.
+- **Fix:** add a CI job (or a documented local command) that starts Postgres,
+  sets `DATABASE_URL`, and runs the same contract suite.
+
+---
 
 ## Deployment (blockers)
 
 ### D1. Client hardcodes `localhost:3001` for the gateway
 
-- **Status:** Multiplayer + leaderboard are broken in any real deployment.
-- **Detail:** `packages/game-client/src/useGameSocket.js:12` falls back to
-  `ws://localhost:3001` and `packages/game-client/src/leaderboard.js:7-9` to
-  `http://localhost:3001`. These are **build-time** Vite env vars, and the
-  `Dockerfile` build (`Dockerfile:15`) runs `npm run build` without setting
-  `VITE_GATEWAY_URL`, so the shipped client bakes in `localhost`. A deployed
-  browser connects to the *user's own machine*, not the server, and fails.
-- **Fix:** Derive the gateway URL from `window.location` at runtime
-  (same-origin `wss://<host>` / `https://<host>`). The gateway already serves
-  the client on one origin, so this needs no env var and also fixes D2.
+- **Status:** multiplayer and leaderboard are broken in any real deployment.
+- **Detail:** `packages/game-client/src/useGameSocket.ts:25` still falls back to
+  `http://localhost:3001`. This is a **build-time** Vite env var, so a shipped
+  client bakes in `localhost` unless `VITE_GATEWAY_URL` is set at build.
+- **Fix:** derive the gateway URL from `window.location` at runtime
+  (same-origin), which also fixes D2. Keep `VITE_GATEWAY_URL` as an override for
+  a split deploy.
 
 ### D2. `ws://` breaks under HTTPS
 
-- **Status:** Blocks HTTPS deployment even if `VITE_GATEWAY_URL` is injected.
-- **Detail:** A `ws://` URL on an `https://` page is blocked as mixed content;
-  needs `wss://`. The runtime origin-derivation in D1 handles this.
+- **Status:** blocks HTTPS deployment.
+- **Detail:** a `ws://` URL on an `https://` page is blocked as mixed content.
+  The runtime origin-derivation in D1 handles this.
 
-### D3. Persistence is ephemeral and single-replica
+### D3. Persistence paths default to the container CWD
 
-- **Status:** Leaderboards, achievements, and room snapshots lost on restart.
-- **Detail:** `packages/game-core/src/store.js:20,41,64` default to relative
-  paths (`./outcomes.json`, `./achievements.json`, `./snapshots`) resolved
-  against the container CWD (`/app`). `bin/dev-server.js:16-19` does not
-  override them. In a container these live on the ephemeral writable layer —
-  **lost on every restart/redeploy** — and are not shared across replicas.
-- **Fix:** Mount a volume (PVC) or use an external store; parameterize the
-  paths via env and point them at the mount.
+- **Status:** leaderboards, achievements, snapshots and the event log are lost on
+  restart unless paths are set.
+- **Detail:** `store.ts` defaults resolve against the process CWD. In a container
+  these land on the ephemeral layer. Note the *durability* half of this is now
+  fixed — writes are atomic and torn reads fail loudly (PR #32/#33) — but the
+  default location is still wrong for a deployment.
+- **Fix:** mount a volume and point the `*_PATH` env vars at it, or use Postgres.
 
 ### D4. No horizontal scaling path
 
-- **Status:** Must run as exactly one replica.
-- **Detail:** Rooms, seats, presence, and the per-IP rate-limit bucket are all
-  in-process memory (`packages/game-core/src/rooms.js`, `gateway.js`).
-  WebSocket sessions are sticky to one process with no shared backplane.
-- **Fix:** Document the single-replica constraint, or add sticky sessions +
-  shared state (e.g. Redis) before scaling.
+- **Status:** must run as exactly one replica.
+- **Detail:** rooms, seats, presence and the per-IP rate bucket are all in
+  process memory (`rooms.ts`, `gateway.ts`). WebSocket sessions are sticky to one
+  process with no shared backplane.
+- **Fix:** document the single-replica constraint, or add sticky sessions plus
+  shared state before scaling.
 
-### D5. No Kubernetes / Compose / Helm / CI config
+### D5. No CI, and no Kubernetes / Compose / Helm config
 
-- **Status:** Repo ships only a `Dockerfile` + `.dockerignore`.
-- **Detail:** No `.github/`, `.buildkite/`, `*.yaml`/`*.yml`, `Chart.yaml`, or
-  `docker-compose.yml` anywhere. "Do we handle kubernetes?" → no.
-- **Fix:** Add k8s Deployment + Service + Ingress (or Compose), a readiness
-  probe endpoint, resource limits, `PORT`/volume wiring, and
-  `terminationGracePeriodSeconds` ≥ the 5s drain in `bin/dev-server.js:23`.
+- **Status:** there is no `.github/`, no pipeline, and no orchestration config.
+- **Detail:** nothing runs `npm run check` or `npm run test:e2e` on a push. This
+  is why V1 and V3 went unnoticed.
+- **Fix:** add a CI workflow running typecheck, unit tests, and e2e. That single
+  step would have caught most of what is in this file.
 
-## User flow / lobby
+### D7. `OutcomeStore` rewrites the whole file on every finished game
 
-### F1. Multiplayer games dump you into a lobby, not the game
+- **Status:** correctness fixed, performance not.
+- **Detail:** writes are now atomic (`atomicWriteJson`, temp + fsync + rename)
+  and a torn read throws rather than silently returning `[]` (PR #33). But
+  `record` still serialises the entire in-memory history per game, so cost stays
+  O(total games) and the array never shrinks.
+- **Fix:** append JSONL, or move outcomes to Postgres and aggregate in SQL.
 
-- **Status:** Core friction — unlike FPS/tic-tac-toe which load straight into
-  play.
-- **Detail:** Portal cards are plain `<a href={game.path}>`
-  (`portal/src/Portal.jsx:13`). FPS boots gameplay on page load
-  (`games/fps/src/main.ts:11-22`, no socket/identity/room). Multiplayer games
-  render `<Lobby>` first (`games/poker/src/Poker.jsx:36-52`) — name entry +
-  room create/join gate every session.
-- **Fix:** Make the primary action instant — card click → auto "Play now"
-  (quick-match, fills with bots), with create/join-specific-room demoted to
-  secondary.
-- **Partially done:** the lobby was redesigned so **Play now** is the single
-  dominant CTA (bots fill empty seats), with Create/Join demoted (see F5).
-  Still lobby-first: the portal card lands on the lobby rather than skipping
-  straight into a bot-filled game. Full instant-play (card → game) is the
-  remaining step if desired.
+### D9. No documented env-var contract
 
-### F2. Lobby room list is stale — never pushed — ✅ FIXED
+- **Detail:** the server reads `PORT`, `STATIC_DIR`, `NODE_ENV`,
+  `OUTCOMES_PATH`, `ACHIEVEMENTS_PATH`, `SNAPSHOTS_PATH`, `EVENTS_PATH`,
+  `RATE_LIMIT_CAPACITY` and now `DATABASE_URL`. The client reads
+  `VITE_GATEWAY_URL` at **build** time. No file lists them together.
+- **Fix:** add `.env.example` and a table marking which are build-time.
 
-- **Status:** Resolved. Lobby watchers now get live pushes.
-- **Fix (done):** The gateway tracks lobby watchers per `gameId` (registered on
-  `lobby:list`) and pushes a fresh `rooms` frame to all of them on any
-  membership change (create/join/leave/kick/lock) via an `onLobbyChange` hook
-  (`gateway.js`). Required the client send-before-open fix (robustness #2) so the
-  initial `lobby:list` actually registers the watcher. Verified in-browser:
-  a room created in one tab appears in another's list with no Refresh.
+### D10. `bin/dev-server.js` is the production entrypoint
 
-### F3. Selected name is not remembered — ✅ FIXED
+- **Detail:** `Dockerfile` runs it; the name says otherwise.
+- **Fix:** rename to `bin/server.js` and update `Dockerfile`, `package.json` and
+  `playwright.config.js`.
 
-- **Status:** Resolved.
-- **Fix (done):** `useIdentity` now persists the last-used display name in
-  localStorage (`browser-games:playerName`) via a `setName` setter; `Lobby.jsx`
-  reads/writes it, so the name prefills on every mount. Verified in-browser.
+### D11. Container runs as root with no healthcheck
 
-### F4. No user-initiated "leave room" — ✅ FIXED (protocol + client)
+- **Detail:** no `USER`, no `HEALTHCHECK`. A `/healthz` endpoint now exists
+  (PR #27) and is side-effect-free, so a healthcheck has something to point at.
+- **Fix:** add `USER node`, `chown` the state mount, and a `HEALTHCHECK`
+  against `/healthz`.
 
-- **Status:** Protocol + client action done. A "Leave" button still needs
-  wiring into each game's in-room UI (the hook exposes `leaveRoom`).
-- **Fix (done):** Added `lobby:leave` to the protocol — unlike a socket close
-  (which holds the seat for the reconnect grace window), it frees the seat
-  immediately, deletes the room if it was the last member, acks with `left`, and
-  re-sends the fresh room list. The client `useGameSocket` exposes `leaveRoom()`
-  and clears local room state on `left` (dropping the rejoin intent so a later
-  reconnect doesn't pull the player back in). Name is preserved via F3.
-- **Remaining:** each game's board should render a "Leave / back to lobby"
-  button calling `leaveRoom`.
+### D12. Up to 60s of in-flight game state is lost on a hard crash
 
-### F5. No single obvious primary action per page — ✅ FIXED (lobby)
+- **Status:** narrowed, not closed.
+- **Detail:** rooms snapshot on a 60s timer
+  (`gateway.ts:37 SNAPSHOT_INTERVAL_MS`). A graceful restart loses nothing, and
+  room reaping now flushes the event log before deleting the room and keeps the
+  room if that flush fails (PR #38). A hard crash still loses everything since
+  the last tick.
+- **Fix:** also snapshot on a phase change, or lower the interval. Decide whether
+  it matters before building for it.
 
-- **Status:** Resolved for the lobby.
-- **Fix (done):** `Lobby.jsx` + `lobby.css` rebuilt around one dominant CTA — a
-  glowing **Play now** hero card — with "Private Table" (Create room /
-  join-by-code) and the live "Public Tables" list demoted to quiet secondary
-  cards, matching the "Find a Match" mockup. Accessible button names
-  ("Create room", "Join by code", "Play now") were preserved so e2e specs pass.
+---
+
+## Deployment shape B — split frontend / backend / database
+
+### B1. Wildcard CORS
+
+- **Detail:** `handleHttp` sets `Access-Control-Allow-Origin: *` on every
+  response. Harmless while same-origin; once the frontend is a separate origin,
+  any site can read the leaderboard, history, head-to-head and `/stats` APIs.
+- **Fix:** read `ALLOWED_ORIGIN` and echo only that. Also gate `/admin` and
+  `/stats`, which are unauthenticated and expose room codes and player counts.
+
+### B2. Gateway URL becomes build-time again in a split deploy
+
+- **Detail:** follows from D1. Keep the `window.location` default and let
+  `VITE_GATEWAY_URL` override it, so both shapes work from one code path.
+
+### B4. Static frontend has no serving story
+
+- **Detail:** in shape B the gateway must not serve `dist/`, so unknown paths
+  return JSON 404s.
+- **Fix:** publish `dist/` to a static host with an SPA-style fallback.
+
+---
+
+## User flow
+
+### F1. Multiplayer games land on a lobby, not in a game
+
+- **Status:** partially addressed. "Play now" is the dominant CTA and fills with
+  bots, but a portal card still lands on the lobby rather than starting a
+  bot-filled game directly.
+- **Fix:** make the card click go straight to quick-match.
+
+### F4. "Leave" is only wired into the mahjong board
+
+- **Detail:** `useGameSocket` exposes `leaveRoom`, and PR #31 added a Leave
+  control to `games/mahjong`. Poker, president, reversi and sheng-ji still have
+  no way to leave a room from the board.
+- **Fix:** add the same control to the other four boards.
+
+---
 
 ## Correctness / robustness
 
 ### C1. Per-IP rate-limit map leaks
 
-- **Status:** Unbounded memory growth over the process lifetime.
-- **Detail:** `gateway.js:383` — `rateLimitMap` entries are never GC'd.
-- **Fix:** Evict stale IP buckets on the heartbeat.
+- **Detail:** `gateway.ts:114` creates `rateLimitMap` and entries are never
+  evicted, so it grows for the process lifetime.
+- **Fix:** evict stale IP buckets on the heartbeat.
+
+### C2. `infra.spec` version-mismatch banner test fails on baseline
+
+- **Status:** pre-existing, not a product bug.
+- **Detail:** the product path is correct — the gateway sends `protocolVersion`
+  in `hello` and the client shows a refresh banner on mismatch. The test tries to
+  force a mismatch with `page.routeWebSocket(...)`, and the rewritten frame never
+  reaches the client.
+- **Fix:** repair the interception, or add a server-side test hook for the
+  advertised `protocolVersion`.
+
+### C3. The e2e suite is not hermetic
+
+- **Status:** mitigated, not closed.
+- **Detail:** persistence points at a throwaway `.state/e2e` dir and the rate
+  limit is widened for tests, but one long-lived gateway process is shared across
+  spec files, so rooms and held seats accumulate.
+- **Fix:** a fresh gateway per spec file, or a test-only reset endpoint.
 
 ---
 
-## Session notes (multiplayer "not in a room" seating bug, commit `318a3ca`)
+## From the mahjong build
 
-The items below were observed during that session.
+### M1. Tai values and severity thresholds are uncalibrated
 
-## 1. infra.spec AC2 — version-mismatch refresh banner (pre-existing failure)
+- **Detail:** the 13-pattern catalogue in
+  `packages/engines/mahjong-analysis/src/analysis/ruleset.ts` and the mistake
+  thresholds in `packages/shared/src/severity.ts:8`
+  (`{minor: 1, moderate: 20, severe: 1000}`) are defensible starting values, not
+  a calibrated Taiwanese table. Tai values vary by table.
+- **Fix:** play real hands, compare against a reference table, and tune. Keep the
+  values in the ruleset object so tuning stays configuration.
 
-- **Status:** Fails on baseline *and* with the seating fix. Not a product bug.
-- **Detail:** The product path is correct — the gateway sends a `hello` frame
-  with `protocolVersion`; the client sets `needsRefresh` when it differs from
-  `PROTOCOL_VERSION`, and `RefreshBanner` renders "Server updated — please
-  refresh to continue." The test (`e2e/infra.spec.js:74`) tries to force a
-  mismatch by intercepting the socket with `page.routeWebSocket(...)` and
-  `ws.connectToServer()` to rewrite the `hello` frame to `99.99.99`, but the
-  rewritten frame never reaches the client, so the banner never appears.
-- **Fix options:** Repair the Playwright WS-routing interception, or inject a
-  version mismatch a different way (e.g. a server-side test hook / env override
-  for the advertised `protocolVersion`).
+### M2. Settlement scale is a starting point
 
-## 2. Actions dropped during the reconnect window — ✅ FIXED
+- **Detail:** a 2 tai discard win pays winner +4 / discarder −4, and a self-draw
+  splits across all three losers. Transfers sum to zero at every tai value
+  tested. The *scale* has not been checked against a real table.
+- **Fix:** confirm against the intended house rules; the rule is injectable via
+  `state.rules.settlement`.
 
-- **Status:** Resolved.
-- **Fix (done):** `useGameSocket` now has an outbound queue (`outbox`): `rawSend`
-  sends immediately when the socket is OPEN, otherwise buffers the frame
-  (de-duped) and flushes on `open`, after the rejoin replay. This also fixed F2 —
-  the lobby's initial `lobby:list` was itself a send-before-open casualty, so the
-  watcher never registered until this landed.
+### M3. The end-of-hand reveal is a new trust boundary
 
-## 3. E2E suite is not hermetic — cross-spec gateway-state contention — ⚠️ MITIGATED
+- **Detail:** `mahjongReveal` exposes every player's hand once the hand is over,
+  gated on `game && phase === 'FINISHED' && outcome`. Verified: mid-hand it is
+  null for every seat and no opponent tile appears in any view.
+- **Fix:** keep it that way. Any future change to `publicState` or to the reveal
+  gate should re-run that check, since this is the one place concealed tiles can
+  reach a client.
 
-- **Status:** Two of the three contention sources removed; the suite now passes
-  9/9. One long-lived gateway is still shared, so this isn't fully closed.
-- **Fixes (done):** (a) Persistence points at a throwaway `.state/e2e` dir wiped
-  each run (`playwright.config.js` env + `test:e2e` script), so outcomes /
-  achievements / snapshots start empty. (b) The per-IP rate-limit capacity is
-  overridable via `RATE_LIMIT_CAPACITY` and the test webServer widens it, so the
-  suite's combined load on the one shared bucket no longer trips false
-  "rate limit exceeded" failures. (This mattered more after F2's live broadcasts
-  raised per-connection message volume.)
-- **Remaining:** rooms / held seats still accumulate in the one gateway process.
-  A fresh gateway per spec file (or a test-only reset endpoint) would fully
-  close it.
+### M4. Multi-hand rotation is only unit-tested
 
-## 4. Runtime-cruft hygiene during tests — ✅ FIXED
+- **Detail:** dealer rotation, prevailing-wind advance on a completed circuit,
+  and carrying scores across hands are covered by unit tests, but no full
+  multi-hand game has been played end to end in a browser.
+- **Fix:** covered once V1 runs, if a spec plays two consecutive hands.
 
-- **Status:** Resolved.
-- **Fix (done):** `bin/dev-server.js` reads `OUTCOMES_PATH` / `ACHIEVEMENTS_PATH`
-  / `SNAPSHOTS_PATH` from env; the Playwright webServer points them at
-  `.state/e2e/*`, and `npm run test:e2e` wipes that dir before each run, so every
-  run starts from empty state. `snapshots/` was also added to `.gitignore` and a
-  stray leftover `snapshots/` + botched `${QA_SPEC_DIR}` dir were removed from the
-  tree. `npm run clean:state` wipes all runtime state on demand.
+### M5. The Standard AI is ~96× slower than the random AI
 
----
-
-## Done this session (for reference)
-
-- **Client rejoin on reconnect** (`packages/game-client/src/useGameSocket.js`):
-  record a join intent, replay it on socket `open`, and ignore closes from a
-  superseded socket so the StrictMode mount/cleanup/mount cycle doesn't spawn an
-  orphan connection. Fixes the repeated "not in a room" rejection.
-- **Idempotent auto-start** (`packages/game-core/src/rooms.js`): `_maybeAutoStart`
-  no longer re-runs once the game has started, so `startEarly` ("Start with
-  bots") can't throw "hand in progress" and abort the `host:start` broadcast.
-- **E2E room-code parsing**: strip the `RoomCode` "Copy" button text in poker,
-  sheng-ji, leaderboard, and observability specs (observability used the raw
-  code in a `/stats` lookup that silently missed).
-- **chrome.spec reconnect assertion**: close the live socket directly instead of
-  relying on `context.setOffline`, which does not sever an already-open loopback
-  WebSocket.
-
-Verified: 224 unit tests pass; poker, sheng-ji, chrome, identity, leaderboard,
-and observability each pass in clean isolation.
+- **Detail:** about 632 ms per game, roughly 3.7 ms per decision. Fine for
+  interactive play; it makes a 10,000-game sweep take ~105 minutes versus ~63
+  seconds. The `runSimulation` acceptance gate should keep using the random AI.
+- **Fix:** none needed unless large Standard-AI sweeps become routine.
