@@ -4,7 +4,6 @@
 
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
-import type { Server } from 'socket.io';
 import { PROTOCOL_VERSION } from '@portal/shared/version';
 import { isSlowGame, rollupMessagesPerSec } from '@portal/shared/metrics';
 import { computeBoard, matchHistory, headToHead } from '@portal/shared/leaderboard';
@@ -27,10 +26,16 @@ export interface Metrics {
 
 export type Funnel = { lobbyViews: number; roomsCreated: number; gamesStarted: number; gamesFinished: number };
 
+// Only the members the HTTP routes actually read. A real OutcomeStore and a
+// real socket.io Server both satisfy these, and a test can supply a small fake
+// without faking the whole class.
+export type OutcomeReader = Pick<OutcomeStore, 'all'>;
+export type ConnectionCounter = { engine?: { clientsCount: number } };
+
 export interface HttpDeps {
   manager: RoomManager;
-  outcomeStore: OutcomeStore;
-  io: Server;
+  outcomeStore: OutcomeReader;
+  io: ConnectionCounter;
   metrics: Metrics;
   funnel: Record<string, Funnel>;
   startedAt: number;

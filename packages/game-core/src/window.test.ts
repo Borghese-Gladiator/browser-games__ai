@@ -57,13 +57,13 @@ const windowAdapter: Adapter<WindowState> = {
   }),
 };
 
-const asEngine = (a: Adapter<WindowState>): Adapter<EngineState> => a as unknown as Adapter<EngineState>;
+const asEngine = (a: Adapter<WindowState>): Adapter<EngineState> => a;
 
 const liveClient = { connected: true, readyState: 1, emit: () => {}, join: () => {}, leave: () => {} };
 
 function openWindow() {
   const m = new RoomManager({ test: asEngine(windowAdapter) });
-  const room = m.createRoom('test') as unknown as import('./rooms.js').Room<WindowState>;
+  const room = m.createRoom('test') as import('./rooms.js').Room<WindowState>;
   room.addPlayer('responder', 'Responder', liveClient, { now: 0 });
   room.addPlayer('silent', 'Silent', liveClient, { now: 0 });
   room.addBot(2); // bot at seat 2

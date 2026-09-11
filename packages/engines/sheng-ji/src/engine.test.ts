@@ -200,13 +200,15 @@ describe('publicState', () => {
     const g = seat4();
     const view0 = publicState(g, 0);
     expect(view0.myHand).toHaveLength(13);
-    expect((view0.players as any[]).every((p) => !('hand' in p))).toBe(true);
-    expect((view0.players as any[]).every((p) => typeof p.handCount === 'number')).toBe(true);
+    const players = view0.players;
+    if (!Array.isArray(players)) throw new Error('players is not an array');
+    expect(players.every((p) => !('hand' in p))).toBe(true);
+    expect(players.every((p) => typeof p.handCount === 'number')).toBe(true);
   });
   it('only the active seat gets legal cards', () => {
     const g = seat4();
     const active = g.activeSeat;
-    expect((publicState(g, active).legalCards as unknown[]).length).toBeGreaterThan(0);
+    expect(publicState(g, active).legalCards).not.toHaveLength(0);
     const inactive = (active + 1) % 4;
     expect(publicState(g, inactive).legalCards).toEqual([]);
   });

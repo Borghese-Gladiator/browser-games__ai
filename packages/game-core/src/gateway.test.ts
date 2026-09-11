@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import crypto from 'node:crypto';
-import { RoomManager, ROOM_GRACE_MS } from './rooms.js';
+import { RoomManager, ROOM_GRACE_MS, type Room } from './rooms.js';
 import { handleMessage, runHeartbeat } from './gateway.js';
 import type { Adapter, EngineState, GameEngine } from './types.ts';
 
@@ -58,7 +58,7 @@ const fakeEngine: GameEngine<FakeEngineState> = {
   publicState: (state, seat) => ({ players: state.players, mySeat: seat }),
 };
 
-const asEngine = (a: Adapter<FakeEngineState>): Adapter<EngineState> => a as unknown as Adapter<EngineState>;
+const asEngine = (a: Adapter<FakeEngineState>): Adapter<EngineState> => a;
 
 const adapter: Adapter<FakeEngineState> = {
   engine: fakeEngine,
@@ -354,7 +354,7 @@ describe('runHeartbeat', () => {
     turn: number;
     folded: string[];
   }
-  const turnAdapter: Adapter<EngineState> = {
+  const turnAdapter: Adapter<TurnState> = {
     engine: {
       createGame: () => ({ players: [], turn: 0, folded: [] }),
       addPlayer: (state: TurnState, { id, name }: { id: string; name: string }) => ({
@@ -378,13 +378,13 @@ describe('runHeartbeat', () => {
     activeSeat: (state: TurnState) => (state.players.length ? state.turn : -1),
     timeoutAction: () => ({ fold: true }),
     botMove: () => ({ bot: true }),
-  } as unknown as Adapter<EngineState>;
+  };
 
   const liveClient = { readyState: 1, emit: () => {}, send: () => {} };
 
   it('auto-folds a dark active player and broadcasts (cannot stall)', () => {
     const m = new RoomManager({ test: turnAdapter });
-    const room = m.createRoom('test') as any;
+    const room = m.createRoom('test') as Room<TurnState>;
     room.addPlayer('h', 'Host', liveClient, { now: 0 });
     room.addPlayer('g', 'Guest', liveClient, { now: 0 });
     room.state.turn = 0;
@@ -392,7 +392,7 @@ describe('runHeartbeat', () => {
     room.recordPong('g', { now: 9000 });
 
     const broadcasts: string[] = [];
-    runHeartbeat(m, (rm: any) => broadcasts.push(rm.code), { DEAD_MS: 100000, GRACE_MS: 1000, FORFEIT_MS: 60000 }, 9000);
+    runHeartbeat(m, (rm: Room<EngineState>) => broadcasts.push(rm.code), { DEAD_MS: 100000, GRACE_MS: 1000, FORFEIT_MS: 60000 }, 9000);
 
     expect(room.state.folded).toContain('h');
     expect(broadcasts).toContain(room.code);
@@ -411,12 +411,12 @@ describe('runHeartbeat', () => {
   });
 
   it('does not propagate an engine exception from a timeout action', () => {
-    const throwingAdapter = {
+    const throwingAdapter: Adapter<TurnState> = {
       ...turnAdapter,
       onMessage: () => { throw new Error('engine boom'); },
-    } as unknown as Adapter<EngineState>;
+    };
     const m = new RoomManager({ test: throwingAdapter });
-    const room = m.createRoom('test') as any;
+    const room = m.createRoom('test') as Room<TurnState>;
     room.addPlayer('h', 'Host', liveClient, { now: 0 });
     room.addPlayer('g', 'Guest', liveClient, { now: 0 });
     room.state.turn = 0;

@@ -127,14 +127,16 @@ describe('publicState', () => {
     const state = startHand(seatFour());
     const view = publicState(state, 0);
     expect(view.myHoleCards).toHaveLength(2);
-    (view.players as any[]).forEach((p) => expect(p.holeCards).toBeUndefined());
+    const players = view.players;
+    if (!Array.isArray(players)) throw new Error('players is not an array');
+    players.forEach((p) => expect(Object.hasOwn(p, 'holeCards')).toBe(false));
   });
 
   it('only the active seat receives legal actions', () => {
     const state = startHand(seatFour());
     const active = state.activeSeat;
     const inactive = (active + 1) % 4;
-    expect((publicState(state, active).legalActions as unknown[]).length).toBeGreaterThan(0);
+    expect(publicState(state, active).legalActions).not.toHaveLength(0);
     expect(publicState(state, inactive).legalActions).toHaveLength(0);
   });
 });

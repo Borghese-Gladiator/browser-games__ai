@@ -11,7 +11,7 @@ import * as president from '@browser-games/engine-president';
 import * as mahjong from '@browser-games/engine-mahjong';
 import type { PokerState, PokerAction } from '@browser-games/engine-poker';
 import type { ShengJiState } from '@browser-games/engine-sheng-ji';
-import type { ReversiState, Move } from '@browser-games/engine-reversi';
+import type { ReversiState } from '@browser-games/engine-reversi';
 import type { PresidentState, PresidentAction } from '@browser-games/engine-president';
 import type {
   GameState as MahjongGameState,
@@ -146,7 +146,13 @@ const reversiAdapter: Adapter<ReversiState> = {
   autoStart: (state) => (state.players.length === 2 ? reversi.startGame(state) : null),
   onMessage: (state, playerId, msg) => {
     if (msg.restart) return reversi.startGame(state);
-    if (msg.row !== undefined) return reversi.applyMove(state, playerId, msg as unknown as Move);
+    if (msg.row !== undefined) {
+      const { row, col } = msg;
+      if (typeof row !== 'number' || typeof col !== 'number') {
+        throw new Error('reversi move needs numeric row and col');
+      }
+      return reversi.applyMove(state, playerId, { row, col });
+    }
     throw new Error('unknown reversi message');
   },
   activeSeat: (state) => state.activeSeat,
@@ -739,10 +745,10 @@ const infraTestAdapter: Adapter<EngineState> = {
 };
 
 export const adapters: AdapterTable = {
-  poker: pokerAdapter as unknown as Adapter<EngineState>,
-  'sheng-ji': shengJiAdapter as unknown as Adapter<EngineState>,
-  reversi: reversiAdapter as unknown as Adapter<EngineState>,
-  president: presidentAdapter as unknown as Adapter<EngineState>,
-  mahjong: mahjongAdapter as unknown as Adapter<EngineState>,
+  poker: pokerAdapter,
+  'sheng-ji': shengJiAdapter,
+  reversi: reversiAdapter,
+  president: presidentAdapter,
+  mahjong: mahjongAdapter,
   '_infra-test': infraTestAdapter,
 };

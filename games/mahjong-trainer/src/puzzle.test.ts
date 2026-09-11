@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { TileKind } from '@browser-games/engine-mahjong';
+import type { Tile, TileKind } from '@browser-games/engine-mahjong';
 import type { RankedDiscard } from '@browser-games/engine-mahjong-analysis';
 import {
   MEANINGFUL_SPREAD_THRESHOLD,
@@ -8,8 +8,20 @@ import {
   rankingSpread,
 } from './puzzle.ts';
 
+const PLACEHOLDER_TILE: Tile = { id: 'honor-east-1', suit: 'honor', honor: 'east' };
+
 function ranked(kind: TileKind, score: number): RankedDiscard {
-  return { kind, score } as unknown as RankedDiscard;
+  return {
+    tile: PLACEHOLDER_TILE,
+    kind,
+    score,
+    completionDistance: 0,
+    improvingTileKinds: [],
+    improvementCount: 0,
+    shapeMetrics: { shapeQuality: 0, isolatedTilePenalty: 0, shapes: [] },
+    waitQuality: 0,
+    reasons: [],
+  };
 }
 
 describe('rankingSpread', () => {

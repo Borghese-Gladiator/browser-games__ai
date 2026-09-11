@@ -172,11 +172,13 @@ describe('publicState', () => {
     const state = withHands([['3c', '3d'], ['4c']]);
     const mine = publicState(state, 0);
     expect(mine.myHand).toEqual(['3c', '3d']);
-    expect((mine.legalPlays as string[][]).length).toBeGreaterThan(0);
+    expect(mine.legalPlays).not.toHaveLength(0);
     const other = publicState(state, 1);
     expect(other.myHand).toEqual(['4c']);
     expect(other.legalPlays).toHaveLength(0); // not their turn
     // No raw hands leak for other players.
-    (mine.players as any[]).forEach((p) => expect(p.hand).toBeUndefined());
+    const players = mine.players;
+    if (!Array.isArray(players)) throw new Error('players is not an array');
+    players.forEach((p) => expect(Object.hasOwn(p, 'hand')).toBe(false));
   });
 });

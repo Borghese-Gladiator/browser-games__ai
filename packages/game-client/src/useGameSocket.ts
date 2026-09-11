@@ -22,6 +22,12 @@ import type {
 } from './protocol.ts';
 import type { ConnectionStatus, JoinedRoom, UseGameSocketApi } from './useGameSocket.types.ts';
 
+declare global {
+  interface Window {
+    __gameSocket?: Socket;
+  }
+}
+
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://localhost:3001';
 
 // Server -> client frames the hook reacts to, delivered as named Socket.IO events.
@@ -87,7 +93,7 @@ export function useGameSocket(gameId: string): UseGameSocketApi {
     // connection deterministically via socket.disconnect() instead of racing a
     // raw-WebSocket close. Never present in a production build.
     if (import.meta.env.DEV) {
-      (window as unknown as { __gameSocket?: Socket }).__gameSocket = socket;
+      window.__gameSocket = socket;
     }
 
     const emit = (obj: ClientMessage) => {
