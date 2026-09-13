@@ -22,7 +22,22 @@ Open the printed Vite URL and click a game card.
 | `npm run check` | Unit tests (Vitest) — fast, run this to validate a change. |
 | `npm run check:all` | Unit + E2E (Playwright boots the stack and plays full games). |
 | `npm run build` / `npm run preview` | Production build / preview. |
+| `npm run verify:image` | Build and probe the Docker image that render.com deploys. Needs Docker. |
 | `npm run clean:state` | Wipe generated runtime state (snapshots, outcomes, achievements). |
+
+## Deployment
+
+render.com builds the `Dockerfile` per `render.yaml` and health checks `/healthz`.
+
+`npm run build` does **not** prove the deploy works. It reads the whole repo,
+while Docker reads only the context that `.dockerignore` allows. A path that the
+build stage never copies fails on render.com and passes here.
+
+Run `npm run verify:image` before a push that touches `Dockerfile`,
+`.dockerignore`, `render.yaml`, a `tsconfig.json`, or the workspace layout. The
+script builds the image, starts the container, probes every built page plus
+`/healthz` and `/api/leaderboard`, checks that no bundle points at the dev
+gateway, and creates a room over the socket.
 
 ## Layout
 
