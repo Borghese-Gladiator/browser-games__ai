@@ -17,7 +17,6 @@ const { shutdown } = createGateway({
   port: process.env.PORT || 3001,
   staticDir,
   outcomesPath: process.env.OUTCOMES_PATH,
-  achievementsPath: process.env.ACHIEVEMENTS_PATH,
   snapshotsPath: process.env.SNAPSHOTS_PATH,
   eventsPath: process.env.EVENTS_PATH,
 });

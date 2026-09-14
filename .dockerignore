@@ -9,7 +9,6 @@ e2e
 *.log
 .DS_Store
 outcomes.json
-achievements.json
 snapshots
 plan.md
 docs

@@ -22,7 +22,8 @@
     "lint": "eslint .",
     "check": "npm run typecheck && npm run lint && vitest run",
     "check:all": "vitest run && npm run test:e2e",
-    "clean:state": "rm -rf snapshots .state outcomes.json achievements.json"
+    "verify:image": "bash bin/verify-image.sh",
+    "clean:state": "rm -rf snapshots .state outcomes.json"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

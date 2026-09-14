@@ -52,7 +52,6 @@ export default defineConfig({
       "@portal/shared/validate": resolve(__dirname, "packages/shared/src/validate.ts"),
       "@portal/shared/rateLimit": resolve(__dirname, "packages/shared/src/rateLimit.ts"),
       "@portal/shared/sanitize": resolve(__dirname, "packages/shared/src/sanitize.ts"),
-      "@portal/shared/leaderboard": resolve(__dirname, "packages/shared/src/leaderboard.ts"),
       "@portal/shared/identity": resolve(__dirname, "packages/shared/src/identity.ts"),
       "@portal/shared/metrics": resolve(__dirname, "packages/shared/src/metrics.ts"),
       "@portal/shared/severity": resolve(__dirname, "packages/shared/src/severity.ts"),

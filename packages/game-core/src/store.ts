@@ -1,7 +1,6 @@
-// Durable, append-only persistence for game outcomes and achievement unlocks.
+// Durable, append-only persistence for game outcomes and room snapshots.
 // Matches the gateway's zero-infrastructure style: plain JSON files written
-// synchronously alongside the server. The pure aggregation over these records
-// lives in @portal/shared/leaderboard; this module is only I/O + dedup.
+// synchronously alongside the server.
 //
 // Every load runs a runtime guard: a file whose shape does not match is treated
 // as absent (fall back) rather than trusted, so a corrupt file cannot poison a
@@ -22,12 +21,11 @@ import { readFile, rename, open, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import crypto from 'node:crypto';
 import {
-  isAchievementUnlockArray,
   isOutcomeRecordArray,
   assertRoomSnapshot,
 } from './guards.ts';
 import { isEnoent } from './eventStore.ts';
-import type { AchievementUnlock, OutcomeRecord, PlayerOutcome, RoomSnapshot } from './types.ts';
+import type { OutcomeRecord, PlayerOutcome, RoomSnapshot } from './types.ts';
 
 // A persisted file that is present but does not parse is corrupt (a torn or
 // partial write). The loader must fail loud with this error rather than silently
@@ -107,8 +105,8 @@ function load<T>(filePath: string, fallback: T, guard?: (v: unknown) => v is T):
   return parsed as T;
 }
 
-// One append-only log of finished games. Every leaderboard scope, the match
-// history, and head-to-head records are all derived from these same records.
+// One append-only log of finished games. /api/reviews reads it to list the
+// finished rooms that a replay driver can review.
 export class OutcomeStore {
   filePath: string;
   records: OutcomeRecord[];
@@ -127,32 +125,6 @@ export class OutcomeStore {
 
   all(): OutcomeRecord[] {
     return this.records;
-  }
-}
-
-// Generic {playerId, achievementId} unlock store. Games declare the conditions;
-// the framework records the unlock here. Recording is idempotent per player.
-export class AchievementStore {
-  filePath: string;
-  unlocks: AchievementUnlock[];
-
-  constructor(filePath = './achievements.json') {
-    this.filePath = filePath;
-    this.unlocks = load(filePath, [] as AchievementUnlock[], isAchievementUnlockArray);
-  }
-
-  // Returns true if newly unlocked, false if the player already had it.
-  record({ playerId, achievementId, gameId }: { playerId: string; achievementId: string; gameId: string }): boolean {
-    if (this.unlocks.some((u) => u.playerId === playerId && u.achievementId === achievementId)) {
-      return false;
-    }
-    this.unlocks.push({ playerId, achievementId, gameId, ts: Date.now() });
-    atomicWriteJsonSync(this.filePath, this.unlocks);
-    return true;
-  }
-
-  forPlayer(playerId: string): AchievementUnlock[] {
-    return this.unlocks.filter((u) => u.playerId === playerId);
   }
 }
 

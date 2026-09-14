@@ -65,11 +65,6 @@ export default tseslint.config(
       'snapshots/**',
       'games/fps/**',
       'eslint.config.js',
-      // Pre-existing: the root tsconfig does not pick this file up, so
-      // `npm run typecheck` never sees it either and a type-aware rule cannot
-      // parse it. Tracked separately; remove this entry once it is in the
-      // project.
-      'packages/game-client/src/Leaderboard.tsx',
     ],
   },
   {

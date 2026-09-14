@@ -7,6 +7,5 @@ e2e/artifacts/
 
 # Gateway persistence (generated at runtime; not source).
 outcomes.json
-achievements.json
 snapshots/
 .state/

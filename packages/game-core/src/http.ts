@@ -1,13 +1,11 @@
 // Read-only HTTP surface for the gateway, served by Fastify on the same port as
-// Socket.IO: /admin (live ops page), /stats (mutating metrics roll-up),
-// /api/leaderboard, /api/history, /api/h2h, and a side-effect-free GET /healthz.
+// Socket.IO: /admin (live ops page), /stats (mutating metrics roll-up), the
+// post-game review endpoints, and a side-effect-free GET /healthz.
 
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { PROTOCOL_VERSION } from '@portal/shared/version';
 import { isSlowGame, rollupMessagesPerSec } from '@portal/shared/metrics';
-import { computeBoard, matchHistory, headToHead } from '@portal/shared/leaderboard';
-import type { LeaderboardWindow } from '@portal/shared/leaderboard';
 import type { RoomManager } from './rooms.ts';
 import type { OutcomeStore } from './store.ts';
 import type { EventStore } from './eventStore.ts';
@@ -129,7 +127,7 @@ export function buildStats(deps: HttpDeps, now: number = Date.now()): Record<str
   };
 }
 
-// Mount /admin, /stats, /api/leaderboard, /api/history, /api/h2h, and GET /healthz.
+// Mount /admin, /stats, the review endpoints, and GET /healthz.
 export function registerHttpRoutes(app: FastifyInstance, deps: HttpDeps): void {
   app.addHook('onSend', (_req, reply, payload, done) => {
     reply.header('Access-Control-Allow-Origin', '*');
@@ -144,26 +142,6 @@ export function registerHttpRoutes(app: FastifyInstance, deps: HttpDeps): void {
   });
 
   app.get('/stats', async () => buildStats(deps));
-
-  app.get('/api/leaderboard', async (req) => {
-    const q = req.query as Record<string, string | undefined>;
-    const entries = computeBoard(deps.outcomeStore.all(), {
-      gameId: q.gameId || undefined,
-      roomCode: q.roomCode || undefined,
-      window: (q.window as LeaderboardWindow) || 'all-time',
-    });
-    return { entries };
-  });
-
-  app.get('/api/history', async (req) => {
-    const q = req.query as Record<string, string | undefined>;
-    return { games: matchHistory(deps.outcomeStore.all(), q.playerId ?? '') };
-  });
-
-  app.get('/api/h2h', async (req) => {
-    const q = req.query as Record<string, string | undefined>;
-    return headToHead(deps.outcomeStore.all(), q.playerA ?? '', q.playerB ?? '');
-  });
 
   // List finished games that can be reviewed (those whose game type has a replay
   // driver). Derived from the outcome log; roomCode is the review key.
