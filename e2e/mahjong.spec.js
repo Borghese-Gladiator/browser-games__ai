@@ -32,11 +32,8 @@ async function act(page, flags) {
   if (/wins/.test(status) || status.startsWith("Draw")) return true;
 
   if (status === "Your turn") {
-    const draw = page.getByRole("button", { name: "Draw", exact: true });
-    if (await draw.isEnabled({ timeout: 200 }).catch(() => false)) {
-      await draw.click();
-      return false;
-    }
+    // The board draws on its own, so a turn only ever needs a discard. A turn
+    // caught before its draw lands simply has no enabled discard yet.
     const discards = page.getByRole("button", { name: /^Discard / });
     const n = await discards.count();
     for (let i = 0; i < n; i += 1) {

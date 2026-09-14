@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useGameSocket } from "@browser-games/game-client/useGameSocket";
 import { Lobby } from "@browser-games/game-client/Lobby";
 import { RefreshBanner } from "@browser-games/game-client/RefreshBanner";
@@ -17,10 +17,10 @@ import { tileLabel, sortTiles, tileKind } from "./tiles.ts";
 import { TileFace, TileBack } from "./TileFace.tsx";
 import { NamePlate } from "./board/NamePlate.tsx";
 import { Hud } from "./board/Hud.tsx";
-import { VisibleCopiesPanel } from "./board/VisibleCopiesPanel.tsx";
+import { VisibleCopiesPopover } from "./board/VisibleCopiesPanel.tsx";
 import { TaiIndicator } from "./board/TaiIndicator.tsx";
-import { TurnTimerBar, useTurnClock } from "./board/TurnTimerBar.tsx";
 import { computeVisibleCopies } from "./board/visibleCopies.ts";
+import type { VisibleCopiesEntry } from "./board/visibleCopies.ts";
 import { HandEndScreen } from "./HandEndScreen.tsx";
 import type { HandEndResult, RevealSeat } from "./HandEndScreen.tsx";
 
@@ -71,7 +71,7 @@ const WIND_CODE: Wind[] = ["E", "S", "W", "N"];
 const WIND_GLYPH: Record<Wind, string> = { E: "東", S: "南", W: "西", N: "北" };
 const WIND_NAME: Record<Wind, string> = { E: "East", S: "South", W: "West", N: "North" };
 // The primary action per phase. It gets the amber, filled treatment.
-const PRIMARY_ACTION = new Set(["win", "draw"]);
+const PRIMARY_ACTION = new Set(["win"]);
 
 function seatWind(seat: number): Wind {
   return WIND_CODE[((seat % 4) + 4) % 4];
@@ -168,45 +168,76 @@ function TileRow({
   );
 }
 
-function MeldRow({ melds, orientation }: { melds: MahjongMeld[]; orientation: SeatPosition }) {
+// Claimed sets, each kept as its own group so three pongs never read as one run.
+function MeldRow({
+  melds,
+  orientation,
+  ariaLabel,
+}: {
+  melds: MahjongMeld[];
+  orientation: SeatPosition;
+  ariaLabel: string;
+}) {
   if (melds.length === 0) return null;
   return (
-    <TileRow
-      tiles={melds.flatMap((m) => m.tiles)}
-      orientation={orientation}
-      className="mj-meld-row"
-    />
+    <div className="mj-melds" aria-label={ariaLabel}>
+      {melds.map((meld, i) => (
+        <TileRow
+          key={`${i}-${meld.kind}`}
+          tiles={meld.tiles}
+          orientation={orientation}
+          className="mj-meld-row"
+        />
+      ))}
+    </div>
   );
 }
 
-// One clickable concealed tile in the local hand. Selection is by click.
-function TileButton({
+// One concealed tile in the local hand. Selection is by click.
+//
+// The mouse handlers sit on the <li>, not the button: a disabled button fires no
+// pointer events, and a tile stays inspectable when it is not this seat's turn.
+// Focus and blur stay on the button, for the keyboard path.
+function HandTile({
   tileId,
   disabled,
   highlighted,
   onSelect,
+  onInspect,
+  className = "",
 }: {
   tileId: string;
   disabled: boolean;
   highlighted?: boolean;
   onSelect: (tileId: string) => void;
+  onInspect: (tileId: string | null) => void;
+  className?: string;
 }) {
   return (
-    <button
-      type="button"
-      className={`mj-tile-btn${highlighted ? " mj-tile-btn--drawn" : ""}`}
-      data-tile={tileId}
-      aria-label={disabled ? tileLabel(tileId) : `Discard ${tileLabel(tileId)}`}
-      disabled={disabled}
-      onClick={() => onSelect(tileId)}
+    <li
+      className={className}
+      onMouseEnter={() => onInspect(tileId)}
+      onMouseLeave={() => onInspect(null)}
     >
-      <TileFace tile={tileId} size="lg" highlighted={highlighted} decorative />
-    </button>
+      <button
+        type="button"
+        className={`mj-tile-btn${highlighted ? " mj-tile-btn--drawn" : ""}`}
+        data-tile={tileId}
+        aria-label={disabled ? tileLabel(tileId) : `Discard ${tileLabel(tileId)}`}
+        disabled={disabled}
+        onClick={() => onSelect(tileId)}
+        onFocus={() => onInspect(tileId)}
+        onBlur={() => onInspect(null)}
+      >
+        <TileFace tile={tileId} size="lg" highlighted={highlighted} decorative />
+      </button>
+    </li>
   );
 }
 
-// An opponent's public information only: count backs, melds, flowers, discards.
-// No concealed tile is ever shown.
+// An opponent's public information only: concealed backs, then the claimed melds
+// and the flowers face up. The discards live in the centre river, not here. No
+// concealed tile is ever shown.
 function OpponentArea({
   player,
   isActive,
@@ -231,11 +262,12 @@ function OpponentArea({
         isDealer={player.seat === 0}
         isTurn={isActive}
       />
-      <p className="mj-muted mj-opponent-meta">
-        {player.count} tiles · {player.melds.length} melds · {player.flowers.length} flowers
-      </p>
       <TileBack count={player.count} orientation={position} />
-      <MeldRow melds={player.melds} orientation={position} />
+      <MeldRow
+        melds={player.melds}
+        orientation={position}
+        ariaLabel={`${player.name} melds`}
+      />
       {player.flowers.length > 0 && (
         <TileRow
           tiles={player.flowers}
@@ -244,37 +276,84 @@ function OpponentArea({
           ariaLabel={`${player.name} flowers`}
         />
       )}
-      <TileRow
-        tiles={player.discards}
-        orientation={position}
-        className="mj-discard-row"
-        ariaLabel={`${player.name} discards`}
-      />
     </div>
   );
 }
 
-function CentreWall({
+// One seat's river, on that seat's side of the centre. Six tiles per row, the
+// way a real table stacks a discard pile.
+function River({
+  tiles,
+  position,
+  ariaLabel,
+  lastDiscard,
+}: {
+  tiles: string[];
+  position: SeatPosition;
+  ariaLabel: string;
+  lastDiscard: string | null;
+}) {
+  return (
+    <ul className={`mj-river mj-river--${position}`} aria-label={ariaLabel}>
+      {tiles.map((t, i) => (
+        <li key={`${i}-${t}`}>
+          <TileFace
+            tile={t}
+            size="md"
+            orientation={position}
+            highlighted={t === lastDiscard}
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// The centre of the table: the wall counter, ringed by one river per seat.
+function CentreTable({
   tilesLeft,
   lastDiscard,
+  myDiscards,
+  riverAt,
 }: {
   tilesLeft: number;
   lastDiscard: { seat: number; tile: string } | null;
+  myDiscards: string[];
+  riverAt: (pos: SeatPosition) => MahjongOpponent | undefined;
 }) {
+  const last = lastDiscard?.tile ?? null;
+  const opp = (pos: SeatPosition) => {
+    const player = riverAt(pos);
+    if (!player) return null;
+    return (
+      <River
+        tiles={player.discards}
+        position={pos}
+        ariaLabel={`${player.name} discards`}
+        lastDiscard={last}
+      />
+    );
+  };
+
   return (
     <div className="mj-centre" aria-label="Centre">
-      <div className="mj-wall-ring">
-        <span className="mj-wall-count">{tilesLeft}</span>
-        <span className="mj-wall-label">tiles left</span>
-      </div>
-      {lastDiscard ? (
-        <div className="mj-last-discard">
-          <span className="mj-label">Last discard</span>
-          <TileFace tile={lastDiscard.tile} size="md" highlighted />
+      <div className="mj-centre-top">{opp("top")}</div>
+      <div className="mj-centre-left">{opp("left")}</div>
+      <div className="mj-centre-wall">
+        <div className="mj-wall-ring">
+          <span className="mj-wall-count">{tilesLeft}</span>
+          <span className="mj-wall-label">tiles left</span>
         </div>
-      ) : (
-        <p className="mj-muted">No discard yet</p>
-      )}
+      </div>
+      <div className="mj-centre-right">{opp("right")}</div>
+      <div className="mj-centre-bottom">
+        <River
+          tiles={myDiscards}
+          position="bottom"
+          ariaLabel="Your discards"
+          lastDiscard={last}
+        />
+      </div>
     </div>
   );
 }
@@ -282,16 +361,13 @@ function CentreWall({
 function ActionBar({
   actions,
   onAct,
-  timer,
 }: {
   actions: MahjongAction[];
   onAct: (action: MahjongAction) => void;
-  timer: React.ReactNode;
 }) {
   if (actions.length === 0) return null;
   return (
     <div className="mj-actionbar">
-      {timer}
       <ul className="mj-actions">
         {actions.map((action, index) => {
           const primary = PRIMARY_ACTION.has(action.type);
@@ -317,14 +393,15 @@ function PlayerArea({
   discardByTile,
   onSelectTile,
   onAct,
-  timer,
+  copies,
 }: {
   view: MahjongView;
   discardByTile: Map<string, MahjongAction>;
   onSelectTile: (tileId: string) => void;
   onAct: (action: MahjongAction) => void;
-  timer: React.ReactNode;
+  copies: Map<string, VisibleCopiesEntry>;
 }) {
+  const [inspected, setInspected] = useState<string | null>(null);
   const wind = seatWind(view.mySeat);
   const canDiscard = discardByTile.size > 0;
   const raw = view.myHand;
@@ -334,7 +411,12 @@ function PlayerArea({
       : undefined;
   const rest = justDrawn ? raw.filter((id) => id !== justDrawn) : raw;
   const sorted = sortTiles(rest);
-  const barActions = view.availableActions.filter((a) => a.type !== "discard");
+  // A discard is made by clicking a tile, and a draw is automatic, so neither
+  // belongs in the action bar.
+  const barActions = view.availableActions.filter(
+    (a) => a.type !== "discard" && a.type !== "draw",
+  );
+  const inspectedEntry = inspected ? copies.get(tileKind(inspected)) : undefined;
 
   return (
     <div className="mj-player">
@@ -355,50 +437,36 @@ function PlayerArea({
             ariaLabel="Your flowers"
           />
         )}
+        <MeldRow melds={view.myMelds} orientation="bottom" ariaLabel="Your melds" />
       </div>
 
-      {view.myMelds.length > 0 && (
-        <section aria-label="Your melds">
-          <MeldRow melds={view.myMelds} orientation="bottom" />
-        </section>
-      )}
-
-      <section aria-label="Your discards">
-        <p className="mj-label">Your discards</p>
-        {view.myDiscards.length === 0 ? (
-          <p className="mj-muted">None</p>
-        ) : (
-          <TileRow tiles={view.myDiscards} orientation="bottom" className="mj-discard-row" />
-        )}
-      </section>
-
-      <section aria-label="Your hand">
-        <p className="mj-label">Your hand</p>
+      <section aria-label="Your hand" className="mj-hand-section">
+        <VisibleCopiesPopover tile={inspected} entry={inspectedEntry} />
         <ul className="mj-hand">
           {sorted.map((tileId, i) => (
-            <li key={`${i}-${tileId}`}>
-              <TileButton
-                tileId={tileId}
-                disabled={!discardByTile.has(tileId)}
-                onSelect={onSelectTile}
-              />
-            </li>
+            <HandTile
+              key={`${i}-${tileId}`}
+              tileId={tileId}
+              disabled={!discardByTile.has(tileId)}
+              onSelect={onSelectTile}
+              onInspect={setInspected}
+            />
           ))}
           {justDrawn && (
-            <li className="mj-hand-drawn">
-              <TileButton
-                tileId={justDrawn}
-                disabled={!discardByTile.has(justDrawn)}
-                highlighted
-                onSelect={onSelectTile}
-              />
-            </li>
+            <HandTile
+              className="mj-hand-drawn"
+              tileId={justDrawn}
+              disabled={!discardByTile.has(justDrawn)}
+              highlighted
+              onSelect={onSelectTile}
+              onInspect={setInspected}
+            />
           )}
         </ul>
       </section>
 
       <section aria-label="Your actions">
-        <ActionBar actions={barActions} onAct={onAct} timer={timer} />
+        <ActionBar actions={barActions} onAct={onAct} />
       </section>
     </div>
   );
@@ -427,11 +495,55 @@ export function Mahjong() {
   const [paused, setPaused] = useState(false);
   const [showPanels, setShowPanels] = useState(true);
 
-  // Hooks must run every render, so derive the timer inputs before any early
-  // return. The clock keys off the available-action signature only.
-  const actionSig = view ? view.availableActions.map((a) => `${a.type}:${a.tile ?? ""}`).join("|") : "";
-  const timerActive = !!view && !view.result && !paused && view.availableActions.length > 0;
-  const remainingMs = useTurnClock(timerActive, actionSig, TURN_MS);
+  // Hooks must run every render, so derive everything hook-shaped before any
+  // early return.
+
+  // Drawing is never a decision: the engine offers DRAW alone in the NEEDS_DRAW
+  // phase. Send it as soon as it appears, so the turn goes straight to the
+  // discard.
+  //
+  // The latch sends once per stretch of draw-only actions and resets the moment
+  // the seat has anything else to do. Do not key this off the turn or the wall
+  // count instead: a kong replacement draws without moving the live wall, and a
+  // new hand rewinds it, so a key built from those repeats and the board stops
+  // drawing.
+  const needsDraw =
+    !!view &&
+    !view.result &&
+    view.availableActions.length === 1 &&
+    view.availableActions[0].type === "draw";
+  const drawSent = useRef(false);
+  useEffect(() => {
+    if (!needsDraw) {
+      drawSent.current = false;
+      return;
+    }
+    if (drawSent.current) return;
+    drawSent.current = true;
+    send({ draw: true });
+  }, [needsDraw, send]);
+
+  // A kind -> copies map, so the hand popover is a lookup rather than a scan.
+  const visibleEntries = useMemo(
+    () =>
+      view
+        ? computeVisibleCopies({
+            opponentDiscards: view.opponents.map((o) => o.discards),
+            myDiscards: view.myDiscards,
+            lastDiscard: view.lastDiscard?.tile,
+            visibleMelds: [
+              ...view.opponents.flatMap((o) => o.melds.map((m) => m.tiles)),
+              ...view.myMelds.map((m) => m.tiles),
+            ],
+            visibleFlowers: [...view.opponents.flatMap((o) => o.flowers), ...view.myFlowers],
+          })
+        : [],
+    [view],
+  );
+  const copiesByKind = useMemo(
+    () => new Map<string, VisibleCopiesEntry>(visibleEntries.map((e) => [e.kind, e])),
+    [visibleEntries],
+  );
 
   if (!room || !view) {
     return (
@@ -467,17 +579,6 @@ export function Mahjong() {
   const left = byPosition("left");
   const top = byPosition("top");
   const right = byPosition("right");
-
-  const visibleEntries = computeVisibleCopies({
-    opponentDiscards: view.opponents.map((o) => o.discards),
-    myDiscards: view.myDiscards,
-    lastDiscard: view.lastDiscard?.tile,
-    visibleMelds: [
-      ...view.opponents.flatMap((o) => o.melds.map((m) => m.tiles)),
-      ...view.myMelds.map((m) => m.tiles),
-    ],
-    visibleFlowers: [...view.opponents.flatMap((o) => o.flowers), ...view.myFlowers],
-  });
 
   // Compute the tai estimate once per render and pass it down to the pill.
   const taiEstimate = estimateTai(buildTaiPosition(view));
@@ -535,6 +636,7 @@ export function Mahjong() {
         <p role="status" aria-live="polite">
           {statusText(view)}
         </p>
+        {showPanels && <TaiIndicator estimate={taiEstimate} />}
       </section>
 
       <div className="mj-layout">
@@ -542,7 +644,12 @@ export function Mahjong() {
           <div className="mj-seat-top">{renderOpponent(top, "top")}</div>
           <div className="mj-seat-left">{renderOpponent(left, "left")}</div>
           <div className="mj-seat-centre">
-            <CentreWall tilesLeft={view.wallCount} lastDiscard={view.lastDiscard} />
+            <CentreTable
+              tilesLeft={view.wallCount}
+              lastDiscard={view.lastDiscard}
+              myDiscards={view.myDiscards}
+              riverAt={byPosition}
+            />
           </div>
           <div className="mj-seat-right">{renderOpponent(right, "right")}</div>
           <div className="mj-seat-bottom">
@@ -551,19 +658,10 @@ export function Mahjong() {
               discardByTile={discardByTile}
               onSelectTile={onSelectTile}
               onAct={(action) => send(actionMessage(action))}
-              timer={
-                timerActive ? <TurnTimerBar remainingMs={remainingMs} totalMs={TURN_MS} /> : null
-              }
+              copies={copiesByKind}
             />
           </div>
         </section>
-
-        {showPanels && (
-          <aside className="mj-aside" aria-label="Board insight">
-            <TaiIndicator estimate={taiEstimate} />
-            <VisibleCopiesPanel entries={visibleEntries} />
-          </aside>
-        )}
       </div>
 
       {view.reveal && view.result && (

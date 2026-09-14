@@ -59,8 +59,11 @@ const DOWNLOAD = {
   "Pei.svg": "honor-north.svg",
   "Chun.svg": "honor-red.svg",
   "Hatsu.svg": "honor-green.svg",
-  "Haku.svg": "honor-white.svg",
 };
+
+// The ink the source set uses for the wind characters. The white dragon frame
+// below matches it so the honours read as one group.
+const HONOR_BLUE = "#142896";
 
 // The 8 flowers, drawn on the set's blank front. Seasons take vermilion ink and
 // the four gentlemen take jade, which is how most Taiwanese sets ink them.
@@ -79,6 +82,18 @@ async function fetchText(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${res.status} ${res.statusText} for ${url}`);
   return res.text();
+}
+
+// The white dragon (白板). The source set is riichi, where haku is a blank tile.
+// A Taiwanese set inks a blue double frame instead, so draw that.
+function whiteDragonSvg() {
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">` +
+    `<g fill="none" stroke="${HONOR_BLUE}" stroke-linejoin="miter">` +
+    `<rect x="48" y="58" width="204" height="284" stroke-width="15"/>` +
+    `<rect x="76" y="86" width="148" height="228" stroke-width="7"/>` +
+    `</g></svg>\n`
+  );
 }
 
 // A flower face: the character alone, in the same 300x400 viewBox the source set
@@ -110,7 +125,10 @@ async function main() {
     await writeFile(resolve(OUT, `${name}.svg`), flowerSvg(char, ink));
   }
   console.log(`  flowers ${FLOWERS.length}/${FLOWERS.length}`);
-  console.log(`Wrote ${entries.length + FLOWERS.length} files to public/tiles/`);
+
+  await writeFile(resolve(OUT, "honor-white.svg"), whiteDragonSvg());
+  console.log("  white dragon 1/1");
+  console.log(`Wrote ${entries.length + FLOWERS.length + 1} files to public/tiles/`);
 }
 
 main().catch((err) => {
