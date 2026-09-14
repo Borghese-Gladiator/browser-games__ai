@@ -22,7 +22,7 @@ Open the printed Vite URL and click a game card.
 | `npm run check` | Unit tests (Vitest) — fast, run this to validate a change. |
 | `npm run check:all` | Unit + E2E (Playwright boots the stack and plays full games). |
 | `npm run build` / `npm run preview` | Production build / preview. |
-| `npm run clean:state` | Wipe generated runtime state (snapshots, outcomes, achievements). |
+| `npm run clean:state` | Wipe generated runtime state (snapshots, outcomes). |
 
 ## Layout
 

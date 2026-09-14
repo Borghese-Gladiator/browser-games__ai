@@ -4,7 +4,7 @@
 // silently corrupt a store. Each guard checks only the durable fields the
 // framework depends on, not the opaque per-game engine state.
 
-import type { AchievementUnlock, OutcomeRecord, PlayerOutcome, RoomSnapshot } from './types.ts';
+import type { OutcomeRecord, PlayerOutcome, RoomSnapshot } from './types.ts';
 
 function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
@@ -49,16 +49,3 @@ export function isOutcomeRecordArray(v: unknown): v is OutcomeRecord[] {
   return Array.isArray(v) && v.every(isOutcomeRecord);
 }
 
-export function isAchievementUnlock(v: unknown): v is AchievementUnlock {
-  return (
-    isObject(v) &&
-    typeof v.playerId === 'string' &&
-    typeof v.achievementId === 'string' &&
-    typeof v.gameId === 'string' &&
-    typeof v.ts === 'number'
-  );
-}
-
-export function isAchievementUnlockArray(v: unknown): v is AchievementUnlock[] {
-  return Array.isArray(v) && v.every(isAchievementUnlock);
-}

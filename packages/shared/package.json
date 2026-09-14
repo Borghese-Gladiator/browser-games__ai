@@ -14,7 +14,6 @@
     "./tiles.css": "./src/tiles/tiles.css",
     "./identity": "./src/identity.ts",
     "./sanitize": "./src/sanitize.ts",
-    "./leaderboard": "./src/leaderboard.ts",
     "./metrics": "./src/metrics.ts",
     "./severity": "./src/severity.ts"
   }

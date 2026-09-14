@@ -4,8 +4,6 @@ import {
   assertRoomSnapshot,
   isOutcomeRecord,
   isOutcomeRecordArray,
-  isAchievementUnlock,
-  isAchievementUnlockArray,
 } from './guards.js';
 
 const validSnapshot = {
@@ -32,8 +30,6 @@ const validOutcome = {
   ts: 1000,
   outcomes: [{ playerId: 'p0', rank: 1, score: 10, meta: {} }],
 };
-
-const validUnlock = { playerId: 'p0', achievementId: 'first-win', gameId: 'test', ts: 1000 };
 
 describe('isRoomSnapshot', () => {
   it('accepts a well-formed snapshot', () => {
@@ -82,20 +78,3 @@ describe('isOutcomeRecord', () => {
   });
 });
 
-describe('isAchievementUnlock', () => {
-  it('accepts a well-formed unlock', () => {
-    expect(isAchievementUnlock(validUnlock)).toBe(true);
-  });
-
-  it.each([
-    ['missing achievementId', { ...validUnlock, achievementId: undefined }],
-    ['non-numeric ts', { ...validUnlock, ts: null }],
-  ])('rejects %s', (_label, value) => {
-    expect(isAchievementUnlock(value)).toBe(false);
-  });
-
-  it('validates the array form element-wise', () => {
-    expect(isAchievementUnlockArray([validUnlock])).toBe(true);
-    expect(isAchievementUnlockArray([validUnlock, { playerId: 'p' }])).toBe(false);
-  });
-});

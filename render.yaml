@@ -6,9 +6,9 @@ services:
     region: oregon
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    # /healthz is purpose-built and side-effect free. /api/leaderboard runs
-    # outcomeStore.all() plus a full computeBoard() on every probe, and that
-    # cost grows with match history.
+    # /healthz is purpose-built and side-effect free. /stats rolls up the
+    # message-rate window on every call, so a probe against it would skew the
+    # metric it reports.
     healthCheckPath: /healthz
     autoDeploy: true
     envVars:

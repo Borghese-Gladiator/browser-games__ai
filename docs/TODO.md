@@ -5,37 +5,19 @@ speculative.
 
 ## Deployment (blockers)
 
-### D1. Client hardcodes `localhost:3001` for the gateway
+### D1. Persistence is ephemeral and single-replica
 
-- **Status:** Multiplayer + leaderboard are broken in any real deployment.
-- **Detail:** `packages/game-client/src/useGameSocket.js:12` falls back to
-  `ws://localhost:3001` and `packages/game-client/src/leaderboard.js:7-9` to
-  `http://localhost:3001`. These are **build-time** Vite env vars, and the
-  `Dockerfile` build (`Dockerfile:15`) runs `npm run build` without setting
-  `VITE_GATEWAY_URL`, so the shipped client bakes in `localhost`. A deployed
-  browser connects to the *user's own machine*, not the server, and fails.
-- **Fix:** Derive the gateway URL from `window.location` at runtime
-  (same-origin `wss://<host>` / `https://<host>`). The gateway already serves
-  the client on one origin, so this needs no env var and also fixes D2.
+- **Status:** The outcome log and room snapshots are lost on restart.
+- **Detail:** `packages/game-core/src/store.ts` defaults to relative paths
+  (`./outcomes.json`, `./snapshots`) resolved against the container CWD
+  (`/app`). `render.yaml` mounts no disk and sets no path env vars. In a
+  container these live on the ephemeral writable layer.
+- **Impact:** A redeploy drops in-flight rooms and the mahjong review list.
+  It no longer costs a leaderboard, because the leaderboard is gone.
+- **Fix:** Mount a disk on a paid render.com plan and point `OUTCOMES_PATH`
+  and `SNAPSHOTS_PATH` at it. `bin/dev-server.js` already reads both.
 
-### D2. `ws://` breaks under HTTPS
-
-- **Status:** Blocks HTTPS deployment even if `VITE_GATEWAY_URL` is injected.
-- **Detail:** A `ws://` URL on an `https://` page is blocked as mixed content;
-  needs `wss://`. The runtime origin-derivation in D1 handles this.
-
-### D3. Persistence is ephemeral and single-replica
-
-- **Status:** Leaderboards, achievements, and room snapshots lost on restart.
-- **Detail:** `packages/game-core/src/store.js:20,41,64` default to relative
-  paths (`./outcomes.json`, `./achievements.json`, `./snapshots`) resolved
-  against the container CWD (`/app`). `bin/dev-server.js:16-19` does not
-  override them. In a container these live on the ephemeral writable layer —
-  **lost on every restart/redeploy** — and are not shared across replicas.
-- **Fix:** Mount a volume (PVC) or use an external store; parameterize the
-  paths via env and point them at the mount.
-
-### D4. No horizontal scaling path
+### D2. No horizontal scaling path
 
 - **Status:** Must run as exactly one replica.
 - **Detail:** Rooms, seats, presence, and the per-IP rate-limit bucket are all
@@ -44,7 +26,7 @@ speculative.
 - **Fix:** Document the single-replica constraint, or add sticky sessions +
   shared state (e.g. Redis) before scaling.
 
-### D5. No Kubernetes / Compose / Helm / CI config
+### D3. No Kubernetes / Compose / Helm / CI config
 
 - **Status:** Repo ships only a `Dockerfile` + `.dockerignore`.
 - **Detail:** No `.github/`, `.buildkite/`, `*.yaml`/`*.yml`, `Chart.yaml`, or

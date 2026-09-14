@@ -21,15 +21,9 @@ import type {
   Tile as MahjongTile,
   TaiwaneseRules,
 } from '@browser-games/engine-mahjong';
-import type { GameRecord } from '@portal/shared/leaderboard';
 import type { Adapter, AdapterTable, EngineState, GameMessage, Outcome, GameEngine } from './types.ts';
 import type { OptionsBag, OptionsSchema } from './options.ts';
 import { hashState } from './observability.ts';
-
-// True exactly once: when newRecord is the player's first recorded rank-1 finish.
-const isFirstWin = (playerId: string, _newRecord: GameRecord, playerRecords: GameRecord[]): boolean =>
-  playerRecords.filter((r) => r.outcomes.some((o) => o.playerId === playerId && o.rank === 1))
-    .length === 1;
 
 // Trivial poker policy shared by the bot driver and the turn-timeout auto-action:
 // never bet into uncertainty — check when free, otherwise fold.
@@ -80,7 +74,6 @@ const pokerAdapter: Adapter<PokerState> = {
       }),
     };
   },
-  achievements: [{ id: 'poker-first-win', name: 'First Win', predicate: isFirstWin }],
 };
 
 // First-legal-card policy for sheng-ji bots and timeouts.
@@ -125,7 +118,6 @@ const shengJiAdapter: Adapter<ShengJiState> = {
       })),
     };
   },
-  achievements: [{ id: 'shengji-first-win', name: 'Team Player', predicate: isFirstWin }],
 };
 
 const reversiAdapter: Adapter<ReversiState> = {
@@ -176,7 +168,6 @@ const reversiAdapter: Adapter<ReversiState> = {
       })),
     };
   },
-  achievements: [{ id: 'reversi-first-win', name: 'First Win', predicate: isFirstWin }],
 };
 
 // First-legal-play policy for President bots and turn timeouts: play the lowest
@@ -217,7 +208,6 @@ const presidentAdapter: Adapter<PresidentState> = {
   timeoutAction: (state, seat) => presidentFirstLegal(state, seat),
   botMove: (state, seat) => presidentFirstLegal(state, seat),
   getOutcome: (state) => president.getOutcome(state),
-  achievements: [{ id: 'president-first-win', name: 'First Win', predicate: isFirstWin }],
 };
 
 // ---------------------------------------------------------------------------
@@ -725,7 +715,6 @@ export const mahjongAdapter: Adapter<MahjongState> = {
     const config: MahjongConfig = { rules: state.rules, seed: state.seed, dealer: 0, roundWind: 'E' };
     return { type: 'create', payload: config, stateHash: hashState(mahjong.createGame(config)) };
   },
-  achievements: [{ id: 'mahjong-first-win', name: 'First Win', predicate: isFirstWin }],
 };
 
 // Disabled fixture adapter, never listed in the portal registry. It exists only

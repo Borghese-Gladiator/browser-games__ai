@@ -1,5 +1,4 @@
 import type { MessageSchema } from '@portal/shared/validate';
-import type { Achievement } from '@portal/shared/leaderboard';
 import type { OptionsSchema, OptionsBag } from './options.ts';
 
 export type GameMessage = Record<string, unknown>;
@@ -51,7 +50,6 @@ export interface Adapter<TState extends EngineState> {
   autoStart?(state: TState): TState | null;
   onMessage(state: TState, playerId: string, msg: GameMessage): TState;
   getOutcome?(state: TState): Outcome | null;
-  achievements?: Achievement[];
   optionsSchema?: OptionsSchema;
   activeSeat?(state: TState): number;
   pendingSeats?(state: TState): number[];
@@ -133,13 +131,6 @@ export interface OutcomeRecord {
   roomCode: string;
   ts: number;
   outcomes: PlayerOutcome[];
-}
-
-export interface AchievementUnlock {
-  playerId: string;
-  achievementId: string;
-  gameId: string;
-  ts: number;
 }
 
 export interface RoomSummary {

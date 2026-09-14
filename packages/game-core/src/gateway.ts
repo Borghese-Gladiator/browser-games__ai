@@ -11,10 +11,9 @@ import fastifyStatic from '@fastify/static';
 import { Server } from 'socket.io';
 import { RoomManager, reapRoom } from './rooms.ts';
 import { adapters } from './games.ts';
-import { OutcomeStore, AchievementStore, SnapshotStore } from './store.ts';
+import { OutcomeStore, SnapshotStore } from './store.ts';
 import { createFileEventStore } from './eventStore.ts';
 import type { EventStore } from './eventStore.ts';
-import { checkAchievements } from '@portal/shared/leaderboard';
 import { pages } from '@portal/shared/registry';
 import { log } from './logger.ts';
 import {
@@ -39,7 +38,6 @@ const SNAPSHOT_INTERVAL_MS = 60_000;
 export interface GatewayOptions {
   port?: number;
   outcomesPath?: string;
-  achievementsPath?: string;
   snapshotsPath?: string;
   eventsPath?: string;
   staticDir?: string | null;
@@ -47,7 +45,6 @@ export interface GatewayOptions {
   // Store injection seam. Any store not provided defaults to a file-backed
   // implementation built from the matching *Path option.
   outcomeStore?: OutcomeStore;
-  achievementStore?: AchievementStore;
   snapshotStore?: SnapshotStore;
   eventStore?: EventStore;
 }
@@ -62,7 +59,6 @@ export function createGateway(opts: GatewayOptions = {}): Gateway {
   const {
     port = 3001,
     outcomesPath = './outcomes.json',
-    achievementsPath = './achievements.json',
     snapshotsPath = './snapshots',
     eventsPath = './.state/events',
     staticDir = null,
@@ -70,7 +66,6 @@ export function createGateway(opts: GatewayOptions = {}): Gateway {
 
   const resolvedStaticDir = resolveStaticDir(staticDir);
   const outcomeStore = opts.outcomeStore ?? new OutcomeStore(outcomesPath);
-  const achievementStore = opts.achievementStore ?? new AchievementStore(achievementsPath);
   const snapshotStore = opts.snapshotStore ?? new SnapshotStore(snapshotsPath);
   const eventStore = opts.eventStore ?? createFileEventStore(eventsPath);
 
@@ -86,21 +81,13 @@ export function createGateway(opts: GatewayOptions = {}): Gateway {
     totalRoomsFinished: 0,
   };
 
-  // The single framework-side hook every game flows through when it ends: persist
-  // the outcome and record newly-unlocked achievements per player.
+  // The single framework-side hook every game flows through when it ends. The
+  // outcome log is the index /api/reviews reads to list reviewable rooms.
   function onGameEnd(outcome: Outcome, { gameId, roomCode }: { gameId: string; roomCode: string }): void {
-    const record = outcomeStore.record({ gameId, roomCode, outcomes: outcome.outcomes });
+    outcomeStore.record({ gameId, roomCode, outcomes: outcome.outcomes });
     getFunnel(gameId).gamesFinished++;
     metrics.totalRoomsFinished++;
     log.info('game ended', { gameId, roomCode });
-    const achievements = adapters[gameId]?.achievements ?? [];
-    if (achievements.length === 0) return;
-    for (const { playerId } of outcome.outcomes) {
-      const playerRecords = outcomeStore.all().filter((r) => r.outcomes.some((o) => o.playerId === playerId));
-      for (const achievementId of checkAchievements(achievements, playerId, record, playerRecords)) {
-        achievementStore.record({ playerId, achievementId, gameId });
-      }
-    }
   }
 
   function onGameStart({ gameId, roomCode }: { gameId: string; roomCode: string }): void {
@@ -241,10 +228,7 @@ export function createGateway(opts: GatewayOptions = {}): Gateway {
 export { RoomManager, adapters, handleMessage, runHeartbeat, Session, broadcastRoom, reapRoom };
 export { createFileEventStore } from './eventStore.ts';
 export type { EventStore, GameEvent, EventInput } from './eventStore.ts';
-export { selectStores, createFileStores } from './stores.ts';
-export type { GatewayStores, OutcomeStore as DurableOutcomeStore } from './stores.ts';
 export { replayGame } from './replay.ts';
 export type { ReplayResult } from './replay.ts';
 export { reviewGame, discardPositionForSeat } from './review.ts';
 export type { GameReview, ReviewStep, SeatSummary, DiscardEvaluation } from './review.ts';
-export { runMigrations, loadMigrations } from './migrate.ts';

@@ -15,7 +15,7 @@ export default defineConfig({
   webServer: [
     {
       // Point persistence at a throwaway dir so each run starts from clean
-      // state (no leftover rooms, outcomes, or achievements skewing specs).
+      // state (no leftover rooms or outcomes skewing specs).
       command: "node bin/dev-server.js",
       port: GATEWAY_PORT,
       timeout: 10_000,
@@ -24,7 +24,6 @@ export default defineConfig({
         PORT: String(GATEWAY_PORT),
         SNAPSHOTS_PATH: ".state/e2e/snapshots",
         OUTCOMES_PATH: ".state/e2e/outcomes.json",
-        ACHIEVEMENTS_PATH: ".state/e2e/achievements.json",
         EVENTS_PATH: ".state/e2e/events",
         // One shared per-IP bucket serves the whole suite; widen it so combined
         // load doesn't trip a production-tight limit (see TODO §3).

@@ -18,9 +18,8 @@ Local games (tic-tac-toe, FPS) run entirely client-side with no server.
    just game state in, new state out. All transport lives in `game-core`.
 3. **One gateway, many games.** `packages/game-core` is generic. A game plugs in
    via an *adapter* (`game-core/src/games.js`); the gateway never knows game rules.
-4. **Don't commit runtime state.** `snapshots/`, `outcomes.json`, `achievements.json`,
-   and `.state/` are generated at runtime and gitignored. `npm run clean:state`
-   wipes them.
+4. **Don't commit runtime state.** `snapshots/`, `outcomes.json`, and `.state/`
+   are generated at runtime and gitignored. `npm run clean:state` wipes them.
 5. **No code comments unless asked** (see the surrounding code's low comment density).
 
 ## Where things live
@@ -28,11 +27,11 @@ Local games (tic-tac-toe, FPS) run entirely client-side with no server.
 | Path | Responsibility |
 |---|---|
 | `packages/shared/src/registry.js` | Game list — source of truth. |
-| `packages/shared/src/` | Cross-cutting pure helpers: validate, sanitize, rateLimit, leaderboard, identity, metrics, theme. |
+| `packages/shared/src/` | Cross-cutting pure helpers: validate, sanitize, rateLimit, identity, metrics, theme. |
 | `packages/game-core/src/gateway.js` | The single WS + HTTP server. Routes by `gameId` + room code; serves `dist/` in prod. |
 | `packages/game-core/src/rooms.js` | `Room` + `RoomManager` — per-room engine state, seats, membership. |
 | `packages/game-core/src/games.js` | Adapter registry: `gameId -> { engine, hooks }`. |
-| `packages/game-core/src/store.js` | File-backed persistence (outcomes, achievements, room snapshots). |
+| `packages/game-core/src/store.js` | File-backed persistence (the outcome log and room snapshots). |
 | `packages/game-core/src/{matchmaking,bots,timers,observability}.js` | Platform features. |
 | `packages/engines/<id>/src/engine.js` | Pure game logic + its unit tests. |
 | `packages/game-client/src/useGameSocket.js` | Client hook: connect, lobby actions, send moves, reconnect. |
