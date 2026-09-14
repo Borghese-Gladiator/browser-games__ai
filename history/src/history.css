@@ -223,6 +223,15 @@
 .rv-move-tile {
   margin: 0;
   display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rv-move-kind {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-dim);
 }
 
 /* Hand at the reviewed turn, rendered with the shared tile faces. */

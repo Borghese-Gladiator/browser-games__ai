@@ -18,6 +18,21 @@ const SEVERITY_NOTE: Record<MistakeSeverity, string> = {
   severe: "This discard is far from the best option.",
 };
 
+const SEVERITY_MARK: Record<MistakeSeverity, string> = {
+  optimal: "◎",
+  minor: "○",
+  moderate: "△",
+  severe: "✕",
+};
+
+// Bar width for a row, relative to the best score. Scores can be negative, so
+// the range is measured from the worst option up.
+function barWidth(score: number, best: number, worst: number): string {
+  const span = best - worst;
+  if (span <= 0) return "100%";
+  return `${Math.max(2, Math.round(((score - worst) / span) * 100))}%`;
+}
+
 export function RankingView({
   ranking,
   result,
@@ -25,30 +40,37 @@ export function RankingView({
   ranking: readonly RankedDiscard[];
   result: PlayerChoiceResult;
 }): JSX.Element {
+  const best = ranking[0].score;
+  const worst = ranking[ranking.length - 1].score;
+
   return (
     <section className="dt-ranking-section" aria-label="Discard ranking">
       <div className={`dt-result dt-result-${result.severity}`} role="status">
-        <p className="dt-result-severity">{SEVERITY_LABEL[result.severity]}</p>
-        <p className="dt-result-note">{SEVERITY_NOTE[result.severity]}</p>
+        <span className="dt-result-mark" aria-hidden="true">
+          {SEVERITY_MARK[result.severity]}
+        </span>
+        <div className="dt-result-copy">
+          <p className="dt-result-severity">{SEVERITY_LABEL[result.severity]}</p>
+          <p className="dt-result-note">{SEVERITY_NOTE[result.severity]}</p>
+        </div>
         <dl className="dt-result-stats">
           <div>
             <dt>Your pick</dt>
             <dd>
-              <span className="dt-tile-stat">
-                <TileFace tile={tileToId(result.choice)} size="md" decorative />
-                <span className="dt-tile-rank">#{result.choiceRank}</span>
-              </span>
+              <TileFace tile={tileToId(result.choice)} size="md" decorative />
+              <span className="dt-rank-badge">#{result.choiceRank}</span>
             </dd>
           </div>
           <div>
             <dt>Best</dt>
             <dd>
               <TileFace tile={kindToTileId(result.best.kind)} size="md" decorative />
+              <span className="dt-rank-badge dt-rank-badge--best">#1</span>
             </dd>
           </div>
           <div>
             <dt>Points lost</dt>
-            <dd>{result.deltaScore}</dd>
+            <dd className="dt-delta">{result.deltaScore}</dd>
           </div>
         </dl>
       </div>
@@ -58,11 +80,16 @@ export function RankingView({
         {ranking.map((entry, index) => {
           const rank = index + 1;
           const isChoice = rank === result.choiceRank;
-          const sentences = renderReasons(entry.reasons);
+          const isBest = rank === 1;
+          // Reasons are long. Spell them out for the two rows the player came
+          // here to compare, and keep the rest to one scannable line.
+          const sentences = isBest || isChoice ? renderReasons(entry.reasons) : [];
           return (
             <li
               key={entry.kind}
-              className={`dt-rank-row${isChoice ? " dt-rank-choice" : ""}`}
+              className={`dt-rank-row${isChoice ? " dt-rank-choice" : ""}${
+                isBest ? " dt-rank-best" : ""
+              }`}
               aria-current={isChoice ? "true" : undefined}
             >
               <div className="dt-rank-head">
@@ -70,8 +97,15 @@ export function RankingView({
                 <span className="dt-rank-tile">
                   <TileFace tile={kindToTileId(entry.kind)} size="md" decorative />
                 </span>
+                <span className="dt-rank-kind">Cut {entry.kind}</span>
+                <span className="dt-rank-bar" aria-hidden="true">
+                  <span
+                    className="dt-rank-fill"
+                    style={{ width: barWidth(entry.score, best, worst) }}
+                  />
+                </span>
                 <span className="dt-rank-score">{entry.score}</span>
-                {rank === 1 && <span className="dt-badge dt-badge-best">Best</span>}
+                {isBest && <span className="dt-badge dt-badge-best">Best</span>}
                 {isChoice && <span className="dt-badge dt-badge-choice">Your pick</span>}
               </div>
               {sentences.length > 0 && (

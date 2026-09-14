@@ -13,13 +13,14 @@ async function readSeat(page) {
   return Number(value);
 }
 
-// Read the concealed hand as the sorted list of tile glyphs. Only the local seat
-// renders concealed hand tiles (.mj-tile-btn); opponents never do.
+// Read the concealed hand as the sorted list of tile ids. A tile face is real
+// artwork and carries no text, so the button tags itself with data-tile. Only
+// the local seat renders concealed hand tiles (.mj-tile-btn); opponents never do.
 async function readHand(page) {
   const tiles = page.locator(`${HAND} .mj-tile-btn`);
   const count = await tiles.count();
   const out = [];
-  for (let i = 0; i < count; i += 1) out.push((await tiles.nth(i).textContent())?.trim());
+  for (let i = 0; i < count; i += 1) out.push(await tiles.nth(i).getAttribute("data-tile"));
   return out.sort();
 }
 

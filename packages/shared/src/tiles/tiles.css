@@ -1,167 +1,121 @@
-/* Reusable mahjong tile faces and backs, plus the shared felt/typography tokens
-   that the board and any tile consumer read. Faces are cream/ivory with a
-   suit-coloured corner index and an inline-SVG glyph; backs are mid-green. */
+/* Mahjong tile faces and backs.
+
+   The artwork in public/tiles/ is ink only, on a transparent ground. This file
+   draws the tile itself: the ivory body, the bevel, the edge, and the shadow.
+   That keeps one image request per tile and lets the theme restyle the body
+   without touching the art. */
 :root {
-  --mj-felt: #0b3d2e;
-  --mj-felt-2: #0e4a37;
-  --mj-rail: #072a1c;
-  --mj-line: rgba(245, 239, 224, 0.14);
-  --mj-cream: #f6f0e2;
-  --mj-cream-2: #efe6d2;
-  --mj-cream-edge: #cbbf9f;
+  --mj-felt: #0f4132;
+  --mj-felt-2: #145140;
+  --mj-rail: #08281e;
+  --mj-line: rgb(237 231 217 / 0.12);
+
+  --mj-cream: #f7f3e8;
+  --mj-cream-2: #e9e2d1;
+  --mj-cream-edge: #b9ae95;
+  --mj-cream-shade: #cfc6ad;
+
+  --mj-back: #2a8a63;
+  --mj-back-2: #1c6349;
+  --mj-back-edge: #0d3527;
+
   --mj-ink: #2c2823;
   --mj-char: #b02a20;
   --mj-dot: #1f5fb0;
   --mj-bam: #1f7a3d;
   --mj-honor: #2c2823;
   --mj-dragon: #b02a20;
-  --mj-dragon-red: #b02a20;
-  --mj-dragon-green: #1f7a3d;
-  --mj-dragon-white: #1f5fb0;
-  --mj-flower: #9c3f97;
-  --mj-back: #2f6f4f;
-  --mj-back-2: #24583e;
-  --mj-back-edge: #163f2c;
-  --mj-amber: #e6a417;
-  --mj-amber-2: #f4b52c;
+  --mj-flower: #1d7a4c;
+
+  --mj-amber: var(--gold, #e7b84f);
+  --mj-amber-2: var(--gold-2, #f3ce78);
 }
 
-/* Backs: opponent concealed hands as count backs facing their seat. */
-.mj-backs {
-  display: flex;
-  gap: 2px;
-}
-.mj-backs--top,
-.mj-backs--bottom,
-.mj-backs--left,
-.mj-backs--right {
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-/* Tile faces and backs. */
+/* Faces and backs. Aspect ratio matches the 300x400 artwork viewBox. */
 .mj-tile {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 5 / 7;
-  border-radius: 4px;
-  background: linear-gradient(160deg, var(--mj-cream), var(--mj-cream-2));
-  border: 1px solid var(--mj-cream-edge);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  color: var(--mj-ink);
+  flex: none;
+  aspect-ratio: 3 / 4;
+  border-radius: 14%;
+  background: linear-gradient(168deg, #fffdf6 0%, var(--mj-cream) 38%, var(--mj-cream-2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -2px 0 var(--mj-cream-shade),
+    inset 0 0 0 1px var(--mj-cream-edge),
+    0 2px 3px rgb(0 0 0 / 0.45);
   overflow: hidden;
+  user-select: none;
 }
+
 .mj-tile--xs {
-  width: 18px;
+  width: 20px;
 }
 .mj-tile--sm {
-  width: 26px;
+  width: 28px;
 }
 .mj-tile--md {
-  width: 34px;
+  width: 38px;
 }
 .mj-tile--lg {
-  width: 46px;
+  width: 52px;
 }
+
+.mj-tile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 9%;
+  pointer-events: none;
+}
+.mj-tile--xs .mj-tile-img {
+  padding: 6%;
+}
+
+/* Highlighted: the drawn tile, the last discard, the winning tile. */
 .mj-tile--hl {
-  border-color: var(--mj-amber);
-  box-shadow: 0 0 0 2px var(--mj-amber), 0 2px 4px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -2px 0 var(--mj-cream-shade),
+    inset 0 0 0 1px var(--mj-amber),
+    0 0 0 2px var(--mj-amber),
+    0 0 14px rgb(231 184 79 / 0.5);
 }
+
+/* Backs: jade, with a woven diagonal so a stack of them reads as tiles. */
 .mj-tile--back {
-  background: linear-gradient(160deg, var(--mj-back), var(--mj-back-2));
-  border-color: var(--mj-back-edge);
-}
-.mj-tile-corner {
-  position: absolute;
-  top: 1px;
-  left: 2px;
-  font-size: 0.55em;
-  font-weight: 800;
-  line-height: 1;
-}
-.mj-tile--xs .mj-tile-corner {
-  display: none;
-}
-.mj-tile-glyph {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  padding: 2px;
-}
-.mj-glyph {
-  width: 100%;
-  height: 100%;
+  background: linear-gradient(168deg, var(--mj-back) 0%, var(--mj-back-2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    inset 0 -2px 0 rgb(0 0 0 / 0.28),
+    inset 0 0 0 1px var(--mj-back-edge),
+    0 2px 3px rgb(0 0 0 / 0.45);
 }
 .mj-back-art {
   width: 100%;
   height: 100%;
-}
-.mj-back-frame {
-  fill: none;
-  stroke: rgba(245, 239, 224, 0.35);
-  stroke-width: 1.5;
-}
-.mj-back-mark {
-  fill: rgba(245, 239, 224, 0.22);
-}
-.mj-back-dot {
-  fill: rgba(245, 239, 224, 0.5);
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgb(255 255 255 / 0.07) 0 2px,
+      transparent 2px 6px
+    );
 }
 
-/* Glyph ink. */
-.mj-glyph text {
-  text-anchor: middle;
-  font-family: "Noto Sans TC", "PingFang TC", "Hiragino Sans", "Microsoft JhengHei",
-    system-ui, sans-serif;
-  font-weight: 700;
+.mj-backs {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
-.mj-glyph-num {
-  font-size: 18px;
-}
-.mj-glyph-wan {
-  font-size: 20px;
-}
-.mj-glyph-honour {
-  font-size: 30px;
-}
-.mj-ink-char {
-  fill: var(--mj-char);
-}
-.mj-ink-honor {
-  fill: var(--mj-honor);
-}
-.mj-ink-dragon-red {
-  fill: var(--mj-dragon-red);
-}
-.mj-ink-dragon-green {
-  fill: var(--mj-dragon-green);
-}
-.mj-ink-dragon-white {
-  fill: var(--mj-dragon-white);
-}
-.mj-dot {
-  stroke: rgba(0, 0, 0, 0.25);
-  stroke-width: 0.75;
-}
-.mj-dot-a {
-  fill: var(--mj-dot);
-}
-.mj-dot-b {
-  fill: var(--mj-bam);
-}
-.mj-bam-stick rect {
-  fill: var(--mj-bam);
-}
-.mj-bam-stick line {
-  stroke: rgba(0, 0, 0, 0.35);
-  stroke-width: 1;
-}
-.mj-flower ellipse {
-  fill: var(--mj-flower);
-}
-.mj-flower-core {
-  fill: var(--mj-amber-2);
+
+/* Felt surface, shared by the board and any tile tray. */
+.mj-felt-surface {
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--mj-felt-2), var(--mj-felt) 60%, var(--mj-rail) 100%);
+  border: 1px solid var(--mj-line);
+  border-radius: var(--r-lg, 16px);
+  box-shadow: inset 0 2px 24px rgb(0 0 0 / 0.45);
 }

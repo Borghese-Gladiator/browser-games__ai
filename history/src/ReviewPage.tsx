@@ -140,6 +140,7 @@ function StepView({
           <h2>Chosen discard</h2>
           <p className="rv-move-tile">
             <TileFace tile={kindToTileId(step.chosen.kind)} size="lg" decorative />
+            <span className="rv-move-kind">{step.chosen.kind}</span>
           </p>
           <p className="rv-muted rv-num">Score {step.chosen.score}</p>
           <ReasonList reasons={step.chosen.reasons} />
@@ -148,6 +149,7 @@ function StepView({
           <h2>Best discard</h2>
           <p className="rv-move-tile">
             <TileFace tile={kindToTileId(step.best.kind)} size="lg" decorative />
+            <span className="rv-move-kind">{step.best.kind}</span>
           </p>
           <p className="rv-muted rv-num">Score {step.best.score}</p>
           <ReasonList reasons={step.best.reasons} />

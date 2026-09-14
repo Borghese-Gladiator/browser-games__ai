@@ -195,6 +195,7 @@ function TileButton({
     <button
       type="button"
       className={`mj-tile-btn${highlighted ? " mj-tile-btn--drawn" : ""}`}
+      data-tile={tileId}
       aria-label={disabled ? tileLabel(tileId) : `Discard ${tileLabel(tileId)}`}
       disabled={disabled}
       onClick={() => onSelect(tileId)}
