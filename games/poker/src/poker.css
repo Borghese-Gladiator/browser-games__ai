@@ -39,7 +39,7 @@
   font-size: 1.25rem;
   min-height: 1.5em;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--gold);
 }
 
 .poker-join {
@@ -52,9 +52,9 @@
 .poker-join input {
   font-size: 1rem;
   padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--line);
-  background: var(--cell);
+  background: var(--surface);
   color: var(--text);
 }
 
@@ -70,16 +70,16 @@
 .poker-cards li {
   font-size: 1.25rem;
   font-weight: 700;
-  background: var(--cell);
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   padding: 0.5rem 0.75rem;
   min-width: 2.25rem;
 }
 
 .poker-hole li {
   font-size: 1.75rem;
-  border-color: var(--accent);
+  border-color: var(--gold);
 }
 
 .poker-pot {
@@ -97,7 +97,7 @@
 }
 
 .poker-players li[aria-current="true"] {
-  color: var(--accent);
+  color: var(--gold);
   font-weight: 700;
 }
 
@@ -110,7 +110,7 @@
 
 .poker-error {
   margin: 0;
-  color: #f87171;
+  color: var(--danger);
   font-weight: 600;
 }
 

@@ -8,9 +8,9 @@
   --text: var(--mj-cream);
   --muted: rgba(246, 240, 226, 0.62);
   --line: rgba(245, 239, 224, 0.16);
-  --cell: rgba(0, 0, 0, 0.22);
-  --cell-hover: rgba(0, 0, 0, 0.32);
-  --accent: var(--mj-amber-2);
+  --surface: rgba(0, 0, 0, 0.22);
+  --surface-2: rgba(0, 0, 0, 0.32);
+  --gold: var(--mj-amber-2);
 }
 
 .rv {
@@ -60,7 +60,7 @@
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 1rem 1.25rem;
-  background: var(--cell);
+  background: var(--surface);
 }
 
 .rv-panel-title {
@@ -69,7 +69,7 @@
 }
 
 .rv-panel-error {
-  border-left: 4px solid #ef4444;
+  border-left: 4px solid var(--sev-severe);
 }
 
 /* Games list. */
@@ -89,13 +89,13 @@
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.75rem 1rem;
-  background: var(--cell);
+  background: var(--surface);
   color: var(--text);
 }
 
 .rv-list-row:hover {
-  border-color: var(--accent);
-  background: var(--cell-hover);
+  border-color: var(--gold);
+  background: var(--surface-2);
 }
 
 .rv-list-code {
@@ -139,16 +139,16 @@
   border-left-width: 4px;
 }
 .rv-step-optimal {
-  border-left-color: #22c55e;
+  border-left-color: var(--sev-optimal);
 }
 .rv-step-minor {
-  border-left-color: #eab308;
+  border-left-color: var(--sev-minor);
 }
 .rv-step-moderate {
-  border-left-color: #f97316;
+  border-left-color: var(--sev-moderate);
 }
 .rv-step-severe {
-  border-left-color: #ef4444;
+  border-left-color: var(--sev-severe);
 }
 
 .rv-step-head {
@@ -167,24 +167,28 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   padding: 0.125rem 0.5rem;
 }
+/* A badge carries its severity as text, and red cannot clear 4.5:1 on the
+   mid-green felt. The dark plate gives every step of the ramp its contrast. */
+.rv-badge-optimal,
+.rv-badge-minor,
+.rv-badge-moderate,
+.rv-badge-severe {
+  background: var(--sev-plate);
+}
 .rv-badge-optimal {
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
+  color: var(--sev-optimal);
 }
 .rv-badge-minor {
-  background: rgba(234, 179, 8, 0.15);
-  color: #eab308;
+  color: var(--sev-minor);
 }
 .rv-badge-moderate {
-  background: rgba(249, 115, 22, 0.15);
-  color: #f97316;
+  color: var(--sev-moderate);
 }
 .rv-badge-severe {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  color: var(--sev-severe);
 }
 
 .rv-compare {
@@ -206,10 +210,10 @@
   background: rgba(0, 0, 0, 0.24);
 }
 .rv-move-chosen {
-  border-color: var(--accent);
+  border-color: var(--gold);
 }
 .rv-move-best {
-  border-color: #22c55e;
+  border-color: var(--sev-optimal);
 }
 
 .rv-move h2 {

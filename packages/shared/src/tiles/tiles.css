@@ -5,9 +5,11 @@
    That keeps one image request per tile and lets the theme restyle the body
    without touching the art. */
 :root {
-  --mj-felt: #0f4132;
-  --mj-felt-2: #145140;
-  --mj-rail: #08281e;
+  /* The felt is the parlor jade. These names stay because the board, the
+     trainer and the review all read them, but the values live in theme.css. */
+  --mj-felt: var(--jade-felt);
+  --mj-felt-2: var(--jade-felt-2);
+  --mj-rail: var(--jade-rail);
   --mj-line: rgb(237 231 217 / 0.12);
 
   --mj-cream: #f7f3e8;
@@ -29,6 +31,12 @@
 
   --mj-amber: var(--gold, #e7b84f);
   --mj-amber-2: var(--gold-2, #f3ce78);
+
+  /* Tier accents for the tai pill and the fan and pattern guide. Mahjong
+     domain colours, so they live with the other --mj- tokens. */
+  --mj-tier-guaranteed: #2dd4bf;
+  --mj-tier-on-track: #60a5fa;
+  --mj-tier-potential: var(--mj-amber-2);
 }
 
 /* Faces and backs. Aspect ratio matches the 300x400 artwork viewBox. */

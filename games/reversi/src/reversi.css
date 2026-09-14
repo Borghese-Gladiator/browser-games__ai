@@ -29,16 +29,17 @@
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   gap: 2px;
-  background: #1b5e20;
-  border: 4px solid #1b5e20;
-  border-radius: 6px;
+  background: var(--jade-felt);
+  border: 4px solid var(--jade-felt);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
   width: 100%;
   aspect-ratio: 1;
 }
 
 .reversi-cell {
   aspect-ratio: 1;
-  background: #2e7d32;
+  background: var(--jade-felt-3);
   border: none;
   padding: 0;
   position: relative;
@@ -49,20 +50,25 @@
   cursor: pointer;
 }
 
+.reversi-cell:not(:disabled):hover {
+  background: var(--jade-felt-2);
+}
+
 .reversi-cell--black::after,
 .reversi-cell--white::after {
   content: "";
   position: absolute;
   inset: 12%;
   border-radius: 50%;
+  box-shadow: var(--shadow-sm);
 }
 
 .reversi-cell--black::after {
-  background: #222;
+  background: var(--bg);
 }
 
 .reversi-cell--white::after {
-  background: #fff;
+  background: var(--text);
 }
 
 .reversi-cell--hint::after {
@@ -70,9 +76,9 @@
   position: absolute;
   inset: 38%;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgb(237 231 217 / 0.35);
 }
 
 .reversi-error {
-  color: #c62828;
+  color: var(--danger);
 }

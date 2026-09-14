@@ -174,7 +174,7 @@
   margin: 0;
   text-align: center;
   font-size: 0.78rem;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 /* "or join with a code" divider */
@@ -186,7 +186,7 @@
   font-size: 0.7rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--muted);
 }
 .rule-or::before,
 .rule-or::after {
@@ -277,7 +277,7 @@
 
 .table-host {
   font-size: 0.72rem;
-  color: var(--faint);
+  color: var(--muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

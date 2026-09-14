@@ -1,0 +1,37 @@
+{
+  "extends": "stylelint-config-standard",
+  "ignoreFiles": ["dist/**", "node_modules/**", ".claude/**"],
+  "rules": {
+    "color-no-hex": true,
+    "alpha-value-notation": null,
+    "color-function-notation": null,
+    "custom-property-pattern": null,
+    "selector-class-pattern": null,
+    "declaration-block-no-redundant-longhand-properties": null,
+    "no-descending-specificity": null,
+    "comment-empty-line-before": null,
+    "custom-property-empty-line-before": null,
+    "declaration-empty-line-before": null,
+    "rule-empty-line-before": null,
+    "media-feature-range-notation": null,
+    "value-keyword-case": null,
+    "color-function-alias-notation": null,
+    "color-hex-length": null,
+    "length-zero-no-unit": null,
+    "keyframes-name-pattern": null,
+    "shorthand-property-no-redundant-values": null,
+    "number-max-precision": null,
+    "property-no-vendor-prefix": null,
+    "property-no-deprecated": null
+  },
+  "overrides": [
+    {
+      "files": [
+        "packages/shared/src/theme.css",
+        "packages/shared/src/tiles/tiles.css",
+        "games/fps/src/style.css"
+      ],
+      "rules": { "color-no-hex": null }
+    }
+  ]
+}

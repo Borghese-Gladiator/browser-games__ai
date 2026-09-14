@@ -13,10 +13,12 @@
   --line: #35352c;
   --line-soft: #2a2a23;
 
-  /* Ink. */
+  /* Ink. Every token down to --muted is safe for text on --bg through
+     --surface-2. --faint is not: it is inert chrome only. */
   --text: #ede7d9;
   --text-dim: #c4bdac;
   --muted: #8f8877;
+  /* Borders, pips, dots and disabled labels. Never readable text — 2.94:1. */
   --faint: #615c51;
 
   /* Accents. */
@@ -28,14 +30,33 @@
   --jade-deep: #10402f;
   --jade-felt: #0f4132;
   --jade-felt-2: #145140;
+  /* The lightest felt. A near-black game piece needs it to clear 3:1. */
+  --jade-felt-3: #1a6b53;
+  --jade-rail: #08281e;
+  /* Positive text on felt or on a panel. Reads at 5.94:1 on the light felt. */
+  --jade-light: #8fe0bb;
   --vermilion: #c2452d;
   --vermilion-2: #e0644a;
+  /* Deep enough to carry ivory text at 6.98:1. Use it for a filled alert. */
+  --vermilion-deep: #8a2b1a;
   --danger: #e0644a;
 
-  /* Back-compat aliases. Older game CSS reads these names. */
-  --accent: var(--gold);
-  --cell: var(--surface);
-  --cell-hover: var(--surface-2);
+  /* Ink to lay on top of a filled gold or jade surface. Both are dark: a
+     mid-tone fill cannot carry white text at 4.5:1. */
+  --on-gold: #1a1400;
+  --on-jade: #04120c;
+
+  /* Severity ramp, keyed to packages/shared/src/severity.ts. The history
+     review, the discard trainer and the mahjong hand-end screen each invented
+     their own before; they all read these now. Every step clears 4.5:1 on a
+     dark plate and 3:1 as a swatch on bare felt. Red on mid-green felt cannot
+     reach 4.5:1, so a badge that carries one of these as text must sit on a
+     dark plate — see --sev-plate. */
+  --sev-optimal: #4ade80;
+  --sev-minor: var(--gold);
+  --sev-moderate: #ffab5e;
+  --sev-severe: #f87171;
+  --sev-plate: rgb(0 0 0 / 0.4);
 
   /* Shape. */
   --r-sm: 6px;
@@ -131,7 +152,7 @@ a:hover {
 }
 
 .btn-primary {
-  color: #1a1400;
+  color: var(--on-gold);
   background: linear-gradient(180deg, var(--gold-2), var(--gold));
   border-color: var(--gold);
   box-shadow: 0 6px 20px rgb(231 184 79 / 0.18);
@@ -142,12 +163,12 @@ a:hover {
 }
 
 .btn-jade {
-  color: #eafaf2;
-  background: linear-gradient(180deg, var(--jade-2), var(--jade));
-  border-color: var(--jade);
+  color: var(--on-jade);
+  background: linear-gradient(180deg, #4bbd8e, var(--jade-2));
+  border-color: var(--jade-2);
 }
 .btn-jade:hover:not(:disabled) {
-  background: linear-gradient(180deg, #49bd8d, var(--jade-2));
+  background: linear-gradient(180deg, #5ccb9d, #4bbd8e);
 }
 
 .btn-ghost {
@@ -189,7 +210,7 @@ select {
   padding: 0.6rem 0.8rem;
 }
 input::placeholder {
-  color: var(--faint);
+  color: var(--muted);
 }
 input:focus-visible,
 select:focus-visible {

@@ -91,7 +91,7 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--muted);
 }
 .dt-brief-stats dd {
   margin: 0.15rem 0 0;
@@ -224,11 +224,11 @@
 }
 
 .dt-result-moderate {
-  border-left-color: #d98f3c;
+  border-left-color: var(--sev-moderate);
 }
 .dt-result-moderate .dt-result-mark,
 .dt-result-moderate .dt-result-severity {
-  color: #e0a055;
+  color: var(--sev-moderate);
 }
 
 .dt-result-severe {
@@ -252,7 +252,7 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--muted);
   margin-bottom: 0.3rem;
 }
 .dt-result-stats dd {
@@ -326,7 +326,7 @@
   font-family: var(--font-mono);
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--faint);
+  color: var(--muted);
   width: 2.1rem;
   flex: none;
 }
@@ -384,7 +384,7 @@
   flex: none;
 }
 .dt-badge-best {
-  color: #8fe0bb;
+  color: var(--jade-light);
   background: rgb(42 138 99 / 0.18);
   border: 1px solid rgb(42 138 99 / 0.4);
 }

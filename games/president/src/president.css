@@ -39,7 +39,7 @@
   font-size: 1.25rem;
   min-height: 1.5em;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--gold);
 }
 
 .president-cards {
@@ -60,9 +60,9 @@
 .president-card {
   font-size: 1.25rem;
   font-weight: 700;
-  background: var(--cell);
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   padding: 0.5rem 0.75rem;
   min-width: 2.25rem;
   color: var(--text);
@@ -70,8 +70,8 @@
 }
 
 .president-card.selected {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--gold);
+  color: var(--gold);
 }
 
 .president-card:disabled {
@@ -92,7 +92,7 @@
 
 .president-error {
   margin: 0;
-  color: #f87171;
+  color: var(--danger);
   font-weight: 600;
 }
 
