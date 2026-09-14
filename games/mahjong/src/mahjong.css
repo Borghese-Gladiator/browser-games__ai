@@ -3,10 +3,9 @@
    and the history review share one palette. This file owns only the table
    layout: seats, name plates, HUD, panels and responsive rules. */
 .mj {
-  /* Hand tiles size off the viewport so a 17-tile hand always fits one row.
-     The floor is what 17 tiles plus their gaps need at 360px, the narrowest
-     phone worth supporting. */
-  --mj-hand-tile: clamp(17px, 3.6vw, 56px);
+  /* The widest a hand tile is ever drawn. It is a cap, not a size: the hand row
+     divides its own width, so tiles shrink below this whenever they must. */
+  --mj-hand-tile-max: 56px;
 
   min-height: 100vh;
   display: flex;
@@ -451,8 +450,10 @@
   flex-wrap: wrap;
   gap: 0.25rem;
 }
-/* The hand is always one row. Tiles size off the viewport (--mj-hand-tile), so
-   a 17-tile hand fits from a phone up. */
+/* The hand is always one row, at any viewport and any hand size.
+   Each tile is a flex item that starts at the cap and shrinks with the row, so
+   the tiles divide whatever width the row has rather than reading a size off
+   the viewport. No breakpoint, and no hand length, can wrap it. */
 .mj-hand-section {
   position: relative;
 }
@@ -462,8 +463,16 @@
   flex-wrap: nowrap;
   justify-content: center;
 }
+.mj-hand > li {
+  flex: 0 1 var(--mj-hand-tile-max);
+  min-width: 0;
+}
+.mj-hand .mj-tile-btn {
+  display: block;
+  width: 100%;
+}
 .mj-hand .mj-tile {
-  width: var(--mj-hand-tile);
+  width: 100%;
 }
 
 /* Visible copies for the pointed-at tile, floated just above the hand. */
@@ -515,8 +524,10 @@
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
+/* The drawn tile sits apart from the sorted hand. The gap shrinks with the row
+   so it never costs the hand a tile's worth of width on a phone. */
 .mj-hand-drawn {
-  margin-left: 0.75rem;
+  margin-left: clamp(3px, 0.8vw, 12px);
 }
 
 /* Action bar. */
