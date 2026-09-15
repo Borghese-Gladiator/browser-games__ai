@@ -1,3 +1,3 @@
 export * from "./parseTile.ts";
-export * from "./TileGlyphs.tsx";
+export * from "./tileAsset.ts";
 export * from "./TileFace.tsx";

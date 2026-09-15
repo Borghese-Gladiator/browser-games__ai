@@ -1,6 +1,6 @@
 import type { TileSize, SeatPosition } from "./parseTile.ts";
 import { parseTile, tileLabel } from "./parseTile.ts";
-import { TileGlyph, CornerIndex } from "./TileGlyphs.tsx";
+import { tileAssetUrl } from "./tileAsset.ts";
 
 export interface TileFaceProps {
   tile: string;
@@ -43,11 +43,7 @@ export function TileFace({
         aria-label={ariaLabel}
         role={ariaLabel ? "img" : undefined}
       >
-        <svg viewBox="0 0 40 56" className="mj-back-art" aria-hidden="true">
-          <rect x="4" y="4" width="32" height="48" rx="4" className="mj-back-frame" />
-          <path d="M20 12 L28 20 L20 28 L12 20 Z" className="mj-back-mark" />
-          <circle cx="20" cy="20" r="3.2" className="mj-back-dot" />
-        </svg>
+        <span className="mj-back-art" aria-hidden="true" />
       </span>
     );
   }
@@ -63,10 +59,13 @@ export function TileFace({
       aria-label={decorative ? undefined : label}
       aria-hidden={decorative ? true : undefined}
     >
-      <CornerIndex suit={parsed.suit} rank={parsed.rank} code={parsed.code} />
-      <span className="mj-tile-glyph">
-        <TileGlyph suit={parsed.suit} rank={parsed.rank} code={parsed.code} title={label} />
-      </span>
+      <img
+        className="mj-tile-img"
+        src={tileAssetUrl(tile)}
+        alt=""
+        draggable={false}
+        loading="lazy"
+      />
     </span>
   );
 }

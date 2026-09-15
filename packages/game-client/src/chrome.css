@@ -1,5 +1,5 @@
 /* Shared chrome styles for game-client components. Themed via the same CSS
-   variables as theme.css (--accent, --line, --cell, --text, --muted). */
+   variables as theme.css (--gold, --line, --surface, --text, --muted). */
 
 /* Connection banner — fixed top bar driven by useGameSocket's status. */
 .connection-banner {
@@ -11,16 +11,16 @@
   padding: 0.6rem 1rem;
   text-align: center;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--on-gold);
 }
 
 .connection-banner[data-status="reconnecting"] {
-  background: #fbbf24;
+  background: var(--gold);
 }
 
 .connection-banner[data-status="disconnected"] {
-  background: #f87171;
-  color: #fff;
+  background: var(--vermilion-deep);
+  color: var(--text);
 }
 
 /* Presence dots (moved here from poker.css so every game shares them). */
@@ -33,11 +33,11 @@
 }
 
 .presence-dot.is-live {
-  background: #22c55e;
+  background: var(--jade-2);
 }
 
 .presence-dot.is-dark {
-  background: #9ca3af;
+  background: var(--faint);
 }
 
 /* Player list */
@@ -57,7 +57,7 @@
 }
 
 .player-list-item[aria-current="true"] {
-  color: var(--accent);
+  color: var(--gold);
   font-weight: 700;
 }
 
@@ -96,8 +96,8 @@
 }
 
 .btn-active {
-  background: var(--accent);
-  color: var(--cell);
+  background: var(--gold);
+  color: var(--on-gold);
 }
 
 /* Chat */
@@ -116,8 +116,8 @@
   max-height: 12rem;
   overflow-y: auto;
   border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--cell);
+  border-radius: var(--r-sm);
+  background: var(--surface);
   text-align: left;
 }
 
@@ -134,9 +134,9 @@
   flex: 1;
   font-size: 1rem;
   padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--line);
-  background: var(--cell);
+  background: var(--surface);
   color: var(--text);
 }
 
@@ -147,16 +147,16 @@
 
 .spectator-banner {
   font-weight: 700;
-  color: var(--accent);
+  color: var(--gold);
   text-align: center;
 }
 
 .spectator-state {
   max-height: 60vh;
   overflow: auto;
-  background: var(--cell);
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   padding: 1rem;
   font-size: 0.8rem;
   text-align: left;

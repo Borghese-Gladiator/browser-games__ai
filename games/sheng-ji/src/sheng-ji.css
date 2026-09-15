@@ -31,7 +31,7 @@
   font-size: 1.25rem;
   min-height: 1.5em;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--gold);
 }
 
 .sj-join {
@@ -44,9 +44,9 @@
 .sj-join input {
   font-size: 1rem;
   padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--line);
-  background: var(--cell);
+  background: var(--surface);
   color: var(--text);
 }
 
@@ -63,9 +63,9 @@
 .sj-card-btn {
   font-size: 1.25rem;
   font-weight: 700;
-  background: var(--cell);
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   padding: 0.5rem 0.75rem;
   color: var(--text);
   cursor: pointer;
@@ -78,7 +78,7 @@
 }
 
 .sj-card-btn:not(:disabled):hover {
-  border-color: var(--accent);
+  border-color: var(--gold);
 }
 
 .sj-trick {
@@ -101,12 +101,12 @@
 
 .sj ul[aria-label] li[aria-current="true"],
 .sj li[aria-current="true"] {
-  color: var(--accent);
+  color: var(--gold);
   font-weight: 700;
 }
 
 .sj-error {
   margin: 0;
-  color: #f87171;
+  color: var(--danger);
   font-weight: 600;
 }

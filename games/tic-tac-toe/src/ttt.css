@@ -27,7 +27,7 @@
   font-size: 1.25rem;
   min-height: 1.5em;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--gold);
 }
 
 .ttt-board {
@@ -44,7 +44,7 @@
   font-size: 2.5rem;
   font-weight: 700;
   color: var(--text);
-  background: var(--cell);
+  background: var(--surface);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -55,7 +55,7 @@
 }
 
 .ttt-cell:hover:not(:disabled) {
-  background: var(--cell-hover);
+  background: var(--surface-2);
 }
 
 .ttt-cell:disabled {
@@ -63,6 +63,6 @@
 }
 
 .ttt-cell:focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--gold);
   outline-offset: 2px;
 }

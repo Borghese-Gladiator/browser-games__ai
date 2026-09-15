@@ -1,244 +1,420 @@
-/* Shared lobby styling for all multiplayer games. One primary action (Play now),
-   everything else quieter. Uses the shared theme tokens. */
+/* Shared lobby styling for every multiplayer game. One primary action; the rest
+   quiet. Reads the tokens from @portal/shared/theme.css. */
+
+.lobby-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top strip: back link on the left, identity chip on the right. */
+.lobby-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--line-soft);
+  background: rgb(12 12 11 / 0.7);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.lobby-back {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.lobby-back:hover {
+  color: var(--gold);
+}
+
+.lobby-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.35rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+.lobby-id:hover {
+  border-color: var(--gold-dim);
+  color: var(--text);
+}
+
+.lobby-avatar {
+  display: inline-block;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+}
+
+.lobby-id-name {
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Body */
 .lobby {
-  max-width: 30rem;
+  width: 100%;
+  max-width: 34rem;
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 3rem;
+  padding-inline: 1.25rem;
+  padding-block: 2rem 4rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.lobby-head {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-.lobby-back {
-  font-size: 0.85rem;
-  color: var(--muted, #94a3b8);
-}
-.lobby-head h1 {
-  margin: 0;
-  font-size: 1.6rem;
+/* One column by default. A wide screen gets two — see the end of this file. */
+.lobby-grid {
+  display: grid;
+  gap: 1rem;
 }
 
-.lobby-name {
+.lobby-masthead {
+  margin-bottom: 0.5rem;
+}
+
+.lobby-title {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.7rem, 5vw, 2.3rem);
+  line-height: 1.1;
+}
+
+.lobby-sub {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* Fields */
+.field {
   display: block;
 }
-.lobby-name span {
+.field-label {
   display: block;
-  font-size: 0.8rem;
-  color: var(--muted, #94a3b8);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
-.lobby-name input,
-.lobby-join input {
+.field input {
   width: 100%;
-  padding: 0.7rem 0.9rem;
-  font-size: 1rem;
-  color: var(--text, #e2e8f0);
-  background: var(--cell, #1e293b);
-  border: 1px solid var(--line, #334155);
-  border-radius: 8px;
-}
-.lobby-name input:focus,
-.lobby-join input:focus {
-  outline: 2px solid var(--accent, #38bdf8);
-  outline-offset: 1px;
 }
 
 /* Cards */
-.lobby-card {
-  background: var(--cell, #1e293b);
-  border: 1px solid var(--line, #334155);
-  border-radius: 12px;
-  padding: 1.1rem;
+.card {
+  background: linear-gradient(165deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 1.15rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  box-shadow: var(--shadow-sm);
 }
-.lobby-card-title {
-  margin: 0;
-  font-size: 0.95rem;
-  letter-spacing: 0.02em;
-  color: var(--muted, #94a3b8);
-  text-transform: uppercase;
-}
-.lobby-card-head {
+
+.card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
 }
 
-/* Hero quick-match card — the one thing that stands out. */
-.lobby-hero {
-  align-items: center;
-  text-align: center;
-  background: linear-gradient(160deg, var(--cell, #1e293b), var(--bg, #0f172a));
-  border-color: color-mix(in srgb, var(--accent, #38bdf8) 40%, var(--line, #334155));
-}
-.lobby-hero-title {
+.card-title {
   margin: 0;
-  font-size: 1.3rem;
-  font-weight: 700;
-}
-.lobby-hero-sub {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--muted, #94a3b8);
-  max-width: 24rem;
+  font-size: 1.1rem;
+  font-family: var(--font-display);
+  color: var(--text);
 }
 
-/* Buttons */
-.btn-block {
-  width: 100%;
-}
-.btn-primary {
-  background: var(--accent, #38bdf8);
-  color: var(--bg, #0f172a);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, #38bdf8) 60%, transparent),
-    0 6px 20px color-mix(in srgb, var(--accent, #38bdf8) 30%, transparent);
-  font-size: 1.05rem;
-}
-.btn-ghost {
-  background: transparent;
-  color: var(--text, #e2e8f0);
-  border: 1px solid var(--line, #334155);
-}
-.btn-ghost:hover {
-  border-color: var(--accent, #38bdf8);
-  filter: none;
-}
-.btn-link {
-  background: transparent;
-  color: var(--muted, #94a3b8);
-  padding: 0.3rem 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-.btn-link:hover {
-  color: var(--accent, #38bdf8);
-  filter: none;
+.card-sub,
+.hero-sub {
+  margin: 0;
+  font-size: 0.87rem;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
-.lobby-or {
-  margin: 0;
-  text-align: center;
-  font-size: 0.75rem;
-  color: var(--muted, #94a3b8);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.lobby-join {
-  display: flex;
-  gap: 0.5rem;
-}
-.lobby-join input {
-  flex: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
+/* The hero card carries the one gold action on the page. */
+.card-hero {
+  position: relative;
+  border-color: var(--gold-dim);
+  background:
+    radial-gradient(120% 100% at 50% 0%, rgb(231 184 79 / 0.1), transparent 65%),
+    linear-gradient(165deg, var(--surface-2), var(--surface));
 }
 
-/* Public tables */
-.lobby-rooms ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.hero-copy {
   display: flex;
   flex-direction: column;
+  gap: 0.35rem;
+}
+
+.hero-action {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* "or join with a code" divider */
+.rule-or {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.15rem 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.rule-or::before,
+.rule-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line-soft);
+}
+
+.join-row {
+  display: flex;
   gap: 0.5rem;
 }
-.lobby-room {
+.code-input {
+  flex: 1;
+  min-width: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-align: center;
+}
+
+/* Open tables */
+.table-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.live-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.live-dot.is-live {
+  background: var(--jade-2);
+  box-shadow: 0 0 0 3px rgb(58 168 123 / 0.2);
+}
+
+.table-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.table-row {
   display: flex;
   align-items: stretch;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
-.lobby-room-main {
+
+.table-main {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.7rem 0.9rem;
-  background: var(--bg, #0f172a);
-  border: 1px solid var(--line, #334155);
-  border-radius: 8px;
-  color: var(--text, #e2e8f0);
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
   cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
-.lobby-room-main:hover:not(:disabled) {
-  border-color: var(--accent, #38bdf8);
+.table-main:hover:not(:disabled) {
+  border-color: var(--gold-dim);
+  background: var(--surface-2);
 }
-.lobby-room-main:disabled {
-  opacity: 0.5;
+.table-main:disabled {
+  opacity: 0.45;
   cursor: not-allowed;
 }
-.lobby-room-code {
+
+.table-id {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.table-host {
+  font-size: 0.72rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table-code {
+  font-family: var(--font-mono);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.18em;
+  font-size: 0.95rem;
 }
-.lobby-room-meta {
-  font-size: 0.85rem;
-  color: var(--muted, #94a3b8);
+
+.table-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--muted);
 }
-.lobby-empty {
+
+.seat-pips {
+  display: inline-flex;
+  gap: 3px;
+}
+.seat-pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid var(--faint);
+}
+.seat-pip.is-taken {
+  background: var(--jade-2);
+  border-color: var(--jade-2);
+}
+
+.table-seats {
+  font-variant-numeric: tabular-nums;
+}
+
+.table-locked {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--r-pill);
+  padding: 0.05rem 0.4rem;
+}
+
+.empty {
   margin: 0;
-  font-size: 0.9rem;
-  color: var(--muted, #94a3b8);
+  font-size: 0.87rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.lobby-refresh {
+  align-self: flex-start;
+  margin-top: -0.25rem;
 }
 
 .lobby-error {
-  color: var(--danger, #f87171);
   margin: 0;
+  padding: 0.7rem 0.9rem;
   text-align: center;
+  color: var(--danger);
+  background: rgb(224 100 74 / 0.1);
+  border: 1px solid rgb(224 100 74 / 0.35);
+  border-radius: var(--r-md);
+  font-size: 0.88rem;
 }
 
-.lobby-identity {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-top: 0.5rem;
-}
-.lobby-avatar {
-  display: inline-block;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* Player-code modal (unchanged behavior) */
+/* Player-code modal */
 .player-code-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  z-index: 50;
+  background: rgb(0 0 0 / 0.7);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  gap: 0.75rem;
 }
 .player-code-modal > * {
   max-width: 28rem;
   width: 100%;
 }
 .player-code-text {
-  background: var(--cell, #1e293b);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
   padding: 0.75rem;
-  border-radius: 0.5rem;
+  border-radius: var(--r-md);
   word-break: break-all;
-  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+@media (max-width: 32rem) {
+  .lobby {
+    padding-block: 1.5rem 3rem;
+  }
+  .table-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+}
+
+/* Wide screens: two columns, with the quick-match hero across the top as a row.
+   These rules must follow `.card`, which sets the one-column defaults. */
+@media (min-width: 60rem) {
+  .lobby {
+    max-width: 58rem;
+  }
+  .lobby-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+  .card-hero {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    gap: 2.5rem;
+    padding: 1.4rem 1.5rem;
+  }
+  .card-hero .hero-copy {
+    flex: 1;
+  }
+  .card-hero .hero-action {
+    flex: none;
+    width: 13rem;
+  }
+  .card-hero .btn-primary {
+    font-size: 1.05rem;
+    padding: 0.8rem 2rem;
+  }
 }

@@ -13,13 +13,14 @@ async function readSeat(page) {
   return Number(value);
 }
 
-// Read the concealed hand as the sorted list of tile glyphs. Only the local seat
-// renders concealed hand tiles (.mj-tile-btn); opponents never do.
+// Read the concealed hand as the sorted list of tile ids. A tile face is real
+// artwork and carries no text, so the button tags itself with data-tile. Only
+// the local seat renders concealed hand tiles (.mj-tile-btn); opponents never do.
 async function readHand(page) {
   const tiles = page.locator(`${HAND} .mj-tile-btn`);
   const count = await tiles.count();
   const out = [];
-  for (let i = 0; i < count; i += 1) out.push((await tiles.nth(i).textContent())?.trim());
+  for (let i = 0; i < count; i += 1) out.push(await tiles.nth(i).getAttribute("data-tile"));
   return out.sort();
 }
 
@@ -31,11 +32,8 @@ async function act(page, flags) {
   if (/wins/.test(status) || status.startsWith("Draw")) return true;
 
   if (status === "Your turn") {
-    const draw = page.getByRole("button", { name: "Draw", exact: true });
-    if (await draw.isEnabled({ timeout: 200 }).catch(() => false)) {
-      await draw.click();
-      return false;
-    }
+    // The board draws on its own, so a turn only ever needs a discard. A turn
+    // caught before its draw lands simply has no enabled discard yet.
     const discards = page.getByRole("button", { name: /^Discard / });
     const n = await discards.count();
     for (let i = 0; i < n; i += 1) {
@@ -341,6 +339,49 @@ test("opens the fan and pattern guide from the pill, filters, and closes with Es
   await host.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(pill).toBeFocused();
+
+  await Promise.all([ctxHost.close(), ctxGuest.close()]);
+});
+
+// QA scenario qa-hand-stays-one-row-at-every-width: the concealed hand is the
+// one row a player reads at a glance. Tiles divide the row rather than reading a
+// size off the viewport, so no width may wrap it or push the page sideways.
+test("keeps the concealed hand on one row at every width", async ({ browser }) => {
+  const [ctxHost, ctxGuest] = await Promise.all([browser.newContext(), browser.newContext()]);
+  const [host, guest] = await Promise.all([ctxHost.newPage(), ctxGuest.newPage()]);
+  await Promise.all([host.goto(URL), guest.goto(URL)]);
+
+  const code = await createRoomAs(host, "Wide1");
+  await joinRoomByCode(guest, code, "Wide2");
+  await guest.getByText(/^Room: /).waitFor({ timeout: 5000 });
+  await host.getByRole("button", { name: "Start with bots" }).click();
+  await host.getByRole("region", { name: "Your hand" }).waitFor({ timeout: 15_000 });
+
+  const measure = () =>
+    host.evaluate(() => {
+      const tiles = [...document.querySelectorAll(".mj-hand > li")];
+      const rows = new Set(tiles.map((t) => Math.round(t.getBoundingClientRect().top)));
+      return {
+        count: tiles.length,
+        rows: rows.size,
+        width: tiles.length > 0 ? tiles[0].getBoundingClientRect().width : 0,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+
+  const widths = [];
+  for (const width of [320, 390, 768, 1280, 2560]) {
+    await host.setViewportSize({ width, height: 900 });
+    const m = await measure();
+    expect(m.count, `no hand tiles at ${width}px`).toBeGreaterThan(0);
+    expect(m.rows, `hand wrapped at ${width}px`).toBe(1);
+    expect(m.overflow, `page scrolls sideways at ${width}px`).toBeLessThanOrEqual(0);
+    widths.push(m.width);
+  }
+
+  // Tiles really track the width rather than sitting at a fixed size: the
+  // narrowest viewport draws them smaller than the widest.
+  expect(widths[0]).toBeLessThan(widths[widths.length - 1]);
 
   await Promise.all([ctxHost.close(), ctxGuest.close()]);
 });

@@ -32,8 +32,8 @@ test("select a discard, see the ranking and an explanation, then get a next puzz
   // An explanation renders as a readable sentence.
   await expect(ranking.getByText(REASON).first()).toBeVisible();
 
-  // Advance to a next puzzle: the ranking hides and the hand is selectable again.
-  await page.getByRole("button", { name: "Next puzzle" }).click();
+  // Advance to a next drill: the ranking hides and the hand is selectable again.
+  await page.getByRole("button", { name: "Next drill →" }).click();
   await expect(page.getByRole("region", { name: "Discard ranking" })).toHaveCount(0);
 
   const nextDiscards = page.getByRole("button", { name: /^Discard / });

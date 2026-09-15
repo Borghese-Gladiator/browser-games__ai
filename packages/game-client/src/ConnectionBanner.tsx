@@ -1,4 +1,5 @@
 import type { ConnectionStatus } from './useGameSocket.types.ts';
+import './chrome.css';
 
 // Driven by useGameSocket's connectionStatus. Hidden when connected;
 // role="alert" so assistive tech announces drops/reconnects.

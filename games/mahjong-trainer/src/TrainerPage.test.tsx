@@ -19,7 +19,9 @@ describe("TrainerPage", () => {
       .querySelectorAll<HTMLButtonElement>("button.dt-tile-btn");
     expect(discardButtons.length).toBeGreaterThan(0);
 
-    const firstHand = discardButtons[0].textContent;
+    // A tile is real artwork, so it carries no text. Read its id instead.
+    const firstTile = discardButtons[0].dataset.tile;
+    expect(firstTile).toBeTruthy();
     fireEvent.click(discardButtons[0]);
 
     // The full ranking is revealed and the player's position is marked.
@@ -34,7 +36,7 @@ describe("TrainerPage", () => {
     expect(discardButtons[0].disabled).toBe(true);
 
     // Advancing resets the flow: ranking hides and the hand is selectable again.
-    fireEvent.click(screen.getByRole("button", { name: "Next puzzle" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next drill →" }));
     expect(screen.queryByRole("region", { name: "Discard ranking" })).toBeNull();
 
     const nextHand = screen
@@ -42,10 +44,10 @@ describe("TrainerPage", () => {
       .querySelectorAll<HTMLButtonElement>("button.dt-tile-btn");
     expect(nextHand.length).toBeGreaterThan(0);
     expect(nextHand[0].disabled).toBe(false);
-    expect(nextHand[0].textContent).toBeTruthy();
+    expect(nextHand[0].dataset.tile).toBeTruthy();
     // A fresh puzzle loaded (a different first tile, or a new hand length).
     expect(
-      nextHand[0].textContent !== firstHand || nextHand.length !== discardButtons.length,
+      nextHand[0].dataset.tile !== firstTile || nextHand.length !== discardButtons.length,
     ).toBe(true);
   });
 });

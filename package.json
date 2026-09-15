@@ -20,7 +20,8 @@
     "test:e2e": "rm -rf .state/e2e && playwright test",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "check": "npm run typecheck && npm run lint && vitest run",
+    "lint:css": "stylelint \"**/*.css\"",
+    "check": "npm run typecheck && npm run lint && npm run lint:css && vitest run",
     "check:all": "vitest run && npm run test:e2e",
     "verify:image": "bash bin/verify-image.sh",
     "clean:state": "rm -rf snapshots .state outcomes.json"
@@ -38,6 +39,8 @@
     "eslint-plugin-react-hooks": "5.2.0",
     "fast-check": "^4.9.0",
     "jsdom": "^25.0.0",
+    "stylelint": "^17.15.0",
+    "stylelint-config-standard": "^40.0.0",
     "typescript": "^5.7.2",
     "typescript-eslint": "8.70.0",
     "vite": "^6.0.0",

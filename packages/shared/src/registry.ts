@@ -7,6 +7,33 @@
 //   2. Add an entry here. That's it for the portal and the Vite build.
 //   3. For a multiplayer game, also register an adapter in
 //      packages/game-core/src/games.js so the gateway can host it.
+// Portal grouping. The portal renders one section per group, in this order.
+export type GameGroup = "mahjong" | "board" | "misc";
+
+export interface GroupMeta {
+  id: GameGroup;
+  title: string;
+  blurb: string;
+}
+
+export const groups: GroupMeta[] = [
+  {
+    id: "mahjong",
+    title: "Mahjong",
+    blurb: "Taiwanese 16-tile play, and the drills that sharpen it.",
+  },
+  {
+    id: "board",
+    title: "Board Games",
+    blurb: "Two players, one grid, nothing hidden.",
+  },
+  {
+    id: "misc",
+    title: "Misc",
+    blurb: "Card games, and everything that fits nowhere else.",
+  },
+];
+
 export interface GameMeta {
   id: string;
   title: string;
@@ -15,6 +42,9 @@ export interface GameMeta {
   path: string;
   multiplayer: boolean;
   enabled: boolean;
+  group: GameGroup;
+  // Optional tile id drawn as the card art, for games that use real tiles.
+  tile?: string;
 }
 
 // Non-game top-level pages (e.g. the post-game review). Like `games`, this is the
@@ -50,6 +80,7 @@ export const games: GameMeta[] = [
     multiplayer: false,
     // enabled: false hides the game on the portal and prevents new room creation
     enabled: true,
+    group: "board",
   },
   {
     id: "fps",
@@ -59,6 +90,7 @@ export const games: GameMeta[] = [
     path: "/games/fps/",
     multiplayer: false,
     enabled: true,
+    group: "misc",
   },
   {
     id: "poker",
@@ -68,15 +100,17 @@ export const games: GameMeta[] = [
     path: "/games/poker/",
     multiplayer: true,
     enabled: true,
+    group: "misc",
   },
   {
     id: "sheng-ji",
     title: "Sheng Ji (升级)",
     description: "4-player online trick-taking card game. Create a room and share the code.",
-    emoji: "🀄",
+    emoji: "🎴",
     path: "/games/sheng-ji/",
     multiplayer: true,
     enabled: true,
+    group: "misc",
   },
   {
     id: "president",
@@ -86,6 +120,7 @@ export const games: GameMeta[] = [
     path: "/games/president/",
     multiplayer: true,
     enabled: true,
+    group: "misc",
   },
   {
     id: "reversi",
@@ -95,6 +130,7 @@ export const games: GameMeta[] = [
     path: "/games/reversi/",
     multiplayer: true,
     enabled: true,
+    group: "board",
   },
   {
     id: "mahjong",
@@ -104,6 +140,8 @@ export const games: GameMeta[] = [
     path: "/games/mahjong/",
     multiplayer: true,
     enabled: true,
+    group: "mahjong",
+    tile: "honor-red-1",
   },
   {
     id: "mahjong-trainer",
@@ -113,5 +151,7 @@ export const games: GameMeta[] = [
     path: "/games/mahjong-trainer/",
     multiplayer: false,
     enabled: true,
+    group: "mahjong",
+    tile: "bamboo-1-1",
   },
 ];
