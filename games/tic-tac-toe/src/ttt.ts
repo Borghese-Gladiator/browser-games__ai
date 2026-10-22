@@ -43,7 +43,7 @@ export function recordResult(scores: Scores, board: Board): Scores {
   return scores;
 }
 
-const ROW_LABELS =["top", "middle", "bottom"];
+const ROW_LABELS = ["top", "middle", "bottom"];
 const COL_LABELS = ["left", "center", "right"];
 
 export const cellLabel = (i: number): string =>
