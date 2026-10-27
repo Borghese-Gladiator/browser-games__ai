@@ -1,9 +1,18 @@
 import { useState } from "react";
-import { cellLabel, emptyBoard, findWinner, isDraw, type Mark } from "./ttt.js";
+import {
+  cellLabel,
+  emptyBoard,
+  emptyScores,
+  findWinner,
+  isDraw,
+  recordResult,
+  type Mark,
+} from "./ttt.js";
 
 export function TicTacToe() {
   const [board, setBoard] = useState(emptyBoard);
   const [currentPlayer, setCurrentPlayer] = useState<Mark>("X");
+  const [scores, setScores] = useState(emptyScores);
 
   const winner = findWinner(board);
   const draw = isDraw(board);
@@ -20,12 +29,17 @@ export function TicTacToe() {
     const next = board.slice();
     next[i] = currentPlayer;
     setBoard(next);
+    setScores((s) => recordResult(s, next));
     setCurrentPlayer((p) => (p === "X" ? "O" : "X"));
   }
 
   function reset() {
     setBoard(emptyBoard());
     setCurrentPlayer("X");
+  }
+
+  function resetScores() {
+    setScores(emptyScores());
   }
 
   return (
@@ -37,6 +51,20 @@ export function TicTacToe() {
       <p id="status" role="status" aria-live="polite" className="ttt-status">
         {status}
       </p>
+      <dl className="ttt-scores" aria-label="Scoreboard">
+        <div>
+          <dt>X wins</dt>
+          <dd>{scores.X}</dd>
+        </div>
+        <div>
+          <dt>O wins</dt>
+          <dd>{scores.O}</dd>
+        </div>
+        <div>
+          <dt>Draws</dt>
+          <dd>{scores.draws}</dd>
+        </div>
+      </dl>
       <div className="ttt-board" role="grid" aria-label="Tic-tac-toe board">
         {board.map((value, i) => (
           <button
@@ -52,9 +80,14 @@ export function TicTacToe() {
           </button>
         ))}
       </div>
-      <button type="button" className="btn" onClick={reset}>
-        Reset game
-      </button>
+      <div className="ttt-actions">
+        <button type="button" className="btn" onClick={reset}>
+          Reset game
+        </button>
+        <button type="button" className="btn" onClick={resetScores}>
+          Reset scores
+        </button>
+      </div>
     </main>
   );
 }

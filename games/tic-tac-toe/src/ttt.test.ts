@@ -1,5 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { WIN_LINES, emptyBoard, findWinner, isDraw, type Board } from "./ttt.js";
+import {
+  WIN_LINES,
+  emptyBoard,
+  emptyScores,
+  findWinner,
+  isDraw,
+  recordResult,
+  type Board,
+} from "./ttt.js";
+
+describe("recordResult", () => {
+  it.each([
+    ["X win", ["X", "X", "X", "O", "O", "", "", "", ""], { X: 1, O: 0, draws: 0 }],
+    ["O win", ["O", "O", "O", "X", "X", "", "X", "", ""], { X: 0, O: 1, draws: 0 }],
+    ["draw", ["X", "O", "X", "X", "O", "O", "O", "X", "X"], { X: 0, O: 0, draws: 1 }],
+    ["game in progress", ["X", "", "", "", "O", "", "", "", ""], emptyScores()],
+  ] as Array<[string, Board, ReturnType<typeof emptyScores>]>)(
+    "counts a %s once",
+    (_label, board, expected) => {
+      expect(recordResult(emptyScores(), board)).toEqual(expected);
+    },
+  );
+});
 
 describe("findWinner", () => {
   it.each(WIN_LINES)("detects a win on line %j", (a, b, c) => {

@@ -66,3 +66,29 @@
   outline: 3px solid var(--gold);
   outline-offset: 2px;
 }
+
+.ttt-scores {
+  display: flex;
+  gap: 1.5rem;
+  margin: 0;
+}
+
+.ttt-scores div {
+  text-align: center;
+}
+
+.ttt-scores dt {
+  font-size: 0.85rem;
+  color: var(--text-muted, var(--text));
+}
+
+.ttt-scores dd {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.ttt-actions {
+  display: flex;
+  gap: 0.75rem;
+}

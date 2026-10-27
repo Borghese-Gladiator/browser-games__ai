@@ -30,6 +30,19 @@ export function findWinner(board: Board): Mark | null {
 export const isDraw = (board: Board): boolean =>
   board.every((cell) => cell !== "") && !findWinner(board);
 
+export type Scores = { X: number; O: number; draws: number };
+
+export const emptyScores = (): Scores => ({ X: 0, O: 0, draws: 0 });
+
+export function recordResult(scores: Scores, board: Board): Scores {
+  const winner = findWinner(board);
+  if (winner === "X" || winner === "O") {
+    return { ...scores, [winner]: scores[winner] + 1 };
+  }
+  if (isDraw(board)) return { ...scores, draws: scores.draws + 1 };
+  return scores;
+}
+
 const ROW_LABELS = ["top", "middle", "bottom"];
 const COL_LABELS = ["left", "center", "right"];
 
