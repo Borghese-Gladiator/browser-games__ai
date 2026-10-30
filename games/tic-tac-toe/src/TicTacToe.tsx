@@ -13,6 +13,7 @@ export function TicTacToe() {
   const [board, setBoard] = useState(emptyBoard);
   const [currentPlayer, setCurrentPlayer] = useState<Mark>("X");
   const [scores, setScores] = useState(emptyScores);
+  const [moves, setMoves] = useState<number[]>([]);
 
   const winner = findWinner(board);
   const draw = isDraw(board);
@@ -30,11 +31,22 @@ export function TicTacToe() {
     next[i] = currentPlayer;
     setBoard(next);
     setScores((s) => recordResult(s, next));
+    setMoves((m) => [...m, i]);
+    setCurrentPlayer((p) => (p === "X" ? "O" : "X"));
+  }
+
+  function undo() {
+    if (gameOver || moves.length === 0) return;
+    const next = board.slice();
+    next[moves[moves.length - 1]] = "";
+    setBoard(next);
+    setMoves(moves.slice(0, -1));
     setCurrentPlayer((p) => (p === "X" ? "O" : "X"));
   }
 
   function reset() {
     setBoard(emptyBoard());
+    setMoves([]);
     setCurrentPlayer("X");
   }
 
@@ -81,6 +93,14 @@ export function TicTacToe() {
         ))}
       </div>
       <div className="ttt-actions">
+        <button
+          type="button"
+          className="btn"
+          disabled={gameOver || moves.length === 0}
+          onClick={undo}
+        >
+          Undo
+        </button>
         <button type="button" className="btn" onClick={reset}>
           Reset game
         </button>
