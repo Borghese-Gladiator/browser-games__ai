@@ -18,7 +18,14 @@ export function TicTacToe() {
 
   const winner = findWinner(board);
   const draw = isDraw(board);
-  const gameOver = Boolean(winner) || draw;
+  const matchWinner = bestOf3
+    ? match.X >= 2
+      ? "X"
+      : match.O >= 2
+        ? "O"
+        : null
+    : null;
+  const gameOver = Boolean(winner) || draw || Boolean(matchWinner);
 
   const status = winner
     ? `${winner} wins!`
@@ -83,6 +90,11 @@ export function TicTacToe() {
       {bestOf3 && (
         <p className="ttt-match">
           Match: X {match.X} - O {match.O}
+        </p>
+      )}
+      {matchWinner && (
+        <p className="ttt-match-winner" role="alert">
+          {matchWinner} wins the match!
         </p>
       )}
       <div className="ttt-board" role="grid" aria-label="Tic-tac-toe board">
