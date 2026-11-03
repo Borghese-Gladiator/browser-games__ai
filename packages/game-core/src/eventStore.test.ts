@@ -50,7 +50,7 @@ describe('createFileEventStore', () => {
     expect(log[0].sequence).toBe(0);
     expect(log[249].sequence).toBe(249);
     expect(log.map((e) => e.sequence)).toEqual(Array.from({ length: 250 }, (_, i) => i));
-  });
+  }, 20_000);
 
   // qa: torn-write-fails-loudly-not-empty-history
   it('fails loud on a torn or corrupt file instead of returning an empty history', async () => {

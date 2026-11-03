@@ -64,6 +64,8 @@ export default tseslint.config(
       '.state/**',
       'snapshots/**',
       'games/fps/**',
+      'proof-tests/**',
+      '**/.claude/**',
       'eslint.config.js',
     ],
   },

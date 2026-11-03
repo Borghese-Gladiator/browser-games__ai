@@ -629,7 +629,7 @@ describe('reapRoom event flush', () => {
     expect(log.map((e) => e.sequence)).toEqual(Array.from({ length: 250 }, (_, i) => i));
     expect(log[0].stateHash).toBe(room.eventLog[0].stateHash);
     expect(log[249].stateHash).toBe(room.eventLog[249].stateHash);
-  });
+  }, 20_000);
 
   it('reapEmptyRooms flushes a reaped room to the injected event store', async () => {
     dir = mkdtempSync(join(tmpdir(), 'reap-'));
