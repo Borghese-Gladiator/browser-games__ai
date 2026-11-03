@@ -119,6 +119,18 @@ export function TicTacToe() {
         <button type="button" className="btn" onClick={resetScores}>
           Reset scores
         </button>
+        {bestOf3 && (
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              reset();
+              setMatch({ X: 0, O: 0 });
+            }}
+          >
+            New match
+          </button>
+        )}
       </div>
     </main>
   );
