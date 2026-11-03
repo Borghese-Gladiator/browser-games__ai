@@ -13,6 +13,8 @@ export function TicTacToe() {
   const [board, setBoard] = useState(emptyBoard);
   const [currentPlayer, setCurrentPlayer] = useState<Mark>("X");
   const [scores, setScores] = useState(emptyScores);
+  const [bestOf3, setBestOf3] = useState(false);
+  const [match, setMatch] = useState({ X: 0, O: 0 });
 
   const winner = findWinner(board);
   const draw = isDraw(board);
@@ -30,6 +32,8 @@ export function TicTacToe() {
     next[i] = currentPlayer;
     setBoard(next);
     setScores((s) => recordResult(s, next));
+    const w = findWinner(next);
+    if (bestOf3 && w) setMatch((m) => ({ ...m, [w]: m[w] + 1 }));
     setCurrentPlayer((p) => (p === "X" ? "O" : "X"));
   }
 
@@ -65,6 +69,22 @@ export function TicTacToe() {
           <dd>{scores.draws}</dd>
         </div>
       </dl>
+      <label>
+        <input
+          type="checkbox"
+          checked={bestOf3}
+          onChange={(e) => {
+            setBestOf3(e.target.checked);
+            setMatch({ X: 0, O: 0 });
+          }}
+        />{" "}
+        Best of 3
+      </label>
+      {bestOf3 && (
+        <p className="ttt-match">
+          Match: X {match.X} - O {match.O}
+        </p>
+      )}
       <div className="ttt-board" role="grid" aria-label="Tic-tac-toe board">
         {board.map((value, i) => (
           <button
