@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   cellLabel,
   emptyBoard,
@@ -16,6 +16,8 @@ export function TicTacToe() {
   const [bestOf3, setBestOf3] = useState(false);
   const [match, setMatch] = useState({ X: 0, O: 0 });
   const [moves, setMoves] = useState<number[]>([]);
+  const [timerOn, setTimerOn] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(10);
 
   const winner = findWinner(board);
   const draw = isDraw(board);
@@ -33,6 +35,13 @@ export function TicTacToe() {
     : draw
       ? "It's a draw!"
       : `${currentPlayer}'s turn`;
+
+  useEffect(() => {
+    setTimeLeft(10);
+    if (!timerOn || gameOver) return;
+    const id = setInterval(() => setTimeLeft((t) => Math.max(0, t - 1)), 1000);
+    return () => clearInterval(id);
+  }, [timerOn, gameOver, moves.length]);
 
   function handleMove(i: number) {
     if (gameOver || board[i] !== "") return;
@@ -99,6 +108,15 @@ export function TicTacToe() {
         />{" "}
         Best of 3
       </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={timerOn}
+          onChange={(e) => setTimerOn(e.target.checked)}
+        />{" "}
+        Turn timer
+      </label>
+      {timerOn && <p className="ttt-timer">Time left: {timeLeft}</p>}
       {bestOf3 && (
         <p className="ttt-match">
           Match: X {match.X} - O {match.O}
