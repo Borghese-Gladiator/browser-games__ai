@@ -17,6 +17,7 @@ export function TicTacToe() {
   const [match, setMatch] = useState({ X: 0, O: 0 });
   const [moves, setMoves] = useState<number[]>([]);
   const [timerOn, setTimerOn] = useState(false);
+  const [seconds, setSeconds] = useState("10");
   const [timeLeft, setTimeLeft] = useState(10);
   const [timeouts, setTimeouts] = useState(0);
   const [timedOut, setTimedOut] = useState<Mark | null>(null);
@@ -39,11 +40,11 @@ export function TicTacToe() {
       : `${currentPlayer}'s turn`;
 
   useEffect(() => {
-    setTimeLeft(10);
+    setTimeLeft(Math.min(30, Math.max(3, Number(seconds) || 10)));
     if (!timerOn || gameOver) return;
     const id = setInterval(() => setTimeLeft((t) => Math.max(0, t - 1)), 1000);
     return () => clearInterval(id);
-  }, [timerOn, gameOver, moves.length, timeouts]);
+  }, [timerOn, gameOver, moves.length, timeouts, seconds]);
 
   useEffect(() => {
     if (!timerOn || gameOver || timeLeft > 0) return;
@@ -126,6 +127,16 @@ export function TicTacToe() {
           onChange={(e) => setTimerOn(e.target.checked)}
         />{" "}
         Turn timer
+      </label>
+      <label>
+        Seconds per turn{" "}
+        <input
+          type="number"
+          min={3}
+          max={30}
+          value={seconds}
+          onChange={(e) => setSeconds(e.target.value)}
+        />
       </label>
       {timerOn && <p className="ttt-timer">Time left: {timeLeft}</p>}
       {timedOut && <p className="ttt-timeout">{timedOut} ran out of time</p>}
