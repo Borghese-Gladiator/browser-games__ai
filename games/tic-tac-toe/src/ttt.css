@@ -88,6 +88,11 @@
   font-weight: 700;
 }
 
+.ttt-history {
+  list-style: none;
+  padding: 0;
+}
+
 .ttt-actions {
   display: flex;
   gap: 0.75rem;
