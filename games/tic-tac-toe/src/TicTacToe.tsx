@@ -124,6 +124,13 @@ export function TicTacToe() {
           </button>
         ))}
       </div>
+      <ol className="ttt-history" aria-label="Move history">
+        {moves.map((cell, n) => (
+          <li key={n}>
+            {n + 1}. {n % 2 === 0 ? "X" : "O"} {cellLabel(cell)}
+          </li>
+        ))}
+      </ol>
       <div className="ttt-actions">
         <button
           type="button"
