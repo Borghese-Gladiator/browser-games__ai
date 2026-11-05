@@ -18,6 +18,8 @@ export function TicTacToe() {
   const [moves, setMoves] = useState<number[]>([]);
   const [timerOn, setTimerOn] = useState(false);
   const [timeLeft, setTimeLeft] = useState(10);
+  const [timeouts, setTimeouts] = useState(0);
+  const [timedOut, setTimedOut] = useState<Mark | null>(null);
 
   const winner = findWinner(board);
   const draw = isDraw(board);
@@ -41,7 +43,14 @@ export function TicTacToe() {
     if (!timerOn || gameOver) return;
     const id = setInterval(() => setTimeLeft((t) => Math.max(0, t - 1)), 1000);
     return () => clearInterval(id);
-  }, [timerOn, gameOver, moves.length]);
+  }, [timerOn, gameOver, moves.length, timeouts]);
+
+  useEffect(() => {
+    if (!timerOn || gameOver || timeLeft > 0) return;
+    setTimedOut(currentPlayer);
+    setCurrentPlayer((p) => (p === "X" ? "O" : "X"));
+    setTimeouts((n) => n + 1);
+  }, [timeLeft]);
 
   function handleMove(i: number) {
     if (gameOver || board[i] !== "") return;
@@ -52,6 +61,7 @@ export function TicTacToe() {
     const w = findWinner(next);
     if (bestOf3 && w) setMatch((m) => ({ ...m, [w]: m[w] + 1 }));
     setMoves((m) => [...m, i]);
+    setTimedOut(null);
     setCurrentPlayer((p) => (p === "X" ? "O" : "X"));
   }
 
@@ -67,6 +77,7 @@ export function TicTacToe() {
   function reset() {
     setBoard(emptyBoard());
     setMoves([]);
+    setTimedOut(null);
     setCurrentPlayer("X");
   }
 
@@ -117,6 +128,7 @@ export function TicTacToe() {
         Turn timer
       </label>
       {timerOn && <p className="ttt-timer">Time left: {timeLeft}</p>}
+      {timedOut && <p className="ttt-timeout">{timedOut} ran out of time</p>}
       {bestOf3 && (
         <p className="ttt-match">
           Match: X {match.X} - O {match.O}
