@@ -168,7 +168,7 @@ export function TicTacToe() {
       <ol className="ttt-history" aria-label="Move history">
         {moves.map((cell, n) => (
           <li key={n}>
-            {n + 1}. {n % 2 === 0 ? "X" : "O"} {cellLabel(cell)}
+            {n + 1}. {board[cell]} {cellLabel(cell)}
           </li>
         ))}
       </ol>
