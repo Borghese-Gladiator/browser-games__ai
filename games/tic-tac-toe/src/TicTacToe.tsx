@@ -16,6 +16,7 @@ export function TicTacToe() {
   const [bestOf3, setBestOf3] = useState(false);
   const [match, setMatch] = useState({ X: 0, O: 0 });
   const [moves, setMoves] = useState<number[]>([]);
+  const [starter, setStarter] = useState<Mark>("X");
   const [timerOn, setTimerOn] = useState(false);
   const [seconds, setSeconds] = useState("10");
   const [timeLeft, setTimeLeft] = useState(10);
@@ -79,7 +80,7 @@ export function TicTacToe() {
     setBoard(emptyBoard());
     setMoves([]);
     setTimedOut(null);
-    setCurrentPlayer("X");
+    setCurrentPlayer(starter);
   }
 
   function resetScores() {
@@ -150,6 +151,21 @@ export function TicTacToe() {
           {matchWinner} wins the match!
         </p>
       )}
+      <label>
+        Starts first{" "}
+        <select
+          value={starter}
+          disabled={moves.length > 0}
+          onChange={(e) => {
+            const m = e.target.value === "O" ? "O" : "X";
+            setStarter(m);
+            setCurrentPlayer(m);
+          }}
+        >
+          <option value="X">X</option>
+          <option value="O">O</option>
+        </select>
+      </label>
       <div className="ttt-board" role="grid" aria-label="Tic-tac-toe board">
         {board.map((value, i) => (
           <button
